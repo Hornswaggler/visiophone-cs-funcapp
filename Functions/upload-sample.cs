@@ -28,20 +28,24 @@ namespace vp.Functions
             try
             {
                 var sample = req.Form.Files[0];
-                Sample data = JsonConvert.DeserializeObject<Sample>(req.Form["data"]);
+                SampleModel data = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
 
                 await _sampleService.AddSample(data);
 
+
+                //TODO: Update to accomodate multiple files per upload
                 Guid guid = Guid.NewGuid();
                 string fileName = $"{guid}_{sample.FileName}";
                 var file = req.Form.Files[0];
                 using (var stream = file.OpenReadStream())
                 {
-                    string connectionString = Environment.GetEnvironmentVariable("VP_STORAGE_CONNECTION_STRING");
-                    string containerName = Environment.GetEnvironmentVariable("VP_SAMPLE_CONTAINER_NAME");
-                    UploadManager uploadManager = new UploadManager(Config.connectionString);
+                    string connectionString = Environment.GetEnvironmentVariable(Config.StorageConnectionString);
+                    string containerName = Environment.GetEnvironmentVariable(Config.SampleBlobContainerName);
+                    UploadManager uploadManager = new UploadManager(Config.StorageConnectionString);
                     await uploadManager.UploadStreamAsync(stream, fileName);
                 }
+
+                //Convert / create MP3 version(s)
 
                 return new StatusCodeResult(StatusCodes.Status201Created);
 

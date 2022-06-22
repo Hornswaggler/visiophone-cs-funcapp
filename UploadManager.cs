@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
+using visiophone_cs_funcapp;
 
 namespace vp
 {
@@ -18,20 +19,16 @@ namespace vp
             _blobServiceClient = new BlobServiceClient(connectionString);
         }
 
-
         public Task UploadStreamAsync(Stream stream, string name)
         {
-            BlobContainerClient container = _blobServiceClient.GetBlobContainerClient("samples");
-
-            BlockBlobClient blobClient = container.GetBlockBlobClient(name);
-            int blockSize = 1 * 1024 * 1024; //1 MB Block
+            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name);
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();
-
+                
             var bytesRemaining = stream.Length;
             do {
-                var dataToRead = Math.Min(bytesRemaining, blockSize);
+                var dataToRead = Math.Min(bytesRemaining, Config.BufferSize);
                 byte[] data = new byte[dataToRead];
                 var dataRead = stream.Read(data, offset, (int)dataToRead);
                 bytesRemaining -= dataRead;
@@ -45,7 +42,6 @@ namespace vp
                 }
             } while (bytesRemaining > 0);
 
-            Console.WriteLine("All blocks uploaded. Now committing block list.");
             // TODO should come from request
             var headers = new BlobHttpHeaders()
             {
