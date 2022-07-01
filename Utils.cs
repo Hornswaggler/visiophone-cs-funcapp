@@ -46,17 +46,14 @@ static class Utils
         //try
         //{
         // TODO: Is the blob Name inside the outputBlob?
-            await FfmpegWrapper.Transcode(transcodeParams.InputFile, transcodeParams.FfmpegParams, outputFilePath, log);
-        //await outputBlob.UploadAsync(outputFilePath);
+        await FfmpegWrapper.Transcode(transcodeParams.InputFile, transcodeParams.FfmpegParams, outputFilePath, log);
         //}
         //finally
         //{
-        //    //TryDeleteFiles(log, outputFilePath);
+        //    TryDeleteFiles(log, outputFilePath);
         //}
 
         return outputFilePath;
-
-        //return GetReadSas(outputBlob, TimeSpan.FromHours(2));
     }
 
     public static void TryDeleteFiles(ILogger log, params string[] files)

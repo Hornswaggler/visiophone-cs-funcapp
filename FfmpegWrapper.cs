@@ -22,9 +22,9 @@ static class FfmpegWrapper
         var home = Environment.GetEnvironmentVariable("HOME");
         if (string.IsNullOrEmpty(home))
         {
-            return Path.Combine(GetAssemblyDirectory(), "..\\ptemp\\ffmpeg.exe");
+            return Path.Combine(GetAssemblyDirectory(), "..\\Tools\\ffmpeg.exe");
         }
-        return Path.Combine(home, "site\\wwwroot\\ptemp\\ffmpeg.exe");
+        return Path.Combine(home, "site\\wwwroot\\Tools\\ffmpeg.exe");
     }
 
     public static string GetAssemblyDirectory()

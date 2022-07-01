@@ -1,5 +1,4 @@
-﻿//using System.Threading;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -39,11 +38,6 @@ class FfmpegVideoProcessor : IVideoProcessor
                 OutputExtension = ".mp4",
                 InputFile = incomingFile,
                 FfmpegParams = $"-f concat -safe 0 -i \"{localConcat}\" -codec copy "
-
-                //InputFile = $"concat:{introLocation}|{incomingFile}", // doesn't work with Uris
-                //FfmpegParams = "-codec copy"
-                //InputFile = introLocation,
-                //FfmpegParams = $"-i \"{incomingFile}\" -filter_complex \"[0:0] [0:1] [1:0] [1:1] concat=n=2:v=1:a=1 [v] [a]\" -map \"[v]\" -map \"[a]\""
             };
             return await Utils.TranscodeAndUpload(transcodeParams, outputBlob, log, null);
         }
@@ -70,8 +64,6 @@ class FfmpegVideoProcessor : IVideoProcessor
 
         using (FileStream fs = new FileStream(tempFileLocation, FileMode.Open))
         {
-            // TODO: move files to new location
-
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();
