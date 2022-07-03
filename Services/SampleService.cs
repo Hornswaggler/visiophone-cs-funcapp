@@ -2,9 +2,8 @@
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using vp.Models;
 
-namespace vp.Services
+namespace vp
 {
     public class SampleService : ISampleService
     {

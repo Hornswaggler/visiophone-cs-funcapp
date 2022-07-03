@@ -3,31 +3,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using visiophone_cs_funcapp;
+using vp;
 
 namespace vp
 {
     public class UploadManager
     {
-        private BlobServiceClient _blobServiceClient;
-
-        public UploadManager(string connectionString)
-        {
-            _blobServiceClient = new BlobServiceClient(connectionString);
-        }
-
         public Task UploadStreamAsync(Stream stream, string name)
         {
             BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name);
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();
-                
+
             var bytesRemaining = stream.Length;
-            do {
+            do
+            {
                 var dataToRead = Math.Min(bytesRemaining, Config.BufferSize);
                 byte[] data = new byte[dataToRead];
                 var dataRead = stream.Read(data, offset, (int)dataToRead);

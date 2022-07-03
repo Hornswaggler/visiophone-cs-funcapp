@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using vp.Models;
 
-namespace vp.Services
+namespace vp
 {
     public interface ISampleService
     {

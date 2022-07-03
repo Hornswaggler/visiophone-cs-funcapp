@@ -1,11 +1,10 @@
-﻿using vp;
-using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Security.Authentication;
-using vp.Services;
+using vp;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp

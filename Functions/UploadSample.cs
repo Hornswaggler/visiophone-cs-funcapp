@@ -6,10 +6,8 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using vp.Services;
-using vp.Models;
 
-namespace vp.Functions
+namespace vp
 {
     public class upload_sample
     {
@@ -40,8 +38,7 @@ namespace vp.Functions
                 {
                     string connectionString = Environment.GetEnvironmentVariable(Config.StorageConnectionString);
                     string containerName = Environment.GetEnvironmentVariable(Config.SampleBlobContainerName);
-                    UploadManager uploadManager = new UploadManager(Config.StorageConnectionString);
-                    await uploadManager.UploadStreamAsync(stream, fileName);
+                    await Utils.UploadStreamAsync(stream, fileName);
                 }
 
                 return new StatusCodeResult(StatusCodes.Status201Created);

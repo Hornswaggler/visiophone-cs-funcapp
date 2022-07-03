@@ -1,13 +1,11 @@
 ﻿using MongoDB.Bson;
 
-namespace vp.Models {
+namespace vp {
 	public class SampleModel
 	{
 		public SampleModel() { }
 
 		public ObjectId _id { get; set; }
-
-		//public string ownerId { get; set; }
 
 		public string tag { get; set; }
 
