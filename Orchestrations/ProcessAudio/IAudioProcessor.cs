@@ -3,7 +3,7 @@ using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 
-namespace vp {
+namespace vp.orchestrations.processaudio{
     interface IAudioProcessor
     {
         Task<string> TranscodeAsync(TranscodeParams transcodeParams, ILogger log);

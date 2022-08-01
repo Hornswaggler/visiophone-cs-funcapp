@@ -6,39 +6,32 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
+using vp.models;
+using vp.services;
 
-// namespace vp
-// {
-//     public class Sample
-//     {
-//         private readonly ISampleService _sampleService;
+namespace vp.functions
+{
+    public class Sample
+    {
+        private readonly ISampleService _sampleService;
 
-//         public Sample(ISampleService sampleService)
-//         {
-//             _sampleService = sampleService;
-//         }
+        public Sample(ISampleService sampleService)
+        {
+            _sampleService = sampleService;
+        }
 
-//         [FunctionName("sample")]
-//         public async Task<IActionResult> Run(
-//             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-//             ILogger log)
-//         {
-//             log.LogInformation("C# HTTP trigger function processed a request.");
+        [FunctionName("sample")]
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
 
-//             string name = req.Query["name"];
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
 
-//             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-//             dynamic data = JsonConvert.DeserializeObject(requestBody);
-//             name = name ?? data?.name;
-
-//             string responseMessage = string.IsNullOrEmpty(name)
-//                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-//                 : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
-//             var result = await this._sampleService.GetSamples();
-
-//             return new OkObjectResult(result);
-//         }
-//     }
-// }
+  
+            return new OkObjectResult(await this._sampleService.GetSamples(request));
+        }
+    }
+}

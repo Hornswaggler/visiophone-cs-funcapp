@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace vp
+namespace vp.orchestrations.processaudio
 {
     static class FfmpegWrapper
     {

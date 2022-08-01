@@ -1,4 +1,4 @@
-﻿namespace vp {
+﻿namespace vp.orchestrations.processaudio {
     public class TranscodeParams
     {
         public string InputFile { get; set; }
@@ -7,4 +7,3 @@
         public string FfmpegParams { get; set; }
     }
 }
-

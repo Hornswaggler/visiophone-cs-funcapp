@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Security.Authentication;
 using vp;
+using vp.services;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp

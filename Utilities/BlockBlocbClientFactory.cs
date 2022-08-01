@@ -1,7 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 
-namespace vp
+namespace vp.util
 {
     public class BlockBlobClientFactory
     {

@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.models;
 
-namespace vp
+namespace vp.services
 {
     public interface ISampleService
     {
-        Task  AddSample(SampleModel sample);
-        Task<List<SampleModel>> GetSamples();
+        Task  AddSample(SampleRequest sample);
+        Task<List<SampleRequest>> GetSamples(SampleRequest page);
 
     }
 }

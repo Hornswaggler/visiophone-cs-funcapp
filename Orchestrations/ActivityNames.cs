@@ -1,4 +1,4 @@
-﻿namespace vp
+﻿namespace vp.orchestrations
 {
     static class ActivityNames
     {

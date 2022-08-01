@@ -6,8 +6,11 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using vp.services;
+using vp.models;
+using vp.util;
 
-namespace vp
+namespace vp.functions
 {
     public class upload_sample
     {
@@ -26,7 +29,7 @@ namespace vp
             try
             {
                 var sample = req.Form.Files[0];
-                SampleModel data = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
+                SampleRequest data = JsonConvert.DeserializeObject<SampleRequest>(req.Form["data"]);
 
                 await _sampleService.AddSample(data);
 

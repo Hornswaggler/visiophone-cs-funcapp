@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using vp.util;
 
-namespace vp
+namespace vp.orchestrations.processaudio
 {
     class FfmpegAudioProcessor : IAudioProcessor
     {

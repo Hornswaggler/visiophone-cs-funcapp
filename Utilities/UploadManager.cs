@@ -7,7 +7,7 @@ using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using vp;
 
-namespace vp
+namespace vp.util
 {
     public class UploadManager
     {

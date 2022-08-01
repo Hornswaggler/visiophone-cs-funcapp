@@ -10,8 +10,9 @@ using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using vp.orchestrations.processaudio;
 
-namespace vp {
+namespace vp.util {
     static class Utils
     {
         public static bool IsInDemoMode => Environment.GetEnvironmentVariable("DemoMode") == "true";

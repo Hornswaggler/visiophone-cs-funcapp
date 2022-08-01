@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using vp.orchestrations;
 
-namespace vp {
+namespace vp.functions {
     public static class ProcessAudioFunctions
     {
         [FunctionName(nameof(AutoProcessUploadedVideos))]
