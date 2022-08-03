@@ -8,7 +8,5 @@ namespace vp.services
     {
         Task  AddSample(SampleRequest sample);
         Task<List<SampleRequest>> GetSamples(SampleRequest page);
-
     }
 }
-
