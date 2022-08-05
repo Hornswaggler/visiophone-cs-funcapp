@@ -29,7 +29,6 @@ namespace vp.functions
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
-
   
             return new OkObjectResult(await this._sampleService.GetSamples(request));
         }

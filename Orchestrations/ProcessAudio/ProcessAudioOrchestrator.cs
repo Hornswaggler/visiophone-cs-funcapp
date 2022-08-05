@@ -30,7 +30,7 @@ namespace vp.orchestrations.processaudio
 
                 foreach (string location in transcodedLocations)
                 {
-                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, localFilePath);
+                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, location);
                 }
 
                 return transcodedLocations;

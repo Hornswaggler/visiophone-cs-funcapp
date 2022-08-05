@@ -20,6 +20,20 @@ namespace vp.services
         {
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
+
+            // TODO Make this into a provisioning script to be run in the deployment pipeline....
+            // This will provision the Sample collection (specifically for local dev)
+            //var bson = new BsonDocument
+            //{
+            //    { "customAction", "CreateCollection" },
+            //    { "collection", "samples" },//update CollectionName
+            //    { "shardKey", "key" }, //update ShardKey
+            //    { "offerThroughput", 400} //update Throughput
+            //};
+            //var shellCommand = new BsonDocumentCommand<BsonDocument>(bson);
+            //_database.RunCommand(shellCommand);
+
+
             _samples = _database.GetCollection<SampleRequest>("samples");
         }
  
