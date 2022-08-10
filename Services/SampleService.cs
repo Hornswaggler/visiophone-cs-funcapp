@@ -16,7 +16,7 @@ namespace vp.services
         private readonly IMongoCollection<SampleModel> _samples;
 
         // TODO This should be configurable
-        public static int ITEMS_PER_PAGE = 5;
+        public static int ITEMS_PER_PAGE = 50;
 
         public SampleService(MongoClient mongoClient, IConfiguration configuration)
         {
