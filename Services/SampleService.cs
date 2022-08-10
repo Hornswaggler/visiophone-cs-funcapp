@@ -4,8 +4,8 @@ using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using vp.DTO;
 using vp.models;
-using vp.services;
 
 namespace vp.services
 {
@@ -13,8 +13,10 @@ namespace vp.services
     {
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
-        private readonly IMongoCollection<SampleRequest> _samples;
-        private readonly int _itemsPerPage = 50;
+        private readonly IMongoCollection<SampleModel> _samples;
+
+        // TODO This should be configurable
+        public static int ITEMS_PER_PAGE = 5;
 
         public SampleService(MongoClient mongoClient, IConfiguration configuration)
         {
@@ -33,28 +35,34 @@ namespace vp.services
             //var shellCommand = new BsonDocumentCommand<BsonDocument>(bson);
             //_database.RunCommand(shellCommand);
 
-
-            _samples = _database.GetCollection<SampleRequest>("samples");
+            _samples = _database.GetCollection<SampleModel>("samples");
         }
  
-        public async Task AddSample(SampleRequest sample)
+        public async Task AddSample(SampleModel sample)
         {
             await _samples.InsertOneAsync(sample);
         }
 
-        public async Task<List<SampleRequest>> GetSamples(SampleRequest request) {
-            var builder = Builders<SampleRequest>.Filter;
-            BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{request.description}.*", RegexOptions.IgnoreCase));
-            FilterDefinition<SampleRequest> filter = builder.Regex("description", queryExpr);
-            var results = await _samples.FindAsync<SampleRequest>(filter);
+        public async Task<SampleQueryResult> GetSamples(SampleRequest request) {
+            var builder = Builders<SampleModel>.Filter;
+            BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{request.query}.*", RegexOptions.IgnoreCase));
+            FilterDefinition<SampleModel> filter = builder.Regex("description", queryExpr);
 
-            return results.ToList();
+            FindOptions<SampleModel> options = new FindOptions<SampleModel>
+            {
+                Limit = ITEMS_PER_PAGE,
+                Skip = request.index
+            };
 
-            //return Task.FromResult<SampleRequest>();
-                //
-                //.Limit(_itemsPerPage).ToList());
+            var samples = await _samples.FindAsync<SampleModel>(filter, options);
+            List<SampleModel> result = samples.ToList();
+
+            return new SampleQueryResult
+            {
+                samples = result,
+                nextResultIndex = result.Count == 0 ? -1 : request.index + ITEMS_PER_PAGE
+            };
         }
-
     }
 }
 

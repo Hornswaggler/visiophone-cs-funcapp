@@ -1,13 +1,12 @@
 ﻿namespace vp.models {
-	public class SampleRequest : BaseModel
+	public class SampleModel : BaseModel
 	{
-		public SampleRequest() : base() {
-			this._paginated = true;
-		}
+		public SampleModel() : base() {}
 
 		public string tag { get; set; }
 
 		public string description { get; set; }
-	}
 
+		public string fileId { get; set; }
+	}
 }

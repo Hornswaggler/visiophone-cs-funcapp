@@ -17,7 +17,6 @@ namespace vp.functions {
         {
             try
             {
-                string id = new Guid().ToString();
                 var orchestrationId = await starter.StartNewAsync<string>(
                     OrchestratorNames.ProcessAudio, name);
 

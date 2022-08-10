@@ -28,14 +28,18 @@ namespace vp.functions
         {
             try
             {
-                var sample = req.Form.Files[0];
-                SampleRequest data = JsonConvert.DeserializeObject<SampleRequest>(req.Form["data"]);
+                var meta = req.Form.Files[0];
+                SampleModel sample = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
 
-                await _sampleService.AddSample(data);
+                sample.fileId = $"{Guid.NewGuid()}";
+
+                await _sampleService.AddSample(sample);
+
+                string extension = meta.FileName.IndexOf('.') != -1 ? ".wav" : meta.FileName.Split('.')[0];
+
+                string fileName = $"{sample.fileId}_{sample._id}{extension}";
 
                 //TODO: Update to accomodate multiple files per upload
-                Guid guid = Guid.NewGuid();
-                string fileName = $"{guid}_{sample.FileName}";
                 var file = req.Form.Files[0];
                 using (var stream = file.OpenReadStream())
                 {

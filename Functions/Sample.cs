@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using vp.models;
 using vp.services;
+using System.Collections.Generic;
+using vp.DTO;
 
 namespace vp.functions
 {
@@ -25,12 +27,10 @@ namespace vp.functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
-  
-            return new OkObjectResult(await this._sampleService.GetSamples(request));
+
+            return new OkObjectResult(await _sampleService.GetSamples(request));
         }
     }
 }
