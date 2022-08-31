@@ -55,6 +55,8 @@ namespace vp.orchestrations.processaudio
             string localFilePath = paths[0];
             string tempFolderPath = paths[1];
 
+            string mp3FileName = $"{localFilePath.Split('_')[0]}.mp3";
+
             var transcodeProfiles = await
                 ctx.CallActivityAsync<TranscodeParams[]>(ActivityNames.GetTranscodeProfiles, null);
 
@@ -63,7 +65,7 @@ namespace vp.orchestrations.processaudio
             foreach (var transcodeProfile in transcodeProfiles)
             { 
                 transcodeProfile.InputFile = tempFolderPath + "\\" + localFilePath;
-                transcodeProfile.OutputFile = tempFolderPath + "\\" + Guid.NewGuid() + ".mp3";
+                transcodeProfile.OutputFile = tempFolderPath + "\\" + mp3FileName;
                 var transcodeTask = ctx.CallActivityAsync<string>
                     (ActivityNames.TranscodeAudio, transcodeProfile);
                 transcodeTasks.Add(transcodeTask);

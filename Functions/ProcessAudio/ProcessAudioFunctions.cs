@@ -6,7 +6,8 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using vp.orchestrations;
 
-namespace vp.functions {
+namespace visiophone_cs_funcapp.Functions.ProcessAudio
+{
     public static class ProcessAudioFunctions
     {
         [FunctionName(nameof(AutoProcessUploadedVideos))]

@@ -6,23 +6,22 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using vp.models;
+
 using vp.services;
-using System.Collections.Generic;
 using vp.DTO;
 
-namespace vp.functions
+namespace vp.Functions.Sample
 {
-    public class Sample
+    public class SampleSearch
     {
         private readonly ISampleService _sampleService;
 
-        public Sample(ISampleService sampleService)
+        public SampleSearch(ISampleService sampleService)
         {
             _sampleService = sampleService;
         }
 
-        [FunctionName("sample")]
+        [FunctionName("sample_search")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)

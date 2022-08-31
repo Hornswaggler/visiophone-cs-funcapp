@@ -21,7 +21,6 @@ namespace vp.orchestrations.processaudio
             [ActivityTrigger] object input,
             ILogger log)
         {
-
             // TODO: Migrate this to the Config object...
             string transcodeProfiles = Environment.GetEnvironmentVariable("TranscodeProfiles");
 
@@ -75,7 +74,10 @@ namespace vp.orchestrations.processaudio
             {
                 // TODO: Fix this drivel
                 string blobName = incomingFile
-                    .Substring(incomingFile.LastIndexOf('\\') + 1).Replace("\\", "").Replace("\"", "").Replace("]", "");
+                    .Substring(incomingFile.LastIndexOf('\\') + 1)
+                    .Replace("\\", "")
+                    .Replace("\"", "")
+                    .Replace("]", "");
 
                 BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
                 BlobContainerClient container = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);

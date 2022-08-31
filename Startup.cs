@@ -27,6 +27,7 @@ namespace vp
 
             builder.Services.AddSingleton((s) => new MongoClient(settings));
             builder.Services.AddTransient<ISampleService, SampleService>();
+            builder.Services.AddTransient<IUserService, UserService>();
         }
     }
 

@@ -9,21 +9,22 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.models;
 using vp.util;
+using vp;
 
-namespace vp.functions
+namespace vp.Functions.Sample
 {
-    public class upload_sample
+    public class SampleUpload
     {
         private readonly ISampleService _sampleService;
 
-        public upload_sample(ISampleService sampleService)
+        public SampleUpload(ISampleService sampleService)
         {
             _sampleService = sampleService;
         }
 
-        [FunctionName("upload_sample")]
+        [FunctionName("sample_upload")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
             try
