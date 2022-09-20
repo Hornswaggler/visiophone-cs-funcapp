@@ -55,9 +55,9 @@ namespace vp.util {
             return transcodeParams.OutputFile;
         }
 
-        public static Task UploadStreamAsync(Stream stream, string name)
+        public static Task UploadStreamAsync(Stream stream, string name, string containerName, string contentType)
         {
-            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name);
+            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name, containerName);
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();
@@ -82,7 +82,7 @@ namespace vp.util {
             // TODO should come from request
             var headers = new BlobHttpHeaders()
             {
-                ContentType = Config.WAV_CONTENT_TYPE
+                ContentType = contentType
             };
             blobClient.CommitBlockList(blockIds, headers);
 

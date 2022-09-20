@@ -29,7 +29,7 @@ namespace vp.orchestrations.processaudio
                 return new[]
                 {
                 new TranscodeParams {
-                    OutputExtension = ".mp3",
+                    OutputExtension = ".ogg",
                     FfmpegParams = $"-b:a {Config.PreviewBitrate}k"
                 }
             };
@@ -93,9 +93,7 @@ namespace vp.orchestrations.processaudio
             {
                 Utils.TryDeleteFiles(log, new[] { incomingFile });
             }
-
         }
-
     }
 }
 

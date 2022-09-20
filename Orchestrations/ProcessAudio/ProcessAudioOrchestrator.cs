@@ -55,7 +55,7 @@ namespace vp.orchestrations.processaudio
             string localFilePath = paths[0];
             string tempFolderPath = paths[1];
 
-            string mp3FileName = $"{localFilePath.Split('_')[0]}.mp3";
+            string mp3FileName = $"{localFilePath.Split('_')[0]}.ogg";
 
             var transcodeProfiles = await
                 ctx.CallActivityAsync<TranscodeParams[]>(ActivityNames.GetTranscodeProfiles, null);

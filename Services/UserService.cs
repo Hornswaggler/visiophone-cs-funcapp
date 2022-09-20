@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using System;
 using System.Threading.Tasks;
 using vp.DTO;
 using vp.Models;
@@ -13,6 +15,8 @@ namespace vp.services
         private readonly IMongoDatabase _database;
         private readonly IMongoCollection<UserProfileModel> _users;
 
+        private string DEFAULT_ID = new ObjectId().ToString();
+
         public UserService(MongoClient mongoClient, IConfiguration configuration) {
             //TODO: move this up a layer...
             _mongoClient = mongoClient;
@@ -20,34 +24,37 @@ namespace vp.services
             _users = _database.GetCollection<UserProfileModel>("users");
         }
 
-        public async Task<UserProfileModel> GetUserProfile(UserProfileRequest request)
+        public UserProfileModel GetUserProfile(UserProfileRequest request)
         {
-            var result = await _users.FindAsync(u => u._id.Equals(request.userId));
+            UserProfileModel otherResult = _users.Find(u => u.accountId.Equals(request.userId)).FirstOrDefault<UserProfileModel>();
 
-            int i = 0;
-            i++;
 
-            return await result.FirstOrDefaultAsync();
-
-            //var builder = Builders<UserProfileModel>.Filter;
-            //BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{request.query}.*", RegexOptions.IgnoreCase));
+             return otherResult;
 
         }
 
         public async Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile)
         {
-            await _users.InsertOneAsync(userProfile);
+            try
+            {
+                if (userProfile._id == null)
+                {
+                    await _users.InsertOneAsync(userProfile);
+                    return userProfile;
 
-            int i = 0;
-            i++;
+                }
+                else
+                {
+                    UserProfileModel result = await _users.FindOneAndReplaceAsync<UserProfileModel>(u => u._id.Equals(userProfile._id), userProfile);
+                    return userProfile;
+                }
+            }
+            catch (Exception e) {
+                int i = 0;
+                i++;
+            }
 
             return userProfile;
-
-            //return await result.FirstOrDefaultAsync();
-
-            //var builder = Builders<UserProfileModel>.Filter;
-            //BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{request.query}.*", RegexOptions.IgnoreCase));
-
         }
     }
 }

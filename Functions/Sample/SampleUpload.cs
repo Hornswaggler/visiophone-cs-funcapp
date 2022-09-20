@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.models;
 using vp.util;
-using vp;
 
 namespace vp.Functions.Sample
 {
@@ -42,11 +41,10 @@ namespace vp.Functions.Sample
 
                 //TODO: Update to accomodate multiple files per upload
                 var file = req.Form.Files[0];
+                var contentType = file.ContentType;
                 using (var stream = file.OpenReadStream())
                 {
-                    string connectionString = Environment.GetEnvironmentVariable(Config.StorageConnectionString);
-                    string containerName = Environment.GetEnvironmentVariable(Config.SampleBlobContainerName);
-                    await Utils.UploadStreamAsync(stream, fileName);
+                    await Utils.UploadStreamAsync(stream, fileName, Config.SampleBlobContainerName, file.ContentType);
                 }
 
                 return new StatusCodeResult(StatusCodes.Status201Created);

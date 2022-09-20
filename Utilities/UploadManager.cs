@@ -13,7 +13,7 @@ namespace vp.util
     {
         public Task UploadStreamAsync(Stream stream, string name)
         {
-            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name);
+            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name, Config.SampleBlobContainerName);
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();

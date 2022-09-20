@@ -6,7 +6,7 @@ namespace vp.services
 {
     public interface IUserService
     {
-        Task<UserProfileModel> GetUserProfile(UserProfileRequest request);
+        UserProfileModel GetUserProfile(UserProfileRequest request);
         Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile);
     }
 }

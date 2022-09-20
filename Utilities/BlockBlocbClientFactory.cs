@@ -12,9 +12,9 @@ namespace vp.util
             return container.GetBlockBlobClient(blobName);
         }
 
-        public static BlockBlobClient MakeSampleBlockBlobClient(string blobName)
+        public static BlockBlobClient MakeSampleBlockBlobClient(string blobName, string containerName)
         {
-            return MakeBlockBlobClient(Config.SampleBlobContainerName, blobName);
+            return MakeBlockBlobClient(containerName, blobName);
         }
     }
 }

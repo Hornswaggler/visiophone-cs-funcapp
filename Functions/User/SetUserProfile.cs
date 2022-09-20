@@ -8,6 +8,11 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.Models;
 using System;
+using vp;
+using vp.util;
+using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 
 namespace visiophone_cs_funcapp.Functions.User
 {
@@ -25,19 +30,18 @@ namespace visiophone_cs_funcapp.Functions.User
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            //var meta = req.Form.Files[0];
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            //UserProfileModel userProfile = JsonConvert.DeserializeObject<UserProfileModel>(req.Form["data"]);
-            await new StreamReader(req.Body).ReadToEndAsync();
-            UserProfileModel userProfile = JsonConvert.DeserializeObject<UserProfileModel>(requestBody);
 
+            var meta = req.Form.Files[0];
+            var contentType = req.Form.Files[0].ContentType;
+            UserProfileModel userProfile = BsonSerializer.Deserialize<UserProfileModel>(req.Form["data"]);
             userProfile.avatarId = $"{Guid.NewGuid()}";
+            
 
-            UserProfileModel result = await _userService.SetUserProfile(userProfile);
-
-            //string extension = meta.FileName.IndexOf('.') != -1 ? ".wav" : meta.FileName.Split('.')[0];
-
-            return result;
+            using (Stream stream = meta.OpenReadStream()) {
+                await Utils.UploadStreamAsync(stream, userProfile.avatarId + ".png", "avatars", contentType);
+            }
+        
+            return await _userService.SetUserProfile(userProfile);
         }
     }
 

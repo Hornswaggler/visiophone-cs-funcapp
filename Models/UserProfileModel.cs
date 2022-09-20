@@ -1,10 +1,11 @@
-﻿using vp.models;
+﻿using System;
+using vp.models;
 
 namespace vp.Models
 {
     public class UserProfileModel : BaseModel
     {
-        public string avatarId { get; set; }
-
+        public string accountId { get; set; }
+        public string avatarId { get; set; } = $"{Guid.NewGuid()}";
     }
 }
