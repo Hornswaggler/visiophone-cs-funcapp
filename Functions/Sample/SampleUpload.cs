@@ -22,38 +22,25 @@ namespace vp.Functions.Sample
         }
 
         [FunctionName("sample_upload")]
-        public async Task<IActionResult> Run(
+        public async Task<SampleModel> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
-            try
-            {
-                var meta = req.Form.Files[0];
-                SampleModel sample = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
 
-                sample.fileId = $"{Guid.NewGuid()}";
+            SampleModel sampleMetadata = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
+            sampleMetadata.fileId = $"{Guid.NewGuid()}";
+            await _sampleService.AddSample(sampleMetadata);
 
-                await _sampleService.AddSample(sample);
+            var form = req.Form;
+            string filename = $"{sampleMetadata._id}";
 
-                string extension = meta.FileName.IndexOf('.') != -1 ? ".wav" : meta.FileName.Split('.')[0];
+            var sample = form.Files["sample"];
+            Utils.UploadFormFileAsync(sample, Config.SampleBlobContainerName, filename);
 
-                string fileName = $"{sample.fileId}_{sample._id}{extension}";
+            var image = form.Files["image"];
+            Utils.UploadFormFileAsync(image, Config.CoverArtContainerName, filename);
 
-                //TODO: Update to accomodate multiple files per upload
-                var file = req.Form.Files[0];
-                var contentType = file.ContentType;
-                using (var stream = file.OpenReadStream())
-                {
-                    await Utils.UploadStreamAsync(stream, fileName, Config.SampleBlobContainerName, file.ContentType);
-                }
-
-                return new StatusCodeResult(StatusCodes.Status201Created);
-            }
-            catch (Exception e)
-            {
-                log.LogError(e, "Bad request");
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-            }
+            return sampleMetadata;
         }
     }
 }

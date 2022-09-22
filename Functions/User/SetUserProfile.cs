@@ -4,14 +4,10 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using vp.services;
 using vp.Models;
 using System;
-using vp;
 using vp.util;
-using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 
 namespace visiophone_cs_funcapp.Functions.User
@@ -30,17 +26,15 @@ namespace visiophone_cs_funcapp.Functions.User
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-
             var meta = req.Form.Files[0];
             var contentType = req.Form.Files[0].ContentType;
             UserProfileModel userProfile = BsonSerializer.Deserialize<UserProfileModel>(req.Form["data"]);
             userProfile.avatarId = $"{Guid.NewGuid()}";
-            
 
             using (Stream stream = meta.OpenReadStream()) {
-                await Utils.UploadStreamAsync(stream, userProfile.avatarId + ".png", "avatars", contentType);
+                Utils.UploadStream(stream, userProfile.avatarId + ".png", "avatars", contentType);
             }
-        
+
             return await _userService.SetUserProfile(userProfile);
         }
     }

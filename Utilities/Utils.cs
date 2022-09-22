@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
-using Microsoft.Azure.WebJobs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using vp.orchestrations.processaudio;
@@ -46,16 +46,12 @@ namespace vp.util {
 
         public static async Task<string> Transcode(TranscodeParams transcodeParams, ILogger log)
         {
-            //var outputFilePath = Path.Combine(GetTempTranscodeFolder(ctx), $"{Guid.NewGuid()}{transcodeParams.OutputExtension}");
-
-            //string outputFilePath = Path.GetTempPath();
-
             await FfmpegWrapper.Transcode(transcodeParams.InputFile, transcodeParams.FfmpegParams, transcodeParams.OutputFile, log);
 
             return transcodeParams.OutputFile;
         }
 
-        public static Task UploadStreamAsync(Stream stream, string name, string containerName, string contentType)
+        public static bool UploadStream(Stream stream, string name, string containerName, string contentType)
         {
             BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name, containerName);
             int offset = 0;
@@ -86,7 +82,16 @@ namespace vp.util {
             };
             blobClient.CommitBlockList(blockIds, headers);
 
-            return Task.FromResult<object>(null);
+            return true;
+        }
+
+        public static void UploadFormFileAsync(IFormFile file, string containerName, string fileName)
+        {
+            string fileExtension = file.FileName.Split('.')[1];
+            using (var stream = file.OpenReadStream())
+            {
+                UploadStream(stream, $"{fileName}.{fileExtension}", containerName, file.ContentType);
+            }
         }
 
         public static void TryDeleteFiles(ILogger log, params string[] files)
