@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
@@ -15,10 +14,12 @@ namespace vp.Functions.Sample
     public class SampleUpload
     {
         private readonly ISampleService _sampleService;
+        private readonly ILogger<SampleUpload> _log;
 
-        public SampleUpload(ISampleService sampleService)
+        public SampleUpload(ISampleService sampleService, ILogger<SampleUpload> log)
         {
             _sampleService = sampleService;
+            _log = log;
         }
 
         [FunctionName("sample_upload")]
@@ -26,10 +27,18 @@ namespace vp.Functions.Sample
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
+            SampleModel sampleMetadata = new SampleModel();
+            try
+            {
+                sampleMetadata = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
+                await _sampleService.AddSample(sampleMetadata);
+            }catch(Exception e)
+            {
+                log.LogError(e, "Failed to deserialize incoming sample json:");
+            }
 
-            SampleModel sampleMetadata = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
-            sampleMetadata.fileId = $"{Guid.NewGuid()}";
-            await _sampleService.AddSample(sampleMetadata);
+            
+            
 
             var form = req.Form;
             string filename = $"{sampleMetadata._id}";
