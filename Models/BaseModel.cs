@@ -7,6 +7,7 @@ namespace vp.models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string _id { get; set; }
+        [BsonIgnoreIfDefault]
+        public string _id { get; set; } = null;
     }
 }

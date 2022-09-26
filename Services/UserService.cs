@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
 using System.Threading.Tasks;
 using vp.DTO;
 using vp.Models;
-using vp.services;
 
 namespace vp.services
 {
@@ -26,33 +24,22 @@ namespace vp.services
 
         public UserProfileModel GetUserProfile(UserProfileRequest request)
         {
-            UserProfileModel otherResult = _users.Find(u => u.accountId.Equals(request.userId)).FirstOrDefault<UserProfileModel>();
-
+            string accountId = request.userId.Split('.')[1];
+            UserProfileModel otherResult = _users.Find(u => u.accountId.Equals(accountId)).FirstOrDefault<UserProfileModel>();
 
              return otherResult;
-
         }
 
         public async Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile)
         {
-            try
+            if (userProfile.accountId.Contains("."))
             {
-                if (userProfile._id == null)
-                {
-                    await _users.InsertOneAsync(userProfile);
-                    return userProfile;
+                userProfile.accountId = userProfile.accountId.Split('.')[1];
 
-                }
-                else
-                {
-                    UserProfileModel result = await _users.FindOneAndReplaceAsync<UserProfileModel>(u => u._id.Equals(userProfile._id), userProfile);
-                    return userProfile;
-                }
             }
-            catch (Exception e) {
-                int i = 0;
-                i++;
-            }
+
+            var filter = Builders<UserProfileModel>.Filter.Where(profile => profile.accountId == userProfile.accountId);
+            await _users.ReplaceOneAsync(filter, userProfile, new ReplaceOptions { IsUpsert = true });
 
             return userProfile;
         }
