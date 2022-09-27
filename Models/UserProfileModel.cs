@@ -8,5 +8,6 @@ namespace vp.Models
         public string accountId { get; set; } = "";
         public string avatarId { get; set; } = $"{Guid.NewGuid()}";
         public string customUserName { get; set; } = "";
+        public string seller { get; set; } = "";
     }
 }
