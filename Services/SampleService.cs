@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using vp.DTO;
 using vp.models;
+using System.Linq;
 
 namespace vp.services
 {
@@ -38,9 +39,10 @@ namespace vp.services
             _samples = _database.GetCollection<SampleModel>("samples");
         }
  
-        public async Task AddSample(SampleModel sample)
+        public async Task<SampleModel> AddSample(SampleModel sample)
         {
             await _samples.InsertOneAsync(sample);
+            return sample;
         }
 
         public async Task<SampleQueryResult> GetSamples(SampleRequest request) {
@@ -62,6 +64,18 @@ namespace vp.services
                 samples = result,
                 nextResultIndex = result.Count == 0 ? -1 : request.index + ITEMS_PER_PAGE
             };
+        }
+
+        public async Task<List<SampleModel>> GetSamplesById(IEnumerable<string> sampleIds)
+        {
+            var samples = await _samples.FindAsync<SampleModel>(sample => sampleIds.Contains(sample._id));
+            return samples.ToList<SampleModel>();
+        }
+
+        public async Task<SampleModel> GetSampleById(string sampleId)
+        {
+            var sampleQuery = await _samples.FindAsync<SampleModel>(sample => sample._id.Equals(sampleId));
+            return await sampleQuery.FirstOrDefaultAsync<SampleModel>();
         }
     }
 }

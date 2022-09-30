@@ -59,7 +59,7 @@ namespace vp.orchestrations.processaudio
 
             using (var fs = new FileStream(localFilePath, FileMode.Create))
             {
-                BlockBlobClient blobClient = BlockBlobClientFactory.MakeBlockBlobClient(Config.SampleBlobContainerName, fileName);
+                BlockBlobClient blobClient = BlobFactory.MakeBlockBlobClient(Config.SampleBlobContainerName, fileName);
                 await blobClient.DownloadToAsync(fs);
                 return "Downloaded blob to local temp dir";
             }

@@ -10,6 +10,7 @@ namespace vp
         private static string MONGO_CONNECTION_STRING = "MONGO_CONNECTION_STRING";
         private static string SAMPLE_TRANSCODES_CONTAINER_NAME = "SAMPLE_TRANSCODES_CONTAINER_NAME";
         private static string TRANSCODE_PROFILES = "TRANSCODE_PROFILES";
+        private static string USER_LIBRARY_CONTAINER_NAME = "USER_LIBRARY_CONTAINER_NAME";
         public static string FFMPEG_PATH = "site\\wwwroot\\Tools\\ffmpeg.exe";
         public static string HOME = "..\\Tools\\ffmpeg.exe";
         public static string WAV_CONTENT_TYPE = "audio/wav";
@@ -19,7 +20,8 @@ namespace vp
         public static string MongoConnectionString { get; set; } = Environment.GetEnvironmentVariable(MONGO_CONNECTION_STRING);
         public static string SampleTranscodeContainerName { get; set; } = Environment.GetEnvironmentVariable(SAMPLE_TRANSCODES_CONTAINER_NAME);
         public static string CoverArtContainerName { get; set; } = Environment.GetEnvironmentVariable(COVER_ART_CONTAINER_NAME);
-        public static string TranscodeProfiles { get; set; } = Environment.GetEnvironmentVariable(TRANSCODE_PROFILES);        
+        public static string TranscodeProfiles { get; set; } = Environment.GetEnvironmentVariable(TRANSCODE_PROFILES);
+        public static string UserLibraryContainerName { get; set; } = Environment.GetEnvironmentVariable(USER_LIBRARY_CONTAINER_NAME);
 
         public static int BufferSize { get; set; } = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;

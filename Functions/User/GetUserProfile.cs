@@ -8,17 +8,20 @@ using Newtonsoft.Json;
 using vp.DTO;
 using vp.services;
 using vp.Models;
-using System;
+using System.Linq;
+
 
 namespace visiophone_cs_funcapp.Functions.User
 {
     public class GetUserProfile
     {
         private readonly IUserService _userService;
+        private readonly ISampleService _sampleService;
 
-        public GetUserProfile(IUserService userService)
+        public GetUserProfile(IUserService userService, ISampleService sampleService)
         {
             _userService = userService;
+            _sampleService = sampleService;
         }
 
         [FunctionName("get_user_profile")]
@@ -26,10 +29,22 @@ namespace visiophone_cs_funcapp.Functions.User
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+            //TODO: Add auth check here (check contents w/ header to ensure they match)
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-         
             UserProfileRequest request = JsonConvert.DeserializeObject<UserProfileRequest>(requestBody);
-            return _userService.GetUserProfile(request);
+            var userProfile = _userService.GetUserProfile(request);
+
+            userProfile.samples.AddRange(
+                await _sampleService.GetSamplesById(
+                    userProfile.forSale
+                        .Select(libraryItem => libraryItem.sampleId)
+                        .Union(userProfile.owned
+                            .Select(libraryItem => libraryItem.sampleId)
+                        )
+                )
+            );
+
+            return userProfile;
         }
     }
 }

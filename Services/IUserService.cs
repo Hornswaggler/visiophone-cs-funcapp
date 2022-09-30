@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Security.Claims;
+using System.Threading.Tasks;
 using vp.DTO;
+using vp.models;
 using vp.Models;
 
 namespace vp.services
@@ -8,5 +10,8 @@ namespace vp.services
     {
         UserProfileModel GetUserProfile(UserProfileRequest request);
         Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile);
+        bool isAuthenticated(ClaimsPrincipal principal, string targetId);
+        Task<UserProfileModel> PurchaseSample(string accountId, string sampleId);
+        Task<UserProfileModel> AddForSale(string accountId, string sampleId);
     }
 }

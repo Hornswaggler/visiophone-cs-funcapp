@@ -53,7 +53,8 @@ namespace vp.util {
 
         public static bool UploadStream(Stream stream, string name, string containerName, string contentType)
         {
-            BlockBlobClient blobClient = BlockBlobClientFactory.MakeSampleBlockBlobClient(name, containerName);
+            BlockBlobClient blobClient = BlobFactory.MakeSampleBlockBlobClient(name, containerName);
+
             int offset = 0;
             int counter = 0;
             List<string> blockIds = new List<string>();
