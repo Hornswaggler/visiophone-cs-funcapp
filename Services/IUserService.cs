@@ -8,7 +8,7 @@ namespace vp.services
 {
     public interface IUserService
     {
-        UserProfileModel GetUserProfile(UserProfileRequest request);
+        UserProfileModel GetUserProfile(string accountId, bool throwNoExist = false);
         Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile);
         bool isAuthenticated(ClaimsPrincipal principal, string targetId);
         Task<UserProfileModel> PurchaseSample(string accountId, string sampleId);

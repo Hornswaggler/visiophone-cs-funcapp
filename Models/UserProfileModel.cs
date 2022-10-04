@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using vp.models;
 
@@ -13,12 +12,19 @@ namespace vp.Models
             public string sampleId { get; set; }
         }
 
-        public UserProfileModel()
-        {
-            ((List<LibraryItem>)this.forSale).Add(new LibraryItem { sampleId = "6330f644365c41309f73ec3c" });
+        public static string GetAcccountIdFromToken(string accountId) {
+            if (accountId != null && accountId.Contains("."))
+            {
+                return accountId.Substring(accountId.IndexOf('.') + 1);
+            }
+            return accountId;
         }
 
-        public string accountId { get; set; } = "";
+        public UserProfileModel() {
+            accountId = GetAcccountIdFromToken(accountId);
+        }
+
+        public string accountId { get; set; }
         public string avatarId { get; set; } = $"{Guid.NewGuid()}";
         public string customUserName { get; set; } = "";
         public List<LibraryItem> forSale { get; set; } = new List<LibraryItem>();

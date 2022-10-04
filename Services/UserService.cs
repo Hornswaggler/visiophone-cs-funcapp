@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using vp.DTO;
-using vp.models;
 using vp.Models;
 
 namespace vp.services
@@ -17,17 +14,11 @@ namespace vp.services
         private readonly IMongoDatabase _database;
         private readonly IMongoCollection<UserProfileModel> _users;
 
-        private string DEFAULT_ID = new ObjectId().ToString();
-
         public UserService(MongoClient mongoClient, IConfiguration configuration) {
             //TODO: move this up a layer...
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
             _users = _database.GetCollection<UserProfileModel>("users");
-        }
-
-        public string GetAccountIdForToken(string accountId) {
-            return accountId.Split('.')[1];
         }
 
         public bool isAuthenticated(ClaimsPrincipal principal, string targetId)
@@ -39,23 +30,17 @@ namespace vp.services
             return true;
         }
 
-
-        public UserProfileModel GetUserProfile(UserProfileRequest request)
+        public UserProfileModel GetUserProfile(string accountId, bool throwNoExist = false)
         {
-            return _users
-                .Find(u => u.accountId.Equals(GetAccountIdForToken(request.accountId)))
+            var result =  _users
+                .Find(u => u.accountId.Equals(UserProfileModel.GetAcccountIdFromToken(accountId)))
                 .FirstOrDefault<UserProfileModel>();
+            if(throwNoExist && result == null) throw new Exception($"failed to find user record for user: ${accountId}");
+            return result;
         }
 
         public async Task<UserProfileModel> PurchaseSample(string accountId, string sampleId) {
-            UserProfileModel userProfile = _users
-                .Find(u => u.accountId.Equals(GetAccountIdForToken(accountId)))
-                .FirstOrDefault<UserProfileModel>();
-
-            if (userProfile == null)
-            {
-                throw new Exception($"failed to find user record for user: ${accountId}");
-            }
+            var userProfile = GetUserProfile(accountId, true);
 
             userProfile.owned.Add(new UserProfileModel.LibraryItem
             {
@@ -70,15 +55,7 @@ namespace vp.services
 
         public async Task<UserProfileModel> AddForSale(string accountId, string sampleId)
         {
-            UserProfileModel userProfile = _users
-                .Find(u => u.accountId.Equals(GetAccountIdForToken(accountId)))
-                .FirstOrDefault<UserProfileModel>();
-
-            if (userProfile == null)
-            {
-                throw new Exception($"failed to find user record for user: ${accountId}");
-            }
-
+            var userProfile = GetUserProfile(accountId, true);
             userProfile.forSale.Add(new UserProfileModel.LibraryItem
             {
                 sampleId = sampleId
@@ -92,13 +69,22 @@ namespace vp.services
 
         public async Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile)
         {
-            if (userProfile.accountId.Contains("."))
+            var lastProfile = GetUserProfile(userProfile.accountId);
+            UserProfileModel forInsert;
+
+            if (lastProfile == null)
             {
-                userProfile.accountId = userProfile.accountId.Split('.')[1];
+                forInsert = userProfile;
+            }
+            else
+            {
+                forInsert = lastProfile;
+                forInsert.customUserName = userProfile.customUserName;
+                forInsert.avatarId = userProfile.avatarId;
             }
 
-            var filter = Builders<UserProfileModel>.Filter.Where(profile => profile.accountId == userProfile.accountId);
-            await _users.ReplaceOneAsync(filter, userProfile, new ReplaceOptions { IsUpsert = true });
+            var filter = Builders<UserProfileModel>.Filter.Where(profile => profile.accountId == forInsert.accountId);
+            await _users.ReplaceOneAsync(filter, forInsert, new ReplaceOptions { IsUpsert = true });
 
             return userProfile;
         }

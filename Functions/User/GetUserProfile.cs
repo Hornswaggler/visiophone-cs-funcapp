@@ -32,7 +32,7 @@ namespace visiophone_cs_funcapp.Functions.User
             //TODO: Add auth check here (check contents w/ header to ensure they match)
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             UserProfileRequest request = JsonConvert.DeserializeObject<UserProfileRequest>(requestBody);
-            var userProfile = _userService.GetUserProfile(request);
+            var userProfile = _userService.GetUserProfile(request.accountId, true);
 
             userProfile.samples.AddRange(
                 await _sampleService.GetSamplesById(
