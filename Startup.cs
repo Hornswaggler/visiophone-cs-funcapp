@@ -1,12 +1,11 @@
-﻿using vp;
-using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using System;
+﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Security.Authentication;
-using vp.Services;
+using vp;
+using vp.services;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -23,11 +22,12 @@ namespace vp
 
             builder.Services.AddSingleton<IConfiguration>(config);
 
-            MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl("mongodb://visiophone-mongo:bbIaen7eZHDpClIx8uZLhZMOubGgdwbmZPx6UIgqopyAz19G969Gzm16IeWa0ta7ymp5hO02QRLBM4mvoHLWnQ==@visiophone-mongo.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@visiophone-mongo@"));
+            MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(Config.MongoConnectionString));
             settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
 
             builder.Services.AddSingleton((s) => new MongoClient(settings));
             builder.Services.AddTransient<ISampleService, SampleService>();
+            builder.Services.AddTransient<IUserService, UserService>();
         }
     }
 
