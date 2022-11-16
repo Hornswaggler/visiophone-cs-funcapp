@@ -10,7 +10,7 @@ using System;
 using vp.util;
 using MongoDB.Bson.Serialization;
 
-namespace visiophone_cs_funcapp.Functions.User
+namespace vp.Functions.User
 {
     public class SetUserProfile
     {

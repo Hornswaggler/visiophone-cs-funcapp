@@ -13,7 +13,7 @@ using System.Linq;
 using vp.DTO;
 
 
-namespace visiophone_cs_funcapp.Functions.UserLibrary
+namespace vp.Functions.UserLibrary
 {
     public static class GetLibraryItem
     {
@@ -26,6 +26,9 @@ namespace visiophone_cs_funcapp.Functions.UserLibrary
             LibraryItemRequest request = JsonConvert.DeserializeObject<LibraryItemRequest>(requestBody);
 
             var sasUri = BlobFactory.GetBlobSasToken(Config.UserLibraryContainerName, "WAFERLOGIC.mp3");
+
+            //TODO: should be in config...
+            string APP_ID = "c133a4c3-508d-4a7d-aaa5-f9225f51543f";
 
             //var jsonString = JsonConvert.SerializeObject(
             //principal, Formatting.Indented,
@@ -44,7 +47,7 @@ namespace visiophone_cs_funcapp.Functions.UserLibrary
             //Uri sasUri = container.GenerateSasUri(sasBuilder);
             //Utils.GetReadSas()
 
-            var result = principal.Identities.Where(identity => identity.Claims.Any(claim => claim.Value == "2d1e671b-65ba-40be-b119-5cb56ca78e80"));
+            var result = principal.Identities.Where(identity => identity.Claims.Any(claim => claim.Value == APP_ID));
             bool IsAuthenticated = principal.Identity.IsAuthenticated;
 
             log.LogInformation($"Found: {result.Count()}, Authenticated: {IsAuthenticated}");

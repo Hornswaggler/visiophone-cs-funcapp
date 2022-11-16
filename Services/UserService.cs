@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using vp.Models;
+using Stripe;
 
 namespace vp.services
 {
@@ -30,6 +31,7 @@ namespace vp.services
             return true;
         }
 
+
         public UserProfileModel GetUserProfile(string accountId, bool throwNoExist = false)
         {
             var result =  _users
@@ -41,6 +43,16 @@ namespace vp.services
 
         public async Task<UserProfileModel> PurchaseSample(string accountId, string sampleId) {
             var userProfile = GetUserProfile(accountId, true);
+
+
+
+
+
+
+
+
+
+
 
             userProfile.owned.Add(new UserProfileModel.LibraryItem
             {

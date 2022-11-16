@@ -12,7 +12,7 @@ using vp.DTO;
 
 namespace vp.Functions.Sample
 {
-    public class SampleSearch
+    public class SampleSearch 
     {
         private readonly ISampleService _sampleService;
 

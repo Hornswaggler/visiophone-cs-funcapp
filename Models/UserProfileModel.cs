@@ -25,6 +25,7 @@ namespace vp.Models
         }
 
         public string accountId { get; set; }
+        public string stripeId { get; set; }
         public string avatarId { get; set; } = $"{Guid.NewGuid()}";
         public string customUserName { get; set; } = "";
         public List<LibraryItem> forSale { get; set; } = new List<LibraryItem>();

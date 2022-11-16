@@ -10,8 +10,7 @@ using vp.services;
 using vp.Models;
 using System.Linq;
 
-
-namespace visiophone_cs_funcapp.Functions.User
+namespace vp.Functions.User
 {
     public class GetUserProfile
     {
