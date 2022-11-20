@@ -6,17 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "visiophone-cs-funcapp", "visiophone-cs-funcapp.csproj", "{C2E46D83-A107-46CB-8E6D-2C58D1335AC9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{488DBA91-D476-41A6-9CD1-2CB9AA3C3633}"
-	ProjectSection(SolutionItems) = preProject
-		ISampleService.cs = ISampleService.cs
-		Startup.cs = Startup.cs
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Models", "Models", "{68B6AAB8-8FFD-4040-B694-6F7CEC6DCA99}"
-	ProjectSection(SolutionItems) = preProject
-		Class1.cs = Class1.cs
-		Sample.cs = Sample.cs
-		SampleService.cs = SampleService.cs
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,9 +20,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{68B6AAB8-8FFD-4040-B694-6F7CEC6DCA99} = {488DBA91-D476-41A6-9CD1-2CB9AA3C3633}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {43C5DF06-D968-4DF0-A95F-AAAB89C183A1}

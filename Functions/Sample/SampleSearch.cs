@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 
 using vp.services;
 using vp.DTO;
+using Microsoft.Identity.Web;
 
 namespace vp.Functions.Sample
 {
@@ -26,6 +27,13 @@ namespace vp.Functions.Sample
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+
+            var (authenticationStatus, authenticationResponse) =
+                await req.HttpContext.AuthenticateAzureFunctionAsync();
+            //if (!authenticationStatus) return authenticationResponse;
+
+            log.LogDebug(authenticationStatus == true ? "true" : "false");
+
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
 
