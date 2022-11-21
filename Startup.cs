@@ -9,6 +9,8 @@ using vp.services;
 using Microsoft.Identity.Web;
 using Microsoft.Extensions.Options;
 using Microsoft.Azure.WebJobs.Host.Bindings;
+using Azure.Functions.Identity.Web.Extensions;
+using Microsoft.IdentityModel.Logging;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -49,13 +51,27 @@ namespace vp
 
         private void ConfigureServices(IServiceCollection services)
         {
+            IdentityModelEventSource.ShowPII = true; //Add this line
+
             services.AddAuthentication(sharedOptions =>
-            {
-                sharedOptions.DefaultScheme = Microsoft.Identity.Web.Constants.Bearer;
-                sharedOptions.DefaultChallengeScheme = Microsoft.Identity.Web.Constants.Bearer;
-            })
-                .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
-        }
+                {
+                    sharedOptions.DefaultScheme = Constants.Bearer;
+                    sharedOptions.DefaultChallengeScheme = Constants.Bearer;
+                })
+                .AddArmToken()
+                .AddScriptAuthLevel()
+                .AddMicrosoftIdentityWebApi(Configuration)
+                .EnableTokenAcquisitionToCallDownstreamApi()
+                .AddInMemoryTokenCaches();
+
+            services
+                .AddAuthorization(options => options.AddScriptPolicies());
+
+            services
+                .AddAuthLevelAuthorizationHandler()
+                .AddNamedAuthLevelAuthorizationHandler()
+                .AddFunctionAuthorizationHandler();
+            }
     }
 
 }

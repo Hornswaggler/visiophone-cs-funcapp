@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.DTO;
 using Microsoft.Identity.Web;
+using System.Security.Claims;
 
 namespace vp.Functions.Sample
 {
@@ -25,7 +26,7 @@ namespace vp.Functions.Sample
         [FunctionName("sample_search")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            ILogger log)
+            ILogger log, ClaimsPrincipal principal)
         {
 
             var (authenticationStatus, authenticationResponse) =
