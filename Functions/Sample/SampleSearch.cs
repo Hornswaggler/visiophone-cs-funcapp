@@ -32,8 +32,7 @@ namespace vp.Functions.Sample
             var (authenticationStatus, authenticationResponse) =
                 await req.HttpContext.AuthenticateAzureFunctionAsync();
             //if (!authenticationStatus) return authenticationResponse;
-
-            log.LogDebug(authenticationStatus == true ? "true" : "false");
+            log.LogInformation($"Searching for samples, user authorization: {authenticationStatus}" );
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
