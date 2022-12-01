@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -6,10 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using vp.services;
-using vp.models;
 using vp.util;
-using vp.Models;
-
+using Microsoft.AspNetCore.Mvc;
 namespace vp.Functions.Sample
 {
     public class SampleUpload
@@ -26,12 +23,19 @@ namespace vp.Functions.Sample
         }
 
         [FunctionName("sample_upload")]
-        public async Task<SampleModel> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
-            SampleModel sampleMetadata = new SampleModel();
-            sampleMetadata = JsonConvert.DeserializeObject<SampleModel>(req.Form["data"]);
+            if (!await _userService.AuthenticateUser(req, log))
+            {
+                return new UnauthorizedResult();
+            }
+
+            //TODO: AUTHORIZE THE USER (CHECK ACCOUNT) interface Stripe etc
+
+            models.Sample sampleMetadata = new models.Sample();
+            sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
 
             await _sampleService.AddSample(sampleMetadata);
             await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id );
@@ -45,7 +49,7 @@ namespace vp.Functions.Sample
             var image = form.Files["image"];
             Utils.UploadFormFileAsync(image, Config.CoverArtContainerName, filename);
 
-            return sampleMetadata;
+            return new OkObjectResult(sampleMetadata);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace vp.models {
-	public class SampleModel : BaseModel
+	public class Sample : BaseModel
 	{
-		public SampleModel() : base() {}
+		public Sample() : base() {}
 
 		public string tag { get; set; } = "";
 

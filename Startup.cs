@@ -2,19 +2,16 @@
 using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.IO;
 using System.Security.Authentication;
 using vp;
 using vp.services;
-using Microsoft.Identity.Web;
 using Microsoft.Extensions.Options;
 using Microsoft.Azure.WebJobs.Host.Bindings;
-//using Azure.Functions.Identity.Web.Extensions;
 using Microsoft.IdentityModel.Logging;
-using System.Collections.Generic;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Azure.Functions.Identity.Web.Extensions;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -38,7 +35,6 @@ namespace vp
                 .SetBasePath(currentDirectory)
                 .AddConfiguration(configuration) // Add the original function configuration 
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
             builder.Services.AddSingleton<IConfiguration>(Configuration);
@@ -49,26 +45,21 @@ namespace vp
             builder.Services.AddSingleton((s) => new MongoClient(settings));
             builder.Services.AddTransient<ISampleService, SampleService>();
             builder.Services.AddTransient<IUserService, UserService>();
+            builder.Services.AddTransient<IStripeService, StripeService>();
 
             ConfigureServices(builder.Services);
         }
 
         private void ConfigureServices(IServiceCollection services)
         {
-            IdentityModelEventSource.ShowPII = true; //Add this line
-
-            //THIRD TIME A CHARM?
-
-            //IList<string> validissuers = new List<string>()
-            //{
-            //    Configuration.GetAuthority(),
-            //};
+            IdentityModelEventSource.ShowPII = true;
            
             var configManager = new ConfigurationManager<OpenIdConnectConfiguration>("https://visiophoneb2c.b2clogin.com/tfp/visiophone.wtf/B2C_1_SIGN_IN/v2.0/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever());
-
             var openidconfig = configManager.GetConfigurationAsync().Result;
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddArmToken()
+                .AddScriptAuthLevel()
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ =>
                 {
                     _.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
@@ -91,39 +82,13 @@ namespace vp
 
                 });
 
+            services
+                .AddAuthorization(options => options.AddScriptPolicies());
 
-            //SECOND TRY...
-
-            //services.AddAuthentication(sharedOptions =>
-            //{
-            //    sharedOptions.DefaultScheme = Constants.Bearer;
-            //    sharedOptions.DefaultChallengeScheme = Constants.Bearer;
-            //})
-            //    .AddMicrosoftIdentityWebApi(Configuration.GetSection("AzureAd"));
-
-
-            //FIRST TRY:
-
-            //services.AddAuthentication(sharedOptions =>
-            //    {
-            //        sharedOptions.DefaultScheme = Constants.Bearer;
-            //        sharedOptions.DefaultChallengeScheme = Constants.Bearer;
-            //    })
-            //    .AddArmToken()
-            //    .AddScriptAuthLevel()
-            //    .AddMicrosoftIdentityWebApi(Configuration)
-            //    .EnableTokenAcquisitionToCallDownstreamApi()
-            //    .AddInMemoryTokenCaches();
-
-            //services
-            //    .AddAuthorization(options => options.AddScriptPolicies());
-
-            //services
-            //    .AddAuthLevelAuthorizationHandler()
-            //    .AddNamedAuthLevelAuthorizationHandler()
-            //    .AddFunctionAuthorizationHandler();
-            //}
-            //}
+            services
+                .AddAuthLevelAuthorizationHandler()
+                .AddNamedAuthLevelAuthorizationHandler()
+                .AddFunctionAuthorizationHandler();
         }
     }
 

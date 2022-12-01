@@ -26,7 +26,7 @@ namespace visiophone_cs_funcapp.Functions.Sample
         }
 
         [FunctionName("sample_purchase")]
-        public async Task<UserProfileModel> Run(
+        public async Task<UserProfile> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ClaimsPrincipal principal,
             ILogger log)
         {
@@ -35,14 +35,14 @@ namespace visiophone_cs_funcapp.Functions.Sample
 
             log.LogInformation($"Sample Purchase: {request.accountId} : {request._id}");
 
-            if (_userService.isAuthenticated(principal, request.accountId)) {
+            //if (_userService.isAuthenticated(principal, request.accountId)) {
                 var sample = await _sampleService.GetSampleById(request._id);
                 if (sample != null)
                 {
                     //TODO: Make sure user doesn't already own this sample...
                     return await _userService.PurchaseSample(request.accountId, sample._id);
                 }
-            }
+            //}
 
             var error = $"Unauthorized Sample Purchase: {request.accountId} : {request._id}";
             var e = new Exception(error);

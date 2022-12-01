@@ -7,8 +7,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using vp.DTO;
 using vp.services;
-using vp.Models;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 
 namespace vp.Functions.User
 {
@@ -24,10 +24,15 @@ namespace vp.Functions.User
         }
 
         [FunctionName("get_user_profile")]
-        public async Task<UserProfileModel> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+            if (!await _userService.AuthenticateUser(req, log))
+            {
+                return new UnauthorizedResult();
+            }
+
             //TODO: Add auth check here (check contents w/ header to ensure they match)
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             UserProfileRequest request = JsonConvert.DeserializeObject<UserProfileRequest>(requestBody);
@@ -43,7 +48,7 @@ namespace vp.Functions.User
                 )
             );
 
-            return userProfile;
+            return new OkObjectResult(userProfile);
         }
     }
 }

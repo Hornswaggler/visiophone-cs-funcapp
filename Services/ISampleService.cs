@@ -8,9 +8,9 @@ namespace vp.services
 {
     public interface ISampleService
     {
-        Task<SampleModel>  AddSample(SampleModel sample);
+        Task<Sample>  AddSample(Sample sample);
         Task<SampleQueryResult> GetSamples(SampleRequest request);
-        Task<SampleModel> GetSampleById(string id);
-        Task<List<SampleModel>> GetSamplesById(IEnumerable<string> sampleIds);
+        Task<Sample> GetSampleById(string id);
+        Task<List<Sample>> GetSamplesById(IEnumerable<string> sampleIds);
     }
 }

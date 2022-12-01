@@ -1,21 +1,28 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Stripe;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using Microsoft.Identity.Web;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using vp.DTO;
+using System.Web.Http;
+using vp.models;
+using vp.services;
 
 namespace vp.Functions.User
 {
     public class ProvisionSellerAccount
     {
+        private IUserService _userService { get; set; }
+        private IStripeService _stripeService { get; set; }
+
+        public ProvisionSellerAccount(IUserService userService, IStripeService stripeService)
+        {
+            _userService = userService;
+            _stripeService = stripeService;
+        }
 
         internal class ProvisionSellerAccountDTO
         {
@@ -24,104 +31,59 @@ namespace vp.Functions.User
 
 
         [FunctionName("provision_stripe_standard")]
-        public HttpResponseMessage ProvisionStripeStandard(
+        public async Task<IActionResult> ProvisionStripeStandard(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            StripeConfiguration.ApiKey = Config.StripeAPIKey;
+            var (authenticationStatus, authenticationResponse) =
+                await req.HttpContext.AuthenticateAzureFunctionAsync();
 
-            var options = new AccountCreateOptions { Type = "standard" };
-            var service = new AccountService();
-            var accountService = service.Create(options);
+            if (!authenticationStatus) return authenticationResponse;
 
-            var accountLink = CreateStripeStandardAccountLink(accountService.Id);
+            var user = req.HttpContext.User;
 
+            if (!user.HasClaim("tfp", "B2C_1_SIGN_IN"))
+            {
+                throw new HttpResponseException(HttpStatusCode.Unauthorized);
+            }
 
-            //var context = req.HttpContext;
-            //var cookieOptions = new CookieOptions()
-            //{
-            //    Path = "/",
-            //    Expires = DateTimeOffset.UtcNow.AddHours(1),
-            //    IsEssential = true,
-            //    HttpOnly = false,
-            //    Secure = false,
-            //};
-            //context.Response.Cookies.Append(
-            //    "stripeId",
-            //    accountService.Id,
-            //    new CookieOptions()
-            //    {
-            //        Path = "/",
-            //        Expires = DateTimeOffset.UtcNow.AddHours(1),
-            //        IsEssential = true,
-            //        HttpOnly = false,
-            //        Secure = false,
-            //    }
-            //);
+            var accountId = user.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
+            StripeProfile stripeProfile = _stripeService.GetStripeProfile(accountId);
 
+            if (stripeProfile != null) {
+                return new OkObjectResult(stripeProfile);
+            }
 
+            var result = await _stripeService.CreateNewAccount(accountId);
 
-            //context.Crea
-
-            var resp = new HttpResponseMessage();
-            //resp.Headers.AddCookies(new CookieHeaderValue[]
-            //{
-            //    new CookieHeaderValue("stripeId", accountService.Id) {
-            //        Expires = DateTimeOffset.Now.AddMinutes(5),
-            //        HttpOnly = true,
-            //        Path = "/"
-            //    }
-            //});
-            resp.Content = new StringContent(JsonConvert.SerializeObject(
-                new StripeSellerAccount
-                {
-                    id = accountService.Id,
-                    url = accountLink.Url
-                }
-            ));
-
-            return resp;
-            //req.
-            //resp.Content = JsonConvert.SerializeObject(
-            //    new StripeSellerAccount { 
-            //        url = accountLink.Url
-            //    }
-            //)
-
-            //var result = new StripeSellerAccount()
-            //{
-            //    url = accountLink.Url
-            //};
-
-
-            //Response accountService.Id
-
-            //return res;
+            return new OkObjectResult(result);
         }
 
         [FunctionName("provision_stripe_standard_return")]
-        public async Task<string> ProvisionStripeStandardReturn(
+        public async Task<IActionResult> ProvisionStripeStandardReturn(
             [HttpTrigger(AuthorizationLevel.User, "post", Route = null)] HttpRequest req,
             ILogger log, ClaimsPrincipal principal
         )
         {
-            //log.LogInformation("Processing string standard return");
-            log.LogInformation("Processing string standard response");
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var seller = JsonConvert.DeserializeObject<ProvisionSellerAccountDTO>(requestBody);
-            //account.stripeId
+            if (!await _userService.AuthenticateUser(req, log))
+            {
+                return new UnauthorizedResult();
+            }
 
-            //StripeConfiguration.ApiKey = "sk_test_YLa694rQaWsXLKPrPJQ0bvF6";
+            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req));
 
-            StripeConfiguration.ApiKey = Config.StripeAPIKey;
-            var service = new AccountService();
-            var account = service.Get(seller.stripeId);
+            //TODO: This should come from the token...
+            var stripeAccount = await _stripeService.GetStripeAccount(stripeProfile);
 
             //Persist stripeId
+            if (stripeAccount.DetailsSubmitted)
+            {
+                stripeProfile.isStripeApproved = true;
+                stripeProfile = await _stripeService.SetStripeProfile(stripeProfile);
+            }
 
-
-            return null;
+            return new OkObjectResult(stripeProfile);
         }
 
         [FunctionName("provision_stripe_standard_refresh")]
@@ -136,18 +98,6 @@ namespace vp.Functions.User
 
 
             return null;
-        }
-        public AccountLink CreateStripeStandardAccountLink(string accountId) {
-            var options = new AccountLinkCreateOptions
-            {
-                Account = accountId,
-                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
-                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
-                Type = "account_onboarding",
-            };
-            var service = new AccountLinkService();
-            return service.Create(options);
-            
         }
     }
 }
