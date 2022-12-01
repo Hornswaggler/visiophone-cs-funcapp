@@ -17,6 +17,10 @@ namespace vp
         public static string HOME = "..\\Tools\\ffmpeg.exe";
         public static string WAV_CONTENT_TYPE = "audio/wav";
         public static string STRIPE_API_KEY = "STRIPE_API_KEY";
+        public static string AUTH_CLAIM_SIGN_IN_AUTHORITY = "AUTH_CLAIM_SIGN_IN_AUTHORITY";
+        public static string AUTH_CLAIM_ID = "AUTH_CLAIM_ID";
+        public static string AUTH_SIGN_IN_AUTHORITY = "AUTH_SIGN_IN_AUTHORITY";
+
         public static int BufferSize { get; set; } = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;
 
@@ -30,7 +34,9 @@ namespace vp
         public static string StripeAPIKey { get; set; } = Environment.GetEnvironmentVariable(STRIPE_API_KEY);
         public static string ProvisionStripeStandardReturnUrl = Environment.GetEnvironmentVariable(PROVISION_STRIPE_STANDARD_RETURN_URL);
         public static string ProvisionStripeStandardRefreshUrl = Environment.GetEnvironmentVariable(PROVISION_STRIPE_STANDARD_REFRESH_URL);
-
+        public static string AuthSignInAuthority { get; set; } = Environment.GetEnvironmentVariable(AUTH_SIGN_IN_AUTHORITY);
+        public static string AuthClaimSignInAuthority { get; set; } = Environment.GetEnvironmentVariable(AUTH_CLAIM_SIGN_IN_AUTHORITY);
+        public static string AuthClaimId { get; set; } = Environment.GetEnvironmentVariable(AUTH_CLAIM_ID);
 
     }
 }

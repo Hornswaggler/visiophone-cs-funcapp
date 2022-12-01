@@ -5,7 +5,7 @@ namespace vp.DTO
 {
     public class SampleQueryResult
     {
-        public List<SampleModel> samples { get; set; }
+        public List<Sample> samples { get; set; }
 
         public int nextResultIndex { get; set; }
     }

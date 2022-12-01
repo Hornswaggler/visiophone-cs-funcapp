@@ -14,7 +14,7 @@ namespace vp.services
     {
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
-        private readonly IMongoCollection<SampleModel> _samples;
+        private readonly IMongoCollection<Sample> _samples;
 
         // TODO This should be configurable
         public static int ITEMS_PER_PAGE = 50;
@@ -36,28 +36,28 @@ namespace vp.services
             //var shellCommand = new BsonDocumentCommand<BsonDocument>(bson);
             //_database.RunCommand(shellCommand);
 
-            _samples = _database.GetCollection<SampleModel>("samples");
+            _samples = _database.GetCollection<Sample>("samples");
         }
  
-        public async Task<SampleModel> AddSample(SampleModel sample)
+        public async Task<Sample> AddSample(Sample sample)
         {
             await _samples.InsertOneAsync(sample);
             return sample;
         }
 
         public async Task<SampleQueryResult> GetSamples(SampleRequest request) {
-            var builder = Builders<SampleModel>.Filter;
+            var builder = Builders<Sample>.Filter;
             BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{request.query}.*", RegexOptions.IgnoreCase));
-            FilterDefinition<SampleModel> filter = builder.Regex("description", queryExpr);
+            FilterDefinition<Sample> filter = builder.Regex("description", queryExpr);
 
-            FindOptions<SampleModel> options = new FindOptions<SampleModel>
+            FindOptions<Sample> options = new FindOptions<Sample>
             {
                 Limit = ITEMS_PER_PAGE,
                 Skip = request.index
             };
 
-            var samples = await _samples.FindAsync<SampleModel>(filter, options);
-            List<SampleModel> result = samples.ToList();
+            var samples = await _samples.FindAsync<Sample>(filter, options);
+            List<Sample> result = samples.ToList();
 
             return new SampleQueryResult
             {
@@ -66,16 +66,16 @@ namespace vp.services
             };
         }
 
-        public async Task<List<SampleModel>> GetSamplesById(IEnumerable<string> sampleIds)
+        public async Task<List<Sample>> GetSamplesById(IEnumerable<string> sampleIds)
         {
-            var samples = await _samples.FindAsync<SampleModel>(sample => sampleIds.Contains(sample._id));
-            return samples.ToList<SampleModel>();
+            var samples = await _samples.FindAsync<Sample>(sample => sampleIds.Contains(sample._id));
+            return samples.ToList<Sample>();
         }
 
-        public async Task<SampleModel> GetSampleById(string sampleId)
+        public async Task<Sample> GetSampleById(string sampleId)
         {
-            var sampleQuery = await _samples.FindAsync<SampleModel>(sample => sample._id.Equals(sampleId));
-            return await sampleQuery.FirstOrDefaultAsync<SampleModel>();
+            var sampleQuery = await _samples.FindAsync<Sample>(sample => sample._id.Equals(sampleId));
+            return await sampleQuery.FirstOrDefaultAsync<Sample>();
         }
     }
 }

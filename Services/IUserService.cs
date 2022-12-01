@@ -1,17 +1,19 @@
-﻿using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using vp.DTO;
-using vp.models;
 using vp.Models;
 
 namespace vp.services
 {
     public interface IUserService
     {
-        UserProfileModel GetUserProfile(string accountId, bool throwNoExist = false);
-        Task<UserProfileModel> SetUserProfile(UserProfileModel userProfile);
-        bool isAuthenticated(ClaimsPrincipal principal, string targetId);
-        Task<UserProfileModel> PurchaseSample(string accountId, string sampleId);
-        Task<UserProfileModel> AddForSale(string accountId, string sampleId);
+        UserProfile GetUserProfile(string accountId, bool throwNoExist = false);
+        Task<UserProfile> SetUserProfile(UserProfile userProfile);
+        Task<UserProfile> PurchaseSample(string accountId, string sampleId);
+        Task<UserProfile> AddForSale(string accountId, string sampleId);
+
+        Task<bool> AuthenticateUser(HttpRequest req, ILogger log);
+        string GetUserAccountId(HttpRequest req);
     }
 }

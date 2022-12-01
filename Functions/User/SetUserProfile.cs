@@ -5,10 +5,8 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using vp.services;
-using vp.Models;
-using System;
 using vp.util;
-using MongoDB.Bson.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace vp.Functions.User
 {
@@ -22,20 +20,25 @@ namespace vp.Functions.User
         }
 
         [FunctionName("set_user_profile")]
-        public async Task<UserProfileModel> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            var meta = req.Form.Files[0];
-            var contentType = req.Form.Files[0].ContentType;
-            UserProfileModel userProfile = BsonSerializer.Deserialize<UserProfileModel>(req.Form["data"]);
-            userProfile.avatarId = $"{Guid.NewGuid()}";
-
-            using (Stream stream = meta.OpenReadStream()) {
-                Utils.UploadStream(stream, userProfile.avatarId + ".png", "avatars", contentType);
+            if (!await _userService.AuthenticateUser(req, log))
+            {
+                return new UnauthorizedResult();
             }
 
-            return await _userService.SetUserProfile(userProfile);
+            var userAccountId = _userService.GetUserAccountId(req);
+
+            var meta = req.Form.Files[0];
+            var contentType = req.Form.Files[0].ContentType;
+
+            using (Stream stream = meta.OpenReadStream()) {
+                Utils.UploadStream(stream, $"{userAccountId}.png", "avatars", contentType);
+            }
+
+            return new OkResult();
         }
     }
 

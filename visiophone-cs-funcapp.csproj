@@ -3,7 +3,6 @@
     <TargetFramework>net6.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <RootNamespace>visiophone_cs_funcapp</RootNamespace>
-    <!-- <UserSecretsId>2b9f502a-a653-4321-b39c-2dd453b7b22e</UserSecretsId> -->
     <_FunctionsSkipCleanOutput>true</_FunctionsSkipCleanOutput>
   </PropertyGroup>
   <ItemGroup>
@@ -18,9 +17,9 @@
 	<PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.7.2" />
 	<PackageReference Include="Azure.Storage.Blobs" Version="12.12.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.OpenApi" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="4.0.5" />
     <PackageReference Include="Microsoft.Identity.Web" Version="1.5.1" />
-    <!-- <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.0" /> -->
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.0.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
     <PackageReference Include="NAudio" Version="2.1.0" />
@@ -46,7 +45,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <!-- <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup> -->
 </Project>

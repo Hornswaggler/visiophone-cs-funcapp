@@ -9,31 +9,28 @@ using Newtonsoft.Json;
 
 using vp.services;
 using vp.DTO;
-using Microsoft.Identity.Web;
-using System.Security.Claims;
 
 namespace vp.Functions.Sample
 {
     public class SampleSearch 
     {
         private readonly ISampleService _sampleService;
+        private readonly IUserService _userService;
 
-        public SampleSearch(ISampleService sampleService)
+        public SampleSearch(ISampleService sampleService, IUserService userService)
         {
             _sampleService = sampleService;
+            _userService = userService;
         }
 
         [FunctionName("sample_search")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            ILogger log, ClaimsPrincipal principal)
+            ILogger log)
         {
-
-            var (authenticationStatus, authenticationResponse) =
-                await req.HttpContext.AuthenticateAzureFunctionAsync();
-            //if (!authenticationStatus) return authenticationResponse;
-
-            log.LogDebug(authenticationStatus == true ? "true" : "false");
+            if (!await _userService.AuthenticateUser(req, log)) {
+                return new UnauthorizedResult();
+            }
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
