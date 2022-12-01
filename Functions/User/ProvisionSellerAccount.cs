@@ -32,7 +32,7 @@ namespace vp.Functions.User
 
         [FunctionName("provision_stripe_standard")]
         public async Task<IActionResult> ProvisionStripeStandard(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
             var (authenticationStatus, authenticationResponse) =
@@ -55,9 +55,13 @@ namespace vp.Functions.User
                 return new OkObjectResult(stripeProfile);
             }
 
-            var result = await _stripeService.CreateNewAccount(accountId);
+            string redirecturi = await _stripeService.CreateNewAccount(accountId);
 
-            return new OkObjectResult(result);
+
+            //"Access-Control-Allow-Origin"
+
+            return new RedirectResult(redirecturi);
+            //return new OkObjectResult(result);
         }
 
         [FunctionName("provision_stripe_standard_return")]
@@ -83,6 +87,7 @@ namespace vp.Functions.User
                 stripeProfile = await _stripeService.SetStripeProfile(stripeProfile);
             }
 
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
             return new OkObjectResult(stripeProfile);
         }
 

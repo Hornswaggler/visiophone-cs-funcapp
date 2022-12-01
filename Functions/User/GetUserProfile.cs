@@ -1,13 +1,9 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using vp.DTO;
 using vp.services;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 
 namespace vp.Functions.User
@@ -16,11 +12,14 @@ namespace vp.Functions.User
     {
         private readonly IUserService _userService;
         private readonly ISampleService _sampleService;
+        private readonly IStripeService _stripeService;
 
-        public GetUserProfile(IUserService userService, ISampleService sampleService)
+        public GetUserProfile(IUserService userService, ISampleService sampleService, IStripeService stripeService)
         {
             _userService = userService;
+            _stripeService = stripeService;
             _sampleService = sampleService;
+            _stripeService = stripeService;
         }
 
         [FunctionName("get_user_profile")]
@@ -33,22 +32,24 @@ namespace vp.Functions.User
                 return new UnauthorizedResult();
             }
 
+            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req));
+
             //TODO: Add auth check here (check contents w/ header to ensure they match)
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            UserProfileRequest request = JsonConvert.DeserializeObject<UserProfileRequest>(requestBody);
-            var userProfile = _userService.GetUserProfile(request.accountId, true);
+            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //UserProfileRequest request = JsonConvert.DeserializeObject<UserProfileRequest>(requestBody);
+            //var userProfile = _userService.GetUserProfile(request.accountId, true);
 
-            userProfile.samples.AddRange(
-                await _sampleService.GetSamplesById(
-                    userProfile.forSale
-                        .Select(libraryItem => libraryItem.sampleId)
-                        .Union(userProfile.owned
-                            .Select(libraryItem => libraryItem.sampleId)
-                        )
-                )
-            );
+            //userProfile.samples.AddRange(
+            //    await _sampleService.GetSamplesById(
+            //        userProfile.forSale
+            //            .Select(libraryItem => libraryItem.sampleId)
+            //            .Union(userProfile.owned
+            //                .Select(libraryItem => libraryItem.sampleId)
+            //            )
+            //    )
+            //);
 
-            return new OkObjectResult(userProfile);
+            return new OkObjectResult(stripeProfile);
         }
     }
 }
