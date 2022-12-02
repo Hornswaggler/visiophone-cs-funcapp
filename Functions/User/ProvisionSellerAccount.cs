@@ -55,13 +55,11 @@ namespace vp.Functions.User
                 return new OkObjectResult(stripeProfile);
             }
 
-            string redirecturi = await _stripeService.CreateNewAccount(accountId);
+            StripeProfile newStripeProfile = await _stripeService.CreateNewAccount(accountId);
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
-
-            //"Access-Control-Allow-Origin"
-
-            return new RedirectResult(redirecturi);
-            //return new OkObjectResult(result);
+            //TODO This should be a redirect
+            return new OkObjectResult(newStripeProfile);
         }
 
         [FunctionName("provision_stripe_standard_return")]

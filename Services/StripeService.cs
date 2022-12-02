@@ -50,7 +50,7 @@ namespace vp.services
         }
 
 
-        public async Task<string> CreateNewAccount(string accountId)
+        public async Task<StripeProfile> CreateNewAccount(string accountId)
         {
             var options = new Stripe.AccountCreateOptions { Type = "standard" };
             var stripeAccount = await _accountService.CreateAsync(options);
@@ -63,13 +63,12 @@ namespace vp.services
                 Type = "account_onboarding",
             });
 
-            await SetStripeProfile(new StripeProfile
+            return await SetStripeProfile(new StripeProfile
             {
                 accountId = accountId,
                 stripeId = stripeAccount.Id,
+                stripeUri = accountLink.Url
             });
-
-            return accountLink.Url;
         }
 
         public async Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile) {
