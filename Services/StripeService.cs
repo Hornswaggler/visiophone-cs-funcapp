@@ -55,19 +55,22 @@ namespace vp.services
             var options = new Stripe.AccountCreateOptions { Type = "standard" };
             var stripeAccount = await _accountService.CreateAsync(options);
 
-            var accountLink = await _linkService.CreateAsync(new Stripe.AccountLinkCreateOptions
-            {
-                Account = stripeAccount.Id,
-                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
-                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
-                Type = "account_onboarding",
-            });
 
             return await SetStripeProfile(new StripeProfile
             {
                 accountId = accountId,
                 stripeId = stripeAccount.Id,
-                stripeUri = accountLink.Url
+                //stripeUri = accountLink.Url
+            });
+        }
+
+        public async Task<Stripe.AccountLink> CreateAccountLink(string stripeId) {
+            return await _linkService.CreateAsync(new Stripe.AccountLinkCreateOptions
+            {
+                Account = stripeId,
+                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
+                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
+                Type = "account_onboarding",
             });
         }
 

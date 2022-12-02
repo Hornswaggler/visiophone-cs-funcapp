@@ -10,6 +10,6 @@ namespace vp.services
         StripeProfile GetStripeProfile(string accountId, bool throwNoExist = false);
 
         Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile);
-
+        Task<Stripe.AccountLink> CreateAccountLink(string stripeId);
     }
 }
