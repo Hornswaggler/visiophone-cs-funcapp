@@ -17,12 +17,15 @@ namespace vp.services
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
         private readonly IMongoCollection<UserProfile> _users;
+        private readonly IStripeService _stripeService;
 
-        public UserService(MongoClient mongoClient, IConfiguration configuration) {
+        public UserService(MongoClient mongoClient, IConfiguration configuration, IStripeService stripeService)
+        {
             //TODO: move this up a layer...
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
             _users = _database.GetCollection<UserProfile>("users");
+            _stripeService = stripeService;
         }
 
         public async Task<bool> AuthenticateUser(HttpRequest req, ILogger log) {
@@ -48,6 +51,28 @@ namespace vp.services
             return true;
         }
 
+        public async Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log) {
+
+            if (!await AuthenticateUser(req, log))
+            {
+                return null;
+            }
+
+            var stripeProfile = _stripeService.GetStripeProfile(GetUserAccountId(req));
+            if (stripeProfile == null)
+            {
+                return null;
+            }
+
+            //TODO: This should come from the token...
+            var stripeAccount = await _stripeService.GetStripeAccount(stripeProfile);
+            if (!stripeAccount.DetailsSubmitted)
+            {
+                return null;
+            }
+
+            return stripeAccount;
+        }
 
         public string GetUserAccountId(HttpRequest req) {
             var user = req.HttpContext.User;

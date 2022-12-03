@@ -14,11 +14,12 @@ namespace vp.Functions.Sample
         private readonly ISampleService _sampleService;
         private readonly IUserService _userService;
         private readonly ILogger<SampleUpload> _log;
-
-        public SampleUpload(ISampleService sampleService, IUserService userService, ILogger<SampleUpload> log)
+        private readonly IStripeService _stripeService;
+        public SampleUpload(ISampleService sampleService, IUserService userService, IStripeService stripeService, ILogger<SampleUpload> log)
         {
             _sampleService = sampleService;
             _userService = userService;
+            _stripeService = stripeService;
             _log = log;
         }
 
@@ -27,27 +28,32 @@ namespace vp.Functions.Sample
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            var stripeAccount = _userService.AuthenticateSeller(req, log);
+            if(stripeAccount == null)
             {
                 return new UnauthorizedResult();
             }
+
+            //TODO: Connect to stripe, provision the product in the product database there...
 
             //TODO: AUTHORIZE THE USER (CHECK ACCOUNT) interface Stripe etc
 
             models.Sample sampleMetadata = new models.Sample();
             sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
 
-            await _sampleService.AddSample(sampleMetadata);
-            await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id );
+
+
+            //await _sampleService.AddSample(sampleMetadata);
+            //await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id );
                  
-            var form = req.Form;
-            string filename = $"{sampleMetadata._id}";
+            //var form = req.Form;
+            //string filename = $"{sampleMetadata._id}";
 
-            var sample = form.Files["sample"];
-            Utils.UploadFormFileAsync(sample, Config.SampleBlobContainerName, filename);
+            //var sample = form.Files["sample"];
+            //Utils.UploadFormFileAsync(sample, Config.SampleBlobContainerName, filename);
 
-            var image = form.Files["image"];
-            Utils.UploadFormFileAsync(image, Config.CoverArtContainerName, filename);
+            //var image = form.Files["image"];
+            //Utils.UploadFormFileAsync(image, Config.CoverArtContainerName, filename);
 
             return new OkObjectResult(sampleMetadata);
         }
