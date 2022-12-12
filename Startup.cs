@@ -8,10 +8,9 @@ using vp.services;
 using Microsoft.Extensions.Options;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.IdentityModel.Protocols;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Azure.Functions.Identity.Web.Extensions;
+using vp.Services;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -30,15 +29,13 @@ namespace vp
 
             var configuration = builder.Services.BuildServiceProvider().GetService<IConfiguration>();
 
-
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(currentDirectory)
-                .AddConfiguration(configuration) // Add the original function configuration 
+                .AddConfiguration(configuration)
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .Build();
 
             builder.Services.AddSingleton<IConfiguration>(Configuration);
-
             MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(Config.MongoConnectionString));
             settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
 
@@ -46,6 +43,7 @@ namespace vp
             builder.Services.AddTransient<ISampleService, SampleService>();
             builder.Services.AddTransient<IUserService, UserService>();
             builder.Services.AddTransient<IStripeService, StripeService>();
+            builder.Services.AddTransient<ICheckoutSessionService, CheckoutSessionService>();
 
             ConfigureServices(builder.Services);
         }
@@ -53,33 +51,14 @@ namespace vp
         private void ConfigureServices(IServiceCollection services)
         {
             IdentityModelEventSource.ShowPII = true;
-           
-            var configManager = new ConfigurationManager<OpenIdConnectConfiguration>("https://visiophoneb2c.b2clogin.com/tfp/visiophone.wtf/B2C_1_SIGN_IN/v2.0/.well-known/openid-configuration", new OpenIdConnectConfigurationRetriever());
-            var openidconfig = configManager.GetConfigurationAsync().Result;
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddArmToken()
                 .AddScriptAuthLevel()
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, _ =>
                 {
-                    _.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                    {
-                        ValidateAudience = true,
-                        ValidAudience = "0134f7f5-3b4a-4e3f-b8f7-992875ad538f",
-
-                        ValidateIssuer = true,
-                        ValidIssuers = new[] { "https://visiophoneb2c.b2clogin.com/tfp/26244285-b320-45e1-946a-99b199d5424e/b2c_1_sign_in/v2.0/" },
-
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKeys = openidconfig.SigningKeys,
-
-                        RequireExpirationTime = true,
-                        ValidateLifetime = true,
-                        RequireSignedTokens = true,
-                    };
-
+                    _.TokenValidationParameters = VPTokenValidationParamters.tokenValidationParameters;
                     _.RequireHttpsMetadata = false;
-
                 });
 
             services

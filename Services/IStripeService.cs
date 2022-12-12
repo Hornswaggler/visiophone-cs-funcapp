@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using vp.DTO;
 using vp.models;
 
 namespace vp.services
@@ -11,5 +12,6 @@ namespace vp.services
 
         Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile);
         Task<Stripe.AccountLink> CreateAccountLink(string stripeId);
+        Stripe.Checkout.Session CreateSession(SamplePurchaseRequest purchaseRequest);
     }
 }

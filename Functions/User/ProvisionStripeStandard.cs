@@ -30,7 +30,7 @@ namespace vp.Functions.User
                 return new UnauthorizedResult();
             }
 
-            string accountId = _userService.GetUserAccountId(req);
+            string accountId = _userService.GetUserAccountId(req.HttpContext.User);
             var stripeProfile = _stripeService.GetStripeProfile(accountId);
             if(stripeProfile == null)
             {
@@ -40,8 +40,8 @@ namespace vp.Functions.User
             var accountLink = await _stripeService.CreateAccountLink(stripeProfile.stripeId);
             stripeProfile.stripeUri = accountLink.Url;
 
-            //TODO This should be a redirect
-            return new OkObjectResult(stripeProfile);
+            req.HttpContext.Response.Headers.Add("Location", accountLink.Url);
+            return new StatusCodeResult(303);
         }
     }
 }

@@ -32,7 +32,7 @@ namespace vp.Functions.User
                 return new UnauthorizedResult();
             }
 
-            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req));
+            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User));
 
             //TODO: Add auth check here (check contents w/ header to ensure they match)
             //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();

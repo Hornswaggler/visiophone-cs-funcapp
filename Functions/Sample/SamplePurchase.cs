@@ -1,53 +1,58 @@
 ﻿
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using System.Threading.Tasks;
 using vp.services;
 using Microsoft.Extensions.Logging;
-using System.IO;
 using vp.DTO;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
-using System;
-using vp.Models;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using vp.Services;
+using Newtonsoft.Json;
 
 namespace visiophone_cs_funcapp.Functions.Sample
 {
     public class SamplePurchase
     {
         private readonly IUserService _userService;
-        private readonly ISampleService _sampleService;
+        private readonly IStripeService _stripeService;
+        private readonly ICheckoutSessionService _checkoutSessionService;
 
-        public SamplePurchase(IUserService userService, ISampleService sampleService)
+
+        public SamplePurchase(IUserService userService, ICheckoutSessionService checkoutSessionService, IStripeService stripeService)
         {
             _userService = userService;
-            _sampleService = sampleService;
+            _stripeService = stripeService;
+            _checkoutSessionService = checkoutSessionService;
         }
 
         [FunctionName("sample_purchase")]
-        public async Task<UserProfile> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req, ClaimsPrincipal principal,
+        public  IActionResult Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<IdDTO>(requestBody);
+            if (!_userService.AuthenticateUserForm(req, log))
+            {
+                return new UnauthorizedResult();
 
-            log.LogInformation($"Sample Purchase: {request.accountId} : {request._id}");
+            }
 
-            //if (_userService.isAuthenticated(principal, request.accountId)) {
-                var sample = await _sampleService.GetSampleById(request._id);
-                if (sample != null)
-                {
-                    //TODO: Make sure user doesn't already own this sample...
-                    return await _userService.PurchaseSample(request.accountId, sample._id);
-                }
-            //}
+            var prices = req.Form["prices"].ToString();
+            var priceIds = JsonConvert.DeserializeObject<List<string>>(prices);
 
-            var error = $"Unauthorized Sample Purchase: {request.accountId} : {request._id}";
-            var e = new Exception(error);
-            log.LogCritical(e, error);
-            throw e;
+            var samples = new List<SampleDTO>();
+            foreach(var priceId in priceIds)
+            {
+                samples.Add(new SampleDTO { priceId = priceId });
+            }
+
+            var samplePurchaseRequest = new SamplePurchaseRequest
+            {
+                samples = samples
+            };
+
+            Stripe.Checkout.Session session = _stripeService.CreateSession(samplePurchaseRequest);
+            return new RedirectResult(session.Url);
         }
     }
 }

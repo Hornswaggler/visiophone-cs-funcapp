@@ -3,6 +3,7 @@ using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.DTO;
 using vp.models;
 
 namespace vp.services
@@ -25,6 +26,31 @@ namespace vp.services
             _productService = new Stripe.ProductService();
             _linkService = new Stripe.AccountLinkService();
             _profiles = _database.GetCollection<StripeProfile>("stripeProfiles");
+        }
+
+        public Session CreateSession(SamplePurchaseRequest purchaseRequest) {
+            var lineItems = new List<SessionLineItemOptions>();
+            foreach(var sample in purchaseRequest.samples)
+            {
+                lineItems.Add(new SessionLineItemOptions
+                {
+                    Price = sample.priceId,
+                    Quantity = 1
+                });
+            }
+
+            var options = new SessionCreateOptions
+            {
+                LineItems = lineItems,
+                Mode = "payment",
+                SuccessUrl = Config.PurchaseSampleStripeReturnUrl,
+                CancelUrl = Config.PurchaseSampleStripeCancelUrl,
+            };
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+
+            return session;
         }
 
         public async Task<Stripe.Account> GetStripeAccount(StripeProfile stripeProfile) {
@@ -88,9 +114,6 @@ namespace vp.services
 
         public async Task<StripeProfile> CreateNewAccount(string accountId)
         {
-            //var options = new Stripe.AccountCreateOptions { 
-            //    Type = "express"
-            //};
 
             //TODO: Get the email from the identity token
             var options = new Stripe.AccountCreateOptions
@@ -117,7 +140,6 @@ namespace vp.services
             {
                 accountId = accountId,
                 stripeId = stripeAccount.Id,
-                //stripeUri = accountLink.Url
             });
         }
 

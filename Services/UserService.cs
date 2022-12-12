@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Web.Http;
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace vp.services
 {
@@ -21,7 +24,6 @@ namespace vp.services
 
         public UserService(MongoClient mongoClient, IConfiguration configuration, IStripeService stripeService)
         {
-            //TODO: move this up a layer...
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
             _users = _database.GetCollection<UserProfile>("users");
@@ -51,6 +53,23 @@ namespace vp.services
             return true;
         }
 
+        public bool AuthenticateUserForm(HttpRequest req, ILogger log)
+        {
+            string idToken = req.Form["idToken"].ToString();
+            ISecurityTokenValidator tokenValidator = new JwtSecurityTokenHandler();
+
+            SecurityToken securityToken;
+            var claimsPrincipal = tokenValidator.ValidateToken(idToken, VPTokenValidationParamters.tokenValidationParameters, out securityToken);
+
+            if (!claimsPrincipal.Identity.IsAuthenticated
+                || !claimsPrincipal.HasClaim(Config.AuthClaimSignInAuthority, Config.AuthSignInAuthority))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public async Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log) {
 
             if (!await AuthenticateUser(req, log))
@@ -58,14 +77,13 @@ namespace vp.services
                 return null;
             }
 
-            var stripeProfile = _stripeService.GetStripeProfile(GetUserAccountId(req));
+            var stripeProfile = _stripeService.GetStripeProfile(GetUserAccountId(req.HttpContext.User));
             if (stripeProfile == null)
             {
                 return null;
             }
 
-            //TODO: This should come from the token...
-            var stripeAccount = await _stripeService.GetStripeAccount(stripeProfile);
+            Stripe.Account stripeAccount = await _stripeService.GetStripeAccount(stripeProfile);
             if (!stripeAccount.DetailsSubmitted)
             {
                 return null;
@@ -74,77 +92,17 @@ namespace vp.services
             return stripeAccount;
         }
 
-        public string GetUserAccountId(HttpRequest req) {
-            var user = req.HttpContext.User;
-
-            if (!user.HasClaim(Config.AuthClaimSignInAuthority, Config.AuthSignInAuthority))
+        public string GetUserAccountId(ClaimsPrincipal claimsPrincipal) {
+            if (!claimsPrincipal.HasClaim(Config.AuthClaimSignInAuthority, Config.AuthSignInAuthority))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            return user.FindFirst(Config.AuthClaimId).Value;
+            return claimsPrincipal.FindFirst(Config.AuthClaimId).Value;
         }
 
         public UserProfile GetUserProfile(string accountId, bool throwNoExist = false)
         {
-            //var result =  _users
-            //    .Find(u => u.accountId.Equals(UserProfile.GetAcccountIdFromToken(accountId)))
-            //    .FirstOrDefault<UserProfile>();
-            //if(throwNoExist && result == null) throw new Exception($"failed to find user record for user: ${accountId}");
-            //return result;
-            return null;
-        }
-
-        public async Task<UserProfile> PurchaseSample(string accountId, string sampleId) {
-            //var userProfile = GetUserProfile(accountId, true);
-
-            //userProfile.owned.Add(new UserProfile.LibraryItem
-            //{
-            //    sampleId = sampleId,
-            //});
-
-            //var filter = Builders<UserProfile>.Filter.Where(profile => profile.accountId == userProfile.accountId);
-            //await _users.ReplaceOneAsync(filter, userProfile, new ReplaceOptions { IsUpsert = true });
-
-            //return userProfile;
-            return null;
-        }
-
-        public async Task<UserProfile> AddForSale(string accountId, string sampleId)
-        {
-            //var userProfile = GetUserProfile(accountId, true);
-            //userProfile.forSale.Add(new UserProfile.LibraryItem
-            //{
-            //    sampleId = sampleId
-            //});
-
-            //var filter = Builders<UserProfile>.Filter.Where(profile => profile.accountId == userProfile.accountId);
-            //await _users.ReplaceOneAsync(filter, userProfile, new ReplaceOptions { IsUpsert = true });
-
-            //return userProfile;
-            return null;
-        }
-
-        public async Task<UserProfile> SetUserProfile(UserProfile userProfile)
-        {
-            //UserProfile lastProfile = GetUserProfile(userProfile.accountId);
-            //UserProfile forInsert;
-
-            //if (lastProfile == null)
-            //{
-            //    forInsert = userProfile;
-            //}
-            //else
-            //{
-            //    forInsert = lastProfile;
-            //    forInsert.customUserName = userProfile.customUserName;
-            //    forInsert.avatarId = userProfile.avatarId;
-            //}
-
-            //var filter = Builders<UserProfile>.Filter.Where(profile => profile.accountId == forInsert.accountId);
-            //await _users.ReplaceOneAsync(filter, forInsert, new ReplaceOptions { IsUpsert = true });
-
-            //return userProfile;
             return null;
         }
     }

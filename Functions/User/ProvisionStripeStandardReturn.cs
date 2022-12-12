@@ -36,7 +36,7 @@ namespace vp.Functions.User
                 return new UnauthorizedResult();
             }
 
-            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req));
+            var stripeProfile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User));
 
             //TODO: This should come from the token...
             var stripeAccount = await _stripeService.GetStripeAccount(stripeProfile);
