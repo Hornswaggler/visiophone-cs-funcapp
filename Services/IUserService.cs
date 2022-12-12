@@ -8,12 +8,10 @@ namespace vp.services
 {
     public interface IUserService
     {
-        UserProfile GetUserProfile(string accountId, bool throwNoExist = false);
-        Task<UserProfile> SetUserProfile(UserProfile userProfile);
-        Task<UserProfile> PurchaseSample(string accountId, string sampleId);
-        Task<UserProfile> AddForSale(string accountId, string sampleId);
-
         Task<bool> AuthenticateUser(HttpRequest req, ILogger log);
-        string GetUserAccountId(HttpRequest req);
+        Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log);
+        UserProfile GetUserProfile(string accountId, bool throwNoExist = false);
+        bool AuthenticateUserForm(HttpRequest req, ILogger log);
+        string GetUserAccountId(ClaimsPrincipal claimsPrincipal);
     }
 }

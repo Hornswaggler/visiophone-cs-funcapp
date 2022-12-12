@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
+using Stripe.Checkout;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.DTO;
 using vp.models;
 
 namespace vp.services
@@ -14,32 +15,83 @@ namespace vp.services
         private readonly IMongoCollection<StripeProfile> _profiles;
         private readonly Stripe.AccountService _accountService;
         private readonly Stripe.AccountLinkService _linkService;
+        private readonly Stripe.ProductService _productService;
 
-
-        public StripeService(MongoClient mongoClient, IConfiguration configuration)
+        public StripeService(MongoClient mongoClient)
         {
             Stripe.StripeConfiguration.ApiKey = Config.StripeAPIKey;
-            //TODO: move this up a layer...
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
             _accountService = new Stripe.AccountService();
+            _productService = new Stripe.ProductService();
             _linkService = new Stripe.AccountLinkService();
-
-            //TODO Make this into a provisioning script to be run in the deployment pipeline....This will provision the Sample collection(specifically for local dev)
-            //var bson = new BsonDocument
-            //{
-            //    { "customAction", "CreateCollection" },
-            //    { "collection", "stripeProfiles" },//update CollectionName
-            //    { "shardKey", "key" }, //update ShardKey
-            //    { "offerThroughput", 400} //update Throughput
-            //};
-            //var shellCommand = new BsonDocumentCommand<BsonDocument>(bson);
-            //_database.RunCommand(shellCommand);
-
             _profiles = _database.GetCollection<StripeProfile>("stripeProfiles");
         }
 
+        public Session CreateSession(SamplePurchaseRequest purchaseRequest) {
+            var lineItems = new List<SessionLineItemOptions>();
+            foreach(var sample in purchaseRequest.samples)
+            {
+                lineItems.Add(new SessionLineItemOptions
+                {
+                    Price = sample.priceId,
+                    Quantity = 1
+                });
+            }
+
+            var options = new SessionCreateOptions
+            {
+                LineItems = lineItems,
+                Mode = "payment",
+                SuccessUrl = Config.PurchaseSampleStripeReturnUrl,
+                CancelUrl = Config.PurchaseSampleStripeCancelUrl,
+            };
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+
+            return session;
+        }
+
         public async Task<Stripe.Account> GetStripeAccount(StripeProfile stripeProfile) {
+
+
+            //var options = new Stripe.ProductListOptions
+            //{
+            //    Limit = 3,
+            //};
+            //var service = new Stripe.ProductService();
+            //Stripe.StripeList<Stripe.Product> products = service.List(
+            //  options);
+
+
+            //var options = new SessionCreateOptions
+            //{
+            //    LineItems = new List<SessionLineItemOptions>
+            //    {
+            //    new SessionLineItemOptions
+            //    {
+            //        Price = "price_1MAisxPILx3YgDycRLexHv3q",
+            //        Quantity = 1,
+            //    },
+            //    },
+            //    Mode = "payment",
+            //    SuccessUrl = "https://example.com/success",
+            //    CancelUrl = "https://example.com/cancel",
+            //    PaymentIntentData = new SessionPaymentIntentDataOptions
+            //    {
+            //        ApplicationFeeAmount = 123,
+            //    },
+            //};
+
+            //var requestOptions = new Stripe.RequestOptions
+            //{
+            //    StripeAccount = "acct_1MAiFGPILx3YgDyc",
+            //};
+            //var service = new SessionService();
+            //Session session = service.Create(options, requestOptions);
+
+
             return await _accountService.GetAsync(stripeProfile.stripeId);
         }
 
@@ -49,27 +101,56 @@ namespace vp.services
             return profile;
         }
 
+        public void AddProduct(string name) {
 
-        public async Task<string> CreateNewAccount(string accountId)
+            var options = new Stripe.ProductCreateOptions
+            {
+                Name = name,
+            };
+
+            //_productService.Create();
+
+        }
+
+        public async Task<StripeProfile> CreateNewAccount(string accountId)
         {
-            var options = new Stripe.AccountCreateOptions { Type = "standard" };
+
+            //TODO: Get the email from the identity token
+            var options = new Stripe.AccountCreateOptions
+            {
+                Type = "custom",
+                Country = "US",
+                Email = "founders@visiophone.wtf",
+                Capabilities = new Stripe.AccountCapabilitiesOptions
+                {
+                    CardPayments = new Stripe.AccountCapabilitiesCardPaymentsOptions
+                    {
+                        Requested = true,
+                    },
+                    Transfers = new Stripe.AccountCapabilitiesTransfersOptions
+                    {
+                        Requested = true,
+                    },
+                },
+            };
+
             var stripeAccount = await _accountService.CreateAsync(options);
 
-            var accountLink = await _linkService.CreateAsync(new Stripe.AccountLinkCreateOptions
-            {
-                Account = stripeAccount.Id,
-                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
-                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
-                Type = "account_onboarding",
-            });
-
-            await SetStripeProfile(new StripeProfile
+            return await SetStripeProfile(new StripeProfile
             {
                 accountId = accountId,
                 stripeId = stripeAccount.Id,
             });
+        }
 
-            return accountLink.Url;
+        public async Task<Stripe.AccountLink> CreateAccountLink(string stripeId) {
+            return await _linkService.CreateAsync(new Stripe.AccountLinkCreateOptions
+            {
+                Account = stripeId,
+                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
+                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
+                Type = "account_onboarding",
+            });
         }
 
         public async Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile) {

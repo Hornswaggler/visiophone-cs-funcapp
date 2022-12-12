@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.util;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+
 namespace vp.Functions.Sample
 {
     public class SampleUpload
@@ -14,11 +16,13 @@ namespace vp.Functions.Sample
         private readonly ISampleService _sampleService;
         private readonly IUserService _userService;
         private readonly ILogger<SampleUpload> _log;
+        private readonly IStripeService _stripeService;
 
-        public SampleUpload(ISampleService sampleService, IUserService userService, ILogger<SampleUpload> log)
+        public SampleUpload(ISampleService sampleService, IUserService userService, IStripeService stripeService, ILogger<SampleUpload> log)
         {
             _sampleService = sampleService;
             _userService = userService;
+            _stripeService = stripeService;
             _log = log;
         }
 
@@ -27,19 +31,46 @@ namespace vp.Functions.Sample
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
             HttpRequest req, ILogger log, ExecutionContext context)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            var stripeAccount = _userService.AuthenticateSeller(req, log);
+            if(stripeAccount.Result == null)
             {
                 return new UnauthorizedResult();
             }
 
             //TODO: AUTHORIZE THE USER (CHECK ACCOUNT) interface Stripe etc
 
+            //TODO: Transactionalize this!
+
             models.Sample sampleMetadata = new models.Sample();
             sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
 
+            var account = stripeAccount.Result as Stripe.Account;
+
+
+            var options = new Stripe.ProductCreateOptions
+            {
+                Name = sampleMetadata.name,
+                Description = sampleMetadata.description,
+                DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions {
+                    Currency = "USD",
+                    UnitAmountDecimal = sampleMetadata.cost
+                },
+                Metadata = new Dictionary<string, string>
+                {
+                    { "accountId", $"{account.Id}" }
+                }
+            };
+
+            var service = new Stripe.ProductService();
+            var stripeProduct = service.Create(options /*, requestOptions*/ );
+            sampleMetadata.priceId = stripeProduct.DefaultPriceId;
+            sampleMetadata.sellerId = account.Id;
+
             await _sampleService.AddSample(sampleMetadata);
-            await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id );
-                 
+
+            //TODO: Fix this...
+            //await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id);
+
             var form = req.Form;
             string filename = $"{sampleMetadata._id}";
 

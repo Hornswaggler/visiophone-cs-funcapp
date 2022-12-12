@@ -29,7 +29,7 @@ namespace vp.Functions.User
                 return new UnauthorizedResult();
             }
 
-            var userAccountId = _userService.GetUserAccountId(req);
+            var userAccountId = _userService.GetUserAccountId(req.HttpContext.User);
 
             var meta = req.Form.Files[0];
             var contentType = req.Form.Files[0].ContentType;
