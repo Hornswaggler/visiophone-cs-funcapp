@@ -53,7 +53,7 @@ namespace vp.services
             return true;
         }
 
-        public bool AuthenticateUserForm(HttpRequest req, ILogger log)
+        public string AuthenticateUserForm(HttpRequest req, ILogger log)
         {
             string idToken = req.Form["idToken"].ToString();
             ISecurityTokenValidator tokenValidator = new JwtSecurityTokenHandler();
@@ -64,10 +64,17 @@ namespace vp.services
             if (!claimsPrincipal.Identity.IsAuthenticated
                 || !claimsPrincipal.HasClaim(Config.AuthClaimSignInAuthority, Config.AuthSignInAuthority))
             {
-                return false;
+                throw new UnauthorizedAccessException();
             }
 
-            return true;
+            string accountId = GetUserAccountId(claimsPrincipal);
+            if (accountId != null && accountId.Trim().Equals(""))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+
+            return accountId;
         }
 
         public async Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log) {

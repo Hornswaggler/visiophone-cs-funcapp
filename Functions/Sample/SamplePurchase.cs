@@ -31,13 +31,14 @@ namespace visiophone_cs_funcapp.Functions.Sample
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!_userService.AuthenticateUserForm(req, log))
+            try {
+                _userService.AuthenticateUserForm(req, log);
+            } catch
             {
                 return new UnauthorizedResult();
-
             }
 
-            var prices = req.Form["prices"].ToString();
+            var prices = req.Form["payload"].ToString();
             var priceIds = JsonConvert.DeserializeObject<List<string>>(prices);
 
             var samples = new List<SampleDTO>();

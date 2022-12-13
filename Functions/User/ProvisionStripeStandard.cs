@@ -20,17 +20,20 @@ namespace vp.Functions.User
             _userService = userService;
         }
 
-        [FunctionName("provision_stripe_standard")]
+        [FunctionName("account_upgrade")]
         public async Task<IActionResult> Run(
-            [Microsoft.Azure.WebJobs.HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
+            [Microsoft.Azure.WebJobs.HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            string accountId = null;
+            try
             {
+                accountId = _userService.AuthenticateUserForm(req, log);
+            }
+            catch {
                 return new UnauthorizedResult();
             }
 
-            string accountId = _userService.GetUserAccountId(req.HttpContext.User);
             var stripeProfile = _stripeService.GetStripeProfile(accountId);
             if(stripeProfile == null)
             {

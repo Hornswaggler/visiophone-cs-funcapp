@@ -11,7 +11,7 @@ namespace vp.services
         Task<bool> AuthenticateUser(HttpRequest req, ILogger log);
         Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log);
         UserProfile GetUserProfile(string accountId, bool throwNoExist = false);
-        bool AuthenticateUserForm(HttpRequest req, ILogger log);
+        string AuthenticateUserForm(HttpRequest req, ILogger log);
         string GetUserAccountId(ClaimsPrincipal claimsPrincipal);
     }
 }

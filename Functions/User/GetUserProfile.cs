@@ -22,7 +22,7 @@ namespace vp.Functions.User
             _stripeService = stripeService;
         }
 
-        [FunctionName("get_user_profile")]
+        [FunctionName("get_stripe_profile")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
