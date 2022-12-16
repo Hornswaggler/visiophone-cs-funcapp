@@ -20,17 +20,20 @@ namespace vp.Functions.User
             _userService = userService;
         }
 
-        [FunctionName("provision_stripe_standard")]
+        [FunctionName("account_upgrade")]
         public async Task<IActionResult> Run(
-            [Microsoft.Azure.WebJobs.HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            string accountId = null;
+            try
             {
+                accountId = _userService.AuthenticateUserForm(req, log);
+            }
+            catch {
                 return new UnauthorizedResult();
             }
 
-            string accountId = _userService.GetUserAccountId(req.HttpContext.User);
             var stripeProfile = _stripeService.GetStripeProfile(accountId);
             if(stripeProfile == null)
             {
@@ -38,8 +41,6 @@ namespace vp.Functions.User
             }
 
             var accountLink = await _stripeService.CreateAccountLink(stripeProfile.stripeId);
-            stripeProfile.stripeUri = accountLink.Url;
-
             req.HttpContext.Response.Headers.Add("Location", accountLink.Url);
             return new StatusCodeResult(303);
         }

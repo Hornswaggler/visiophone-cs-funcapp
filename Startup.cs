@@ -10,7 +10,6 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Azure.Functions.Identity.Web.Extensions;
-using vp.Services;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -43,7 +42,6 @@ namespace vp
             builder.Services.AddTransient<ISampleService, SampleService>();
             builder.Services.AddTransient<IUserService, UserService>();
             builder.Services.AddTransient<IStripeService, StripeService>();
-            builder.Services.AddTransient<ICheckoutSessionService, CheckoutSessionService>();
 
             ConfigureServices(builder.Services);
         }

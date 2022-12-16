@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using Stripe;
 using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
@@ -12,29 +13,31 @@ namespace vp.services
     {
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
-        private readonly IMongoCollection<StripeProfile> _profiles;
-        private readonly Stripe.AccountService _accountService;
-        private readonly Stripe.AccountLinkService _linkService;
-        private readonly Stripe.ProductService _productService;
+        private readonly IMongoCollection<StripeProfile> _profileCollection;
+        private readonly AccountService _accountService;
+        private readonly AccountLinkService _linkService;
+        private readonly ProductService _productService;
+        private readonly SessionService _sessionService;
 
         public StripeService(MongoClient mongoClient)
         {
-            Stripe.StripeConfiguration.ApiKey = Config.StripeAPIKey;
+            StripeConfiguration.ApiKey = Config.StripeAPIKey;
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
-            _accountService = new Stripe.AccountService();
-            _productService = new Stripe.ProductService();
-            _linkService = new Stripe.AccountLinkService();
-            _profiles = _database.GetCollection<StripeProfile>("stripeProfiles");
+            _accountService = new AccountService();
+            _productService = new ProductService();
+            _linkService = new AccountLinkService();
+            _sessionService = new SessionService();
+            _profileCollection = _database.GetCollection<StripeProfile>("stripeProfiles");
         }
 
-        public Session CreateSession(SamplePurchaseRequest purchaseRequest) {
+        public Session CreateSession(string accountId, List<string> priceIds) {
             var lineItems = new List<SessionLineItemOptions>();
-            foreach(var sample in purchaseRequest.samples)
+            foreach(var priceId in priceIds)
             {
                 lineItems.Add(new SessionLineItemOptions
                 {
-                    Price = sample.priceId,
+                    Price = priceId,
                     Quantity = 1
                 });
             }
@@ -45,89 +48,50 @@ namespace vp.services
                 Mode = "payment",
                 SuccessUrl = Config.PurchaseSampleStripeReturnUrl,
                 CancelUrl = Config.PurchaseSampleStripeCancelUrl,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "vp_accountId", accountId }
+                }
             };
 
-            var service = new SessionService();
-            Session session = service.Create(options);
+            Session session = _sessionService.Create(options);
 
             return session;
         }
 
-        public async Task<Stripe.Account> GetStripeAccount(StripeProfile stripeProfile) {
-
-
-            //var options = new Stripe.ProductListOptions
-            //{
-            //    Limit = 3,
-            //};
-            //var service = new Stripe.ProductService();
-            //Stripe.StripeList<Stripe.Product> products = service.List(
-            //  options);
-
-
-            //var options = new SessionCreateOptions
-            //{
-            //    LineItems = new List<SessionLineItemOptions>
-            //    {
-            //    new SessionLineItemOptions
-            //    {
-            //        Price = "price_1MAisxPILx3YgDycRLexHv3q",
-            //        Quantity = 1,
-            //    },
-            //    },
-            //    Mode = "payment",
-            //    SuccessUrl = "https://example.com/success",
-            //    CancelUrl = "https://example.com/cancel",
-            //    PaymentIntentData = new SessionPaymentIntentDataOptions
-            //    {
-            //        ApplicationFeeAmount = 123,
-            //    },
-            //};
-
-            //var requestOptions = new Stripe.RequestOptions
-            //{
-            //    StripeAccount = "acct_1MAiFGPILx3YgDyc",
-            //};
-            //var service = new SessionService();
-            //Session session = service.Create(options, requestOptions);
-
-
+        public async Task<Account> GetStripeAccount(StripeProfile stripeProfile) {
             return await _accountService.GetAsync(stripeProfile.stripeId);
         }
 
         public StripeProfile GetStripeProfile(string accountId, bool throwNoExist = false) {
-            StripeProfile profile = _profiles.Find(u => u.accountId.Equals(accountId)).FirstOrDefault();
+            StripeProfile profile = _profileCollection.Find(u => u.accountId.Equals(accountId)).FirstOrDefault();
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
-            return profile;
-        }
 
-        public void AddProduct(string name) {
-
-            var options = new Stripe.ProductCreateOptions
+            StripeProfileDTO result = new StripeProfileDTO
             {
-                Name = name,
+                accountId = profile.accountId,
+                stripeId = profile.stripeId,
+                isStripeApproved = profile.isStripeApproved,
             };
 
-            //_productService.Create();
-
+            return profile;
         }
 
         public async Task<StripeProfile> CreateNewAccount(string accountId)
         {
-
             //TODO: Get the email from the identity token
-            var options = new Stripe.AccountCreateOptions
+            var options = new AccountCreateOptions
             {
                 Type = "custom",
                 Country = "US",
                 Email = "founders@visiophone.wtf",
-                Capabilities = new Stripe.AccountCapabilitiesOptions
+                Capabilities = new AccountCapabilitiesOptions
                 {
-                    CardPayments = new Stripe.AccountCapabilitiesCardPaymentsOptions
+                    CardPayments = new AccountCapabilitiesCardPaymentsOptions
                     {
                         Requested = true,
                     },
-                    Transfers = new Stripe.AccountCapabilitiesTransfersOptions
+                    Transfers = new AccountCapabilitiesTransfersOptions
                     {
                         Requested = true,
                     },
@@ -143,8 +107,8 @@ namespace vp.services
             });
         }
 
-        public async Task<Stripe.AccountLink> CreateAccountLink(string stripeId) {
-            return await _linkService.CreateAsync(new Stripe.AccountLinkCreateOptions
+        public async Task<AccountLink> CreateAccountLink(string stripeId) {
+            return await _linkService.CreateAsync(new AccountLinkCreateOptions
             {
                 Account = stripeId,
                 RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
@@ -157,10 +121,57 @@ namespace vp.services
             StripeProfile lastProfile = GetStripeProfile(stripeProfile.accountId);
 
             var filter = Builders<StripeProfile>.Filter.Where(profile => profile.accountId == stripeProfile.accountId);
-            await _profiles.ReplaceOneAsync(filter, stripeProfile, new ReplaceOptions { IsUpsert = true });
+            await _profileCollection.ReplaceOneAsync(filter, stripeProfile, new ReplaceOptions { IsUpsert = true });
 
             return stripeProfile;
         }
 
+        public Session GetCheckoutSession(string sessionId) {
+            return _sessionService.Get(sessionId);
+        }
+
+        public List<string> GetPriceIdsForSession(string sessionId)
+        {
+            var options = new SessionListLineItemsOptions
+            {
+                Limit = 100,
+            };
+
+            var priceIds = new List<string>();
+            var hasMore = true;
+            while (hasMore)
+            {
+                StripeList<LineItem> lineItems = _sessionService.ListLineItems(sessionId, options);
+                foreach (var lineItem in lineItems.Data)
+                {
+                    priceIds.Add(lineItem.Price.Id);
+                }
+                hasMore = lineItems.HasMore;
+            }
+
+            return priceIds;
+        }
+
+        public List<Sample> GetProductsForUser(string stripeId)
+        {
+            var options = new ProductSearchOptions
+            {
+                Query = $"active:'true' AND metadata['accountId']:'{stripeId}'",
+            };
+            var result = _productService.Search(options);
+            var products = result.Data as List<Product>;
+
+            List<Sample> samples = new List<Sample>();
+            foreach(Product product in products)
+            {
+                samples.Add(new Sample
+                {
+                    name = product.Name,
+                    description = product.Description,
+                });
+            }
+
+            return samples;
+        }
     }
 }

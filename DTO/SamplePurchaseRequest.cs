@@ -5,6 +5,7 @@ namespace vp.DTO
 {
     public class SamplePurchaseRequest
     {
-        public List<SampleDTO> samples { get; set; } = new List<SampleDTO>();
+        public List<string> priceIds { get; set; } = new List<string>();
+        public string accountId { get; set; } = "";
     }
 }

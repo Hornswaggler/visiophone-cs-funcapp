@@ -2,7 +2,6 @@
 using MongoDB.Driver;
 using System;
 using System.Threading.Tasks;
-using vp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +18,12 @@ namespace vp.services
     {
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
-        private readonly IMongoCollection<UserProfile> _users;
         private readonly IStripeService _stripeService;
 
         public UserService(MongoClient mongoClient, IConfiguration configuration, IStripeService stripeService)
         {
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
-            _users = _database.GetCollection<UserProfile>("users");
             _stripeService = stripeService;
         }
 
@@ -53,7 +50,7 @@ namespace vp.services
             return true;
         }
 
-        public bool AuthenticateUserForm(HttpRequest req, ILogger log)
+        public string AuthenticateUserForm(HttpRequest req, ILogger log)
         {
             string idToken = req.Form["idToken"].ToString();
             ISecurityTokenValidator tokenValidator = new JwtSecurityTokenHandler();
@@ -64,10 +61,17 @@ namespace vp.services
             if (!claimsPrincipal.Identity.IsAuthenticated
                 || !claimsPrincipal.HasClaim(Config.AuthClaimSignInAuthority, Config.AuthSignInAuthority))
             {
-                return false;
+                throw new UnauthorizedAccessException();
             }
 
-            return true;
+            string accountId = GetUserAccountId(claimsPrincipal);
+            if (accountId != null && accountId.Trim().Equals(""))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+
+            return accountId;
         }
 
         public async Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log) {
@@ -99,11 +103,6 @@ namespace vp.services
             }
 
             return claimsPrincipal.FindFirst(Config.AuthClaimId).Value;
-        }
-
-        public UserProfile GetUserProfile(string accountId, bool throwNoExist = false)
-        {
-            return null;
         }
     }
 }

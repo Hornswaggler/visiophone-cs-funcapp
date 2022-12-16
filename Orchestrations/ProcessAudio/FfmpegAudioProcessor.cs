@@ -53,11 +53,6 @@ namespace vp.orchestrations.processaudio
             }
         }
 
-        //public Task<string> TranscodeAsync(TranscodeParams transcodeParams, ILogger log)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public Task<string> TranscodeAsync(TranscodeParams transcodeParams, ILogger log, IDurableOrchestrationContext ctx)
         {
             throw new NotImplementedException();

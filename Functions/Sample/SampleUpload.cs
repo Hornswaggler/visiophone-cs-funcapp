@@ -37,15 +37,9 @@ namespace vp.Functions.Sample
                 return new UnauthorizedResult();
             }
 
-            //TODO: AUTHORIZE THE USER (CHECK ACCOUNT) interface Stripe etc
-
             //TODO: Transactionalize this!
-
-            models.Sample sampleMetadata = new models.Sample();
-            sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
-
+            var sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
             var account = stripeAccount.Result as Stripe.Account;
-
 
             var options = new Stripe.ProductCreateOptions
             {
@@ -57,19 +51,16 @@ namespace vp.Functions.Sample
                 },
                 Metadata = new Dictionary<string, string>
                 {
-                    { "accountId", $"{account.Id}" }
+                    { "accountId", $"{account.Id}" },
                 }
             };
 
             var service = new Stripe.ProductService();
-            var stripeProduct = service.Create(options /*, requestOptions*/ );
+            var stripeProduct = service.Create(options);
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
             sampleMetadata.sellerId = account.Id;
 
             await _sampleService.AddSample(sampleMetadata);
-
-            //TODO: Fix this...
-            //await _userService.AddForSale(req.Form["accountId"], sampleMetadata._id);
 
             var form = req.Form;
             string filename = $"{sampleMetadata._id}";
