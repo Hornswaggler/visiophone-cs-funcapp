@@ -26,6 +26,7 @@ namespace vp
         public static string AUTH_VALID_AUDIENCE = "AUTH_VALID_AUDIENCE";
         public static string AUTH_VALID_ISSUER = "AUTH_VALID_ISSUER";
         public static string AUTH_OPENID_CONNECT_CONFIG = "AUTH_OPENID_CONNECT_CONFIG";
+        public static string CHECKOUT_SESSION_COMPLETED_SECRET = "CHECKOUT_SESSION_COMPLETED_SECRET";
         public static int BufferSize  = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;
 
@@ -47,5 +48,6 @@ namespace vp
         public static string AuthValidAudience  = Environment.GetEnvironmentVariable(AUTH_VALID_AUDIENCE);
         public static string AuthValidIssuer = Environment.GetEnvironmentVariable(AUTH_VALID_ISSUER);
         public static string AuthOpenidConnectConfig = Environment.GetEnvironmentVariable(AUTH_OPENID_CONNECT_CONFIG);
+        public static string CheckoutSessionCompletedSecret = Environment.GetEnvironmentVariable(CHECKOUT_SESSION_COMPLETED_SECRET);
     }
 }

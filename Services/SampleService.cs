@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -15,34 +14,41 @@ namespace vp.services
         private readonly MongoClient _mongoClient;
         private readonly IMongoDatabase _database;
         private readonly IMongoCollection<Sample> _samples;
+        private readonly IMongoCollection<Purchase> _purchases;
 
         // TODO This should be configurable
         public static int ITEMS_PER_PAGE = 50;
 
-        public SampleService(MongoClient mongoClient, IConfiguration configuration)
+        public SampleService(MongoClient mongoClient)
         {
             _mongoClient = mongoClient;
             _database = _mongoClient.GetDatabase("visiophone");
-
-            // TODO Make this into a provisioning script to be run in the deployment pipeline....
-            // This will provision the Sample collection (specifically for local dev)
-            //var bson = new BsonDocument
-            //{
-            //    { "customAction", "CreateCollection" },
-            //    { "collection", "samples" },//update CollectionName
-            //    { "shardKey", "key" }, //update ShardKey
-            //    { "offerThroughput", 400} //update Throughput
-            //};
-            //var shellCommand = new BsonDocumentCommand<BsonDocument>(bson);
-            //_database.RunCommand(shellCommand);
-
             _samples = _database.GetCollection<Sample>("samples");
+            _purchases = _database.GetCollection<Purchase>("purchases");
         }
- 
+
         public async Task<Sample> AddSample(Sample sample)
         {
             await _samples.InsertOneAsync(sample);
             return sample;
+        }
+
+        public async Task<Purchase> AddPurchase(Purchase purchase) {
+            await _purchases.InsertOneAsync(purchase);
+            return purchase;
+        }
+        
+        public async Task<List<Purchase>> GetPurchases(string accountId) {
+            var purchaseQuery = await _purchases.FindAsync<Purchase>(p => p.accountId.Equals(accountId));
+            return await purchaseQuery.ToListAsync();
+        }
+
+        public async Task<List<Sample>> GetSamples(List<string> priceIds)
+        {
+            var filter = Builders<Sample>.Filter.In(p => p.priceId, priceIds);
+            var query = await _samples.FindAsync(filter);
+            var result = await query.ToListAsync();
+            return result;
         }
 
         public async Task<SampleQueryResult> GetSamples(SampleRequest request) {
@@ -77,6 +83,7 @@ namespace vp.services
             var sampleQuery = await _samples.FindAsync<Sample>(sample => sample._id.Equals(sampleId));
             return await sampleQuery.FirstOrDefaultAsync<Sample>();
         }
+
     }
 }
 

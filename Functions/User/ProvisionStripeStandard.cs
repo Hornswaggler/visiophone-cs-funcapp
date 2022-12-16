@@ -22,7 +22,7 @@ namespace vp.Functions.User
 
         [FunctionName("account_upgrade")]
         public async Task<IActionResult> Run(
-            [Microsoft.Azure.WebJobs.HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             string accountId = null;
@@ -41,8 +41,6 @@ namespace vp.Functions.User
             }
 
             var accountLink = await _stripeService.CreateAccountLink(stripeProfile.stripeId);
-            stripeProfile.stripeUri = accountLink.Url;
-
             req.HttpContext.Response.Headers.Add("Location", accountLink.Url);
             return new StatusCodeResult(303);
         }
