@@ -39,6 +39,8 @@ namespace vp.Functions.Sample
 
             //TODO: Transactionalize this!
             var sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
+
+            var name = req.HttpContext.User.FindFirst("name");
             var account = stripeAccount.Result as Stripe.Account;
 
             var options = new Stripe.ProductCreateOptions
@@ -57,6 +59,7 @@ namespace vp.Functions.Sample
 
             var service = new Stripe.ProductService();
             var stripeProduct = service.Create(options);
+            sampleMetadata.seller = name.Value;
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
             sampleMetadata.sellerId = account.Id;
 
