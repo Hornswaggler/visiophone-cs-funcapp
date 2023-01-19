@@ -10,18 +10,12 @@ using Newtonsoft.Json;
 using vp.services;
 using vp.DTO;
 
-namespace vp.Functions.Sample
+namespace vp.functions.sample
 {
-    public class SampleSearch 
+    public class SampleSearch : SampleFunctionBase
     {
-        private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
-
-        public SampleSearch(ISampleService sampleService, IUserService userService)
-        {
-            _sampleService = sampleService;
-            _userService = userService;
-        }
+        public SampleSearch(IUserService userService, ISampleService sampleService) 
+            : base(userService, sampleService) { }
 
         [FunctionName("sample_search")]
         public async Task<IActionResult> Run(

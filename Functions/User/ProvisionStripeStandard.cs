@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace vp.Functions.User
+namespace vp.functions.User
 {
     public class ProvisionStripeStandard
     {

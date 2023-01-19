@@ -29,6 +29,7 @@ namespace vp
         public static string CHECKOUT_SESSION_COMPLETED_SECRET = "CHECKOUT_SESSION_COMPLETED_SECRET";
         public static int BufferSize  = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;
+        public static string SAMPLE_PREVIEW_FILE_FORMAT = "SAMPLE_PREVIEW_FILE_FORMAT";
 
         public static string StorageConnectionString  = Environment.GetEnvironmentVariable(STORAGE_CONNECTION_STRING);
         public static string SampleBlobContainerName  = Environment.GetEnvironmentVariable(SAMPLE_CONTAINER_NAME);
@@ -49,5 +50,6 @@ namespace vp
         public static string AuthValidIssuer = Environment.GetEnvironmentVariable(AUTH_VALID_ISSUER);
         public static string AuthOpenidConnectConfig = Environment.GetEnvironmentVariable(AUTH_OPENID_CONNECT_CONFIG);
         public static string CheckoutSessionCompletedSecret = Environment.GetEnvironmentVariable(CHECKOUT_SESSION_COMPLETED_SECRET);
+        public static string SamplePreviewFileFormat = Environment.GetEnvironmentVariable(SAMPLE_PREVIEW_FILE_FORMAT);
     }
 }

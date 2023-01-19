@@ -15,18 +15,20 @@ namespace vp.orchestrations.processaudio
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            string incomingFilename = ctx.GetInput<string>();
+            ProcessAudioTransaction processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
             try
             {
                 string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
-                string localFilePath = $"{tempFolderPath}\\{incomingFilename}";
 
-                await ctx.CallActivityWithRetryAsync<string>(ActivityNames.StageAudioForTranscode,
+                processAudioTransaction.tempFolderPath = tempFolderPath;
+
+                processAudioTransaction = await ctx.CallActivityWithRetryAsync<ProcessAudioTransaction>(
+                    ActivityNames.StageAudioForTranscode,
                     new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                    new[] { localFilePath, incomingFilename });
+                    processAudioTransaction);
 
                 var transcodedLocations = await
-                    ctx.CallSubOrchestratorAsync<string[]>(OrchestratorNames.Transcode, new[] { incomingFilename, tempFolderPath });
+                    ctx.CallSubOrchestratorAsync<string[]>(OrchestratorNames.Transcode, processAudioTransaction);
 
                 foreach (string location in transcodedLocations)
                 {
@@ -51,21 +53,16 @@ namespace vp.orchestrations.processaudio
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            var paths = ctx.GetInput<string[]>();
-            string localFilePath = paths[0];
-            string tempFolderPath = paths[1];
-
-            string mp3FileName = $"{localFilePath.Split('_')[0]}.ogg";
+            ProcessAudioTransaction processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
 
             var transcodeProfiles = await
                 ctx.CallActivityAsync<TranscodeParams[]>(ActivityNames.GetTranscodeProfiles, null);
 
-
             var transcodeTasks = new List<Task<string>>();
             foreach (var transcodeProfile in transcodeProfiles)
             { 
-                transcodeProfile.InputFile = tempFolderPath + "\\" + localFilePath;
-                transcodeProfile.OutputFile = tempFolderPath + "\\" + mp3FileName;
+                transcodeProfile.InputFile = processAudioTransaction.getTempFilePath();
+                transcodeProfile.OutputFile = processAudioTransaction.getPreviewFilePath();
                 var transcodeTask = ctx.CallActivityAsync<string>
                     (ActivityNames.TranscodeAudio, transcodeProfile);
                 transcodeTasks.Add(transcodeTask);

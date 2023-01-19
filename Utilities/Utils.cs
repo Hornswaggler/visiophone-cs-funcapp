@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -28,6 +29,42 @@ namespace vp.util {
         {
             var sas = blob.GenerateSasUri(Azure.Storage.Sas.BlobSasPermissions.Read, DateTimeOffset.UtcNow + validDuration);
             return sas.ToString();
+        }
+
+        public static string GetFileExtension(string fileName)
+        {
+            return fileName.Substring(fileName.LastIndexOf('.'));
+        }
+
+        public static async void PurgeWebJobHistory(
+            IDurableOrchestrationClient starter,
+            DateTime from ,
+            DateTime to,
+            ILogger log)
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
+            var instances = await starter.ListInstancesAsync(
+                new OrchestrationStatusQueryCondition
+                {
+                    CreatedTimeFrom = from,
+                    CreatedTimeTo = to,
+                },
+                token
+            );
+
+            foreach (var eachInstance in instances.DurableOrchestrationState)
+            {
+                try
+                {
+                    await starter.PurgeInstanceHistoryAsync(eachInstance.InstanceId);
+                }
+                catch (Exception e)
+                {
+                    log.LogError($"Failed to purge instance {eachInstance.InstanceId}, {e.Message}", e);
+                }
+            }
         }
 
         private static HttpClient client;
@@ -86,12 +123,11 @@ namespace vp.util {
             return true;
         }
 
-        public static void UploadFormFileAsync(IFormFile file, string containerName, string fileName)
+        public static void UploadFormFile(IFormFile file, string containerName, string fileName)
         {
-            string fileExtension = file.FileName.Split('.')[1];
             using (var stream = file.OpenReadStream())
             {
-                UploadStream(stream, $"{fileName}.{fileExtension}", containerName, file.ContentType);
+                UploadStream(stream, $"{fileName}", containerName, file.ContentType);
             }
         }
 

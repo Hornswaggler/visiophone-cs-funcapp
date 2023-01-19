@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using vp.models;
 using vp.services;
 
-namespace vp.Functions.Sample
+namespace vp.functions.sample
 {
     public class CheckoutSessionCompletedWebhook
     {

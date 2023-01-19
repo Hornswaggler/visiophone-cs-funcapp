@@ -29,7 +29,7 @@ namespace vp.orchestrations.processaudio
                 return new[]
                 {
                 new TranscodeParams {
-                    OutputExtension = ".ogg",
+                    OutputExtension = Config.SamplePreviewFileFormat,
                     FfmpegParams = $"-b:a {Config.PreviewBitrate}k"
                 }
             };
@@ -43,25 +43,24 @@ namespace vp.orchestrations.processaudio
             ILogger log)
         {
             log.LogInformation($"Transcoding {transcodeParams.InputFile} with params " +
-                     $"{transcodeParams.FfmpegParams} with extension {transcodeParams.OutputExtension}");
+                $"{transcodeParams.FfmpegParams} with extension {transcodeParams.OutputExtension}");
 
             return await videoProcessor.TranscodeAsync(transcodeParams, log);
         }
 
         [FunctionName(ActivityNames.StageAudioForTranscode)]
-        public static async Task<string> StageAudioForTranscode(
-            [ActivityTrigger] string[] paths,
+        public static async Task<ProcessAudioTransaction> StageAudioForTranscode(
+            [ActivityTrigger] ProcessAudioTransaction processAudioTransaction,
             ILogger log)
         {
-            // TODO: WTF IS THIS??? NOT APPROVED! FIX THIS... :D
-            string localFilePath = paths[0];
-            string fileName = paths[1];
-
-            using (var fs = new FileStream(localFilePath, FileMode.Create))
+            using (var fs = new FileStream(processAudioTransaction.getTempFilePath(), FileMode.Create))
             {
-                BlockBlobClient blobClient = BlobFactory.MakeBlockBlobClient(Config.SampleBlobContainerName, fileName);
+                BlockBlobClient blobClient = BlobFactory.MakeBlockBlobClient(
+                    Config.SampleBlobContainerName, 
+                    processAudioTransaction.incomingFileName);
+
                 await blobClient.DownloadToAsync(fs);
-                return "Downloaded blob to local temp dir";
+                return processAudioTransaction;
             }
         }
 

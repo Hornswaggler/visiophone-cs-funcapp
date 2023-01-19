@@ -7,7 +7,7 @@ using vp.services;
 using Microsoft.AspNetCore.Mvc;
 using vp.DTO;
 
-namespace vp.Functions.User
+namespace vp.functions.User
 {
     public class GetStripeProfile
     {

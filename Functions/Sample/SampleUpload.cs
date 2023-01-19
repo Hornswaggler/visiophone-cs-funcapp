@@ -1,80 +1,97 @@
+using System;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Stripe;
+using vp.orchestrations;
 using vp.services;
-using vp.util;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using vp.orchestrations.upsertsample;
 
-namespace vp.Functions.Sample
+namespace vp.functions.sample
 {
-    public class SampleUpload
+    public class SampleUploadFunction : SampleFunctionBase
     {
-        private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
-        private readonly ILogger<SampleUpload> _log;
-        private readonly IStripeService _stripeService;
-
-        public SampleUpload(ISampleService sampleService, IUserService userService, IStripeService stripeService, ILogger<SampleUpload> log)
-        {
-            _sampleService = sampleService;
-            _userService = userService;
-            _stripeService = stripeService;
-            _log = log;
-        }
+        public SampleUploadFunction(IUserService userService, ISampleService sampleService)
+            : base(userService, sampleService) { }
 
         [FunctionName("sample_upload")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]
-            HttpRequest req, ILogger log, ExecutionContext context)
+        public async Task<IActionResult> SampleUpload (
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+            [DurableClient] IDurableOrchestrationClient starter,
+            ILogger log)
         {
-            var stripeAccount = _userService.AuthenticateSeller(req, log);
-            if(stripeAccount.Result == null)
+            var userName = req.HttpContext.User.FindFirst("name")?.Value ?? "";
+
+            Account account;
+            try
             {
+                account = AuthorizeStripeUser(req, log);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                log.LogWarning($"Unauthorized sample upload: {userName} , {e.Message}", e);
                 return new UnauthorizedResult();
             }
 
-            //TODO: Transactionalize this!
-            var sampleMetadata = JsonConvert.DeserializeObject<models.Sample>(req.Form["data"]);
-
-            var name = req.HttpContext.User.FindFirst("name");
-            var account = stripeAccount.Result as Stripe.Account;
-
-            var options = new Stripe.ProductCreateOptions
+            UpsertSampleRequest upsertSampleRequest = null;
+            try
             {
-                Name = sampleMetadata.name,
-                Description = sampleMetadata.description,
-                DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions {
-                    Currency = "USD",
-                    UnitAmountDecimal = sampleMetadata.cost
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { "accountId", $"{account.Id}" },
-                }
-            };
-
-            var service = new Stripe.ProductService();
-            var stripeProduct = service.Create(options);
-            sampleMetadata.seller = name.Value;
-            sampleMetadata.priceId = stripeProduct.DefaultPriceId;
-            sampleMetadata.sellerId = account.Id;
-
-            await _sampleService.AddSample(sampleMetadata);
+                var formData = req.Form["data"];
+                upsertSampleRequest = JsonConvert.DeserializeObject<UpsertSampleRequest>(formData);
+                upsertSampleRequest.sampleMetadata.seller = userName;
+                upsertSampleRequest.sampleMetadata.sellerId = account.Id;
+            }
+            catch (Exception e)
+            {
+                //TODO: Rollback the transaction
+                log.LogError($"Sample deserialization failed: {e.Message}", e);
+                return new BadRequestResult();
+            }
 
             var form = req.Form;
-            string filename = $"{sampleMetadata._id}";
 
-            var sample = form.Files["sample"];
-            Utils.UploadFormFileAsync(sample, Config.SampleBlobContainerName, filename);
+            //TODO: These data uploads need to be deleted if / when the transaction fails
+            try
+            {
+                util.Utils.UploadFormFile(
+                    form.Files[upsertSampleRequest.sampleFileName], 
+                    Config.SampleBlobContainerName, 
+                    upsertSampleRequest.sampleFileName);
+            }
+            catch (Exception e)
+            {
+                //TODO: Rollback the upload(s)
+                log.LogError($"Sample upload failed {e.Message}", e);
+                return new BadRequestResult();
+            }
 
-            var image = form.Files["image"];
-            Utils.UploadFormFileAsync(image, Config.CoverArtContainerName, filename);
+            try
+            {
+                util.Utils.UploadFormFile(
+                    form.Files[upsertSampleRequest.imageFileName], 
+                    Config.CoverArtContainerName, 
+                    upsertSampleRequest.imageFileName);
+            }
+            catch (Exception e)
+            {
+                //TODO: Rollback the upload(s)
+                log.LogError($"Image upload failed {e.Message}", e);
+                return new BadRequestResult();
+            }
 
-            return new OkObjectResult(sampleMetadata);
+            //TODO: What if anything should we do w/ this orchestration Id?
+            var transactionMetadata = new UpsertSampleTransaction(account, upsertSampleRequest);
+            var orchestrationId = await starter.StartNewAsync<UpsertSampleTransaction>(
+                OrchestratorNames.UpsertSample,
+                transactionMetadata
+            );
+
+            return new OkObjectResult(upsertSampleRequest);
         }
     }
 }

@@ -8,7 +8,7 @@ using vp.services;
 using vp.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace vp.Functions.User
+namespace vp.functions.User
 {
     public class SetUserProfile
     {

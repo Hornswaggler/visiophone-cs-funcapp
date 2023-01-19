@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace vp.Functions.User
+namespace vp.functions.User
 {
     public class ProvisionStripeStandardReturn
     {
