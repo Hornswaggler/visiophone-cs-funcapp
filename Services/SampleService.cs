@@ -37,7 +37,7 @@ namespace vp.services
             await _purchases.InsertOneAsync(purchase);
             return purchase;
         }
-        
+
         public async Task<List<Purchase>> GetPurchases(string accountId) {
             var purchaseQuery = await _purchases.FindAsync<Purchase>(p => p.accountId.Equals(accountId));
             return await purchaseQuery.ToListAsync();

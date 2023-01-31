@@ -2,12 +2,8 @@
 
 namespace vp.orchestrations
 {
-    public class UpsertSampleRequest
+    public class UpsertSampleRequest : Sample
     {
-        public string requestId { get; set; }
-        public Sample sampleMetadata { get; set; }
-
         public string sampleFileName { get; set; }
-        public string imageFileName { get; set; }
     }
 }

@@ -3,15 +3,16 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using vp.models;
 using vp.services;
 
 namespace vp.orchestrations.upsertsample
 {
     public class UpsertSampleActivities
     {
-        private readonly ISampleService _sampleService;
+        private ISampleService _sampleService;
 
-        public UpsertSampleActivities (
+        public UpsertSampleActivities(
             ISampleService sampleService)
         {
             _sampleService = sampleService;
@@ -23,7 +24,7 @@ namespace vp.orchestrations.upsertsample
             [ActivityTrigger] UpsertSampleTransaction upsertSammpleTransaction,
             ILogger log)
         {
-            var sampleMetadata = upsertSammpleTransaction.request.sampleMetadata;
+            var sampleMetadata = upsertSammpleTransaction.request;
             var account = upsertSammpleTransaction.account;
 
             var options = new Stripe.ProductCreateOptions
@@ -46,21 +47,18 @@ namespace vp.orchestrations.upsertsample
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
             sampleMetadata.sellerId = account.Id;
 
-            upsertSammpleTransaction.request.sampleMetadata = sampleMetadata;
+            upsertSammpleTransaction.request = sampleMetadata;
 
             return upsertSammpleTransaction;
         }
 
-        [FunctionName(ActivityNames.UpsertSampleMetaData)]
-
-        public async Task<UpsertSampleTransaction> UpsertSampleMetaData (
-            [ActivityTrigger] UpsertSampleTransaction upsertSampleDTO,
+        [FunctionName(ActivityNames.UpsertSample)]
+        public async Task<Sample> UpsertSampleMetaData (
+            [ActivityTrigger] Sample sample,
             ILogger log)
         {
-            var sampleMetadata = upsertSampleDTO.request.sampleMetadata;
-
-            upsertSampleDTO.request.sampleMetadata = await _sampleService.AddSample(sampleMetadata);
-            return upsertSampleDTO;
+            var result = await _sampleService.AddSample(sample);
+            return result;
         }
     }
 }

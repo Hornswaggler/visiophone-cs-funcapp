@@ -7,7 +7,8 @@
         public const string GetTranscodeProfiles = "A_GetTranscodeProfiles";
         public const string TranscodeAudio = "A_TranscodeAudio";
         public const string UpsertStripeData = "A_UpsertStripeData";
-        public const string UpsertSampleMetaData = "A_UpsertSampleMetaData";
+        public const string UpsertSample = "A_UpsertSampleMetaData";
+        public const string UpsertSamplePackMetadata = "A_UpsertSamplePackMetaData";
     }
 }
 

@@ -3,20 +3,21 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
+using vp.models;
 
 namespace vp.orchestrations.upsertsample
 {
     public class UpsertSampleOrchestrator
     {
         [FunctionName(OrchestratorNames.UpsertSample)]
-        public static async Task<UpsertSampleTransaction> UpsertSample (
+        public static async Task<Sample> UpsertSample (
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            UpsertSampleTransaction metadata = ctx.GetInput<UpsertSampleTransaction>();
+            UpsertSampleTransaction transaction = ctx.GetInput<UpsertSampleTransaction>();
             ProcessAudioTransaction audioTransaction = new ProcessAudioTransaction
             {
-                incomingFileName = metadata.request.sampleFileName
+                incomingFileName = transaction.request.sampleFileName
             };
 
             var processAudioResult = await ctx.CallSubOrchestratorAsync<string[]>(
@@ -24,19 +25,20 @@ namespace vp.orchestrations.upsertsample
                 audioTransaction
             );
 
-            metadata = await ctx.CallActivityWithRetryAsync<UpsertSampleTransaction>(
+            transaction = await ctx.CallActivityWithRetryAsync<UpsertSampleTransaction>(
                 ActivityNames.UpsertStripeData,
                 new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                metadata);
+                transaction);
 
-            metadata = await ctx.CallActivityWithRetryAsync<UpsertSampleTransaction>(ActivityNames.UpsertSampleMetaData,
-                new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                metadata);
+            var request = transaction.request;
+            var sample = new Sample(transaction.request);
+            var result = await ctx.CallActivityWithRetryAsync<Sample>(
+                ActivityNames.UpsertSample,
+                new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                sample
+            );
 
-            return metadata;
+            return result;
         }
-
-
-
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Stripe;
-using System.Collections.Generic;
 
 namespace vp.orchestrations.upsertSamplePack
 {
@@ -7,7 +6,6 @@ namespace vp.orchestrations.upsertSamplePack
     {
         public Account account { get; set; }
         public string userName { get; set; }
-
-        public List<UpsertSampleRequest> sampleRequests { get; set; } = new List<UpsertSampleRequest>();
+        public UpsertSamplePackRequest request { get; set; }
     }
 }

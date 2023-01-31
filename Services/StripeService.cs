@@ -65,7 +65,12 @@ namespace vp.services
 
         public StripeProfile GetStripeProfile(string accountId, bool throwNoExist = false) {
             StripeProfile profile = _profileCollection.Find(u => u.accountId.Equals(accountId)).FirstOrDefault();
+            
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
+            else if(profile == null)
+            {
+                return null;
+            }
 
             StripeProfileDTO result = new StripeProfileDTO
             {

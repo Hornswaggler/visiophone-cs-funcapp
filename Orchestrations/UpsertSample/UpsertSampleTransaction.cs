@@ -1,15 +1,14 @@
 ﻿using Stripe;
-using vp.orchestrations.upsertsample;
 
 namespace vp.orchestrations
 {
     public class UpsertSampleTransaction 
     {
-        public UpsertSampleRequest request { get; set; }
+        //TODO: Security risk, take out what is needed...
         public Account account { get; set; }
+        public UpsertSampleRequest request { get; set; }
 
         public UpsertSampleTransaction(Account _account, UpsertSampleRequest _sampleMetadata)
-            : base()
         {
             account = _account;
             request = _sampleMetadata;

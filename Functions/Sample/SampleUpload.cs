@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using Stripe;
 using vp.orchestrations;
 using vp.services;
-using vp.orchestrations.upsertsample;
 
 namespace vp.functions.sample
 {
@@ -43,8 +42,8 @@ namespace vp.functions.sample
             {
                 var formData = req.Form["data"];
                 upsertSampleRequest = JsonConvert.DeserializeObject<UpsertSampleRequest>(formData);
-                upsertSampleRequest.sampleMetadata.seller = userName;
-                upsertSampleRequest.sampleMetadata.sellerId = account.Id;
+                upsertSampleRequest.seller = userName;
+                upsertSampleRequest.sellerId = account.Id;
             }
             catch (Exception e)
             {
@@ -54,7 +53,6 @@ namespace vp.functions.sample
             }
 
             var form = req.Form;
-
             //TODO: These data uploads need to be deleted if / when the transaction fails
             try
             {
@@ -67,20 +65,6 @@ namespace vp.functions.sample
             {
                 //TODO: Rollback the upload(s)
                 log.LogError($"Sample upload failed {e.Message}", e);
-                return new BadRequestResult();
-            }
-
-            try
-            {
-                util.Utils.UploadFormFile(
-                    form.Files[upsertSampleRequest.imageFileName], 
-                    Config.CoverArtContainerName, 
-                    upsertSampleRequest.imageFileName);
-            }
-            catch (Exception e)
-            {
-                //TODO: Rollback the upload(s)
-                log.LogError($"Image upload failed {e.Message}", e);
                 return new BadRequestResult();
             }
 

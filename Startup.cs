@@ -40,6 +40,7 @@ namespace vp
 
             builder.Services.AddSingleton((s) => new MongoClient(settings));
             builder.Services.AddTransient<ISampleService, SampleService>();
+            builder.Services.AddTransient<ISamplePackService, SamplePackService>();
             builder.Services.AddTransient<IUserService, UserService>();
             builder.Services.AddTransient<IStripeService, StripeService>();
 
