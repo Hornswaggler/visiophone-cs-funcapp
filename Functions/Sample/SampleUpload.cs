@@ -20,12 +20,10 @@ namespace vp.functions.sample
 
         [FunctionName("sample_upload")]
         public async Task<IActionResult> SampleUpload (
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            var userName = req.HttpContext.User.FindFirst("name")?.Value ?? "";
-
             Account account;
             try
             {
@@ -33,9 +31,12 @@ namespace vp.functions.sample
             }
             catch (UnauthorizedAccessException e)
             {
-                log.LogWarning($"Unauthorized sample upload: {userName} , {e.Message}", e);
+                log.LogWarning("Unauthorized samplepack upload", e);
                 return new UnauthorizedResult();
             }
+
+            var userName = req.HttpContext.User.FindFirst("name")?.Value ?? "";
+
 
             UpsertSampleRequest upsertSampleRequest = null;
             try
