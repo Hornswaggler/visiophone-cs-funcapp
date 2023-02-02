@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using vp.models;
+using vp.orchestrations.upsertsample;
 
 namespace vp.orchestrations.upsertSamplePack
 {

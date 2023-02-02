@@ -9,17 +9,18 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Stripe;
 using vp.orchestrations;
+using vp.orchestrations.upsertsample;
 using vp.services;
 
 namespace vp.functions.sample
 {
-    public class SampleUploadFunction : SampleFunctionBase
+    public class SampleUpload : SampleBase
     {
-        public SampleUploadFunction(IUserService userService, ISampleService sampleService)
+        public SampleUpload(IUserService userService, ISampleService sampleService)
             : base(userService, sampleService) { }
 
-        [FunctionName("sample_upload")]
-        public async Task<IActionResult> SampleUpload (
+        [FunctionName(FunctionNames.SampleUpload)]
+        public async Task<IActionResult> Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -36,7 +37,6 @@ namespace vp.functions.sample
             }
 
             var userName = req.HttpContext.User.FindFirst("name")?.Value ?? "";
-
 
             UpsertSampleRequest upsertSampleRequest = null;
             try

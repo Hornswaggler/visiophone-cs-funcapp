@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using vp.models;
+using vp.orchestrations.processaudio;
 
 namespace vp.orchestrations.upsertsample
 {
@@ -31,7 +32,7 @@ namespace vp.orchestrations.upsertsample
                 transaction);
 
             var request = transaction.request;
-            var sample = new Sample(transaction.request);
+            var sample = SampleFactory.MakeSampleForSampleRequest(transaction.request);
             var result = await ctx.CallActivityWithRetryAsync<Sample>(
                 ActivityNames.UpsertSample,
                 new RetryOptions(TimeSpan.FromSeconds(5), 1),

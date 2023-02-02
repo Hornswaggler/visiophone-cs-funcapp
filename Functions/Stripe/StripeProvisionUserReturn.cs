@@ -7,14 +7,14 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace vp.functions.User
+namespace vp.functions.stripe
 {
-    public class ProvisionStripeStandardReturn
+    public class StripeProvisionUserReturn
     {
         private IUserService _userService { get; set; }
         private IStripeService _stripeService { get; set; }
 
-        public ProvisionStripeStandardReturn(IUserService userService, IStripeService stripeService)
+        public StripeProvisionUserReturn(IUserService userService, IStripeService stripeService)
         {
             _userService = userService;
             _stripeService = stripeService;
@@ -25,7 +25,7 @@ namespace vp.functions.User
             public string stripeId { get; set; }
         }
 
-        [FunctionName("provision_stripe_standard_return")]
+        [FunctionName(FunctionNames.StripeProvisionUserReturn)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.User, "post", Route = null)] HttpRequest req,
             ILogger log, ClaimsPrincipal principal

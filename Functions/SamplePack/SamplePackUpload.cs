@@ -9,21 +9,22 @@ using Newtonsoft.Json;
 using Stripe;
 using System;
 using System.Threading.Tasks;
+using vp.functions.sample;
 using vp.orchestrations;
 using vp.orchestrations.upsertSamplePack;
 using vp.services;
 
-namespace vp.functions.sample
+namespace vp.functions.samplePack
 {
-    public class SamplePackUploadFunction : SampleFunctionBase
+    public class SamplePackUpload : SampleBase
     {
-        public SamplePackUploadFunction(
-            IUserService userService, 
+        public SamplePackUpload(
+            IUserService userService,
             ISampleService sampleService
-        ) :base(userService, sampleService) { }
+        ) : base(userService, sampleService) { }
 
-        [FunctionName("sample_pack_upload")]
-        public async Task<IActionResult> SamplePackUpload (
+        [FunctionName(FunctionNames.SamplePackUpload)]
+        public async Task<IActionResult> Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
@@ -69,7 +70,7 @@ namespace vp.functions.sample
                 var sampleRequests = transaction.request.sampleRequests;
                 foreach (var sampleRequest in sampleRequests)
                 {
-                    util.Utils.UploadFormFile(
+                    vp.util.Utils.UploadFormFile(
                         form.Files[sampleRequest.sampleFileName],
                         Config.SampleBlobContainerName,
                         sampleRequest.sampleFileName);
@@ -99,7 +100,7 @@ namespace vp.functions.sample
 
 
             //TODO: What if anything should we do w/ this orchestration Id?
-            var orchestrationId = await starter. StartNewAsync(
+            var orchestrationId = await starter.StartNewAsync(
                 OrchestratorNames.UpsertSamplePack,
                 transaction
             );

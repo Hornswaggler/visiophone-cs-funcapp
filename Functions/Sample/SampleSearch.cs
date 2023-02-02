@@ -12,12 +12,12 @@ using vp.DTO;
 
 namespace vp.functions.sample
 {
-    public class SampleSearch : SampleFunctionBase
+    public class SampleSearch : SampleBase
     {
         public SampleSearch(IUserService userService, ISampleService sampleService) 
             : base(userService, sampleService) { }
 
-        [FunctionName("sample_search")]
+        [FunctionName(FunctionNames.SampleSearch)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)

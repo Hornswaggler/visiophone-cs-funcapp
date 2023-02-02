@@ -29,6 +29,7 @@ namespace vp.orchestrations.upsertsample
 
             var options = new Stripe.ProductCreateOptions
             {
+                //TODO: Magic number
                 Name = sampleMetadata.name,
                 Description = sampleMetadata.description,
                 DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions

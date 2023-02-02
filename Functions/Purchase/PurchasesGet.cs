@@ -7,20 +7,20 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace visiophone_cs_funcapp.Functions.Sample
+namespace vp.functions.purchase
 {
-    public class GetPurchases
+    public class PurchaseGet
     {
         private readonly ISampleService _sampleService;
         private readonly IUserService _userService;
 
-        public GetPurchases(ISampleService sampleService, IUserService userService)
+        public PurchaseGet(ISampleService sampleService, IUserService userService)
         {
             _sampleService = sampleService;
             _userService = userService;
         }
 
-        [FunctionName("get_purchases")]
+        [FunctionName(FunctionNames.PurchaseGet)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log)
@@ -30,7 +30,7 @@ namespace visiophone_cs_funcapp.Functions.Sample
                 return new UnauthorizedResult();
             }
             var accountId = _userService.GetUserAccountId(req.HttpContext.User);
-            var purchases =  await _sampleService.GetPurchases(accountId);
+            var purchases = await _sampleService.GetPurchases(accountId);
 
             List<string> priceIds = new List<string>();
             foreach (var purchase in purchases)

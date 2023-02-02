@@ -1,7 +1,7 @@
 ﻿using Stripe;
 
-namespace vp.orchestrations
-{
+namespace vp.orchestrations.upsertsample
+{ 
     public class UpsertSampleTransaction 
     {
         //TODO: Security risk, take out what is needed...

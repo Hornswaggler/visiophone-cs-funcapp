@@ -1,6 +1,6 @@
 ﻿using vp.models;
 
-namespace vp.orchestrations
+namespace vp.orchestrations.upsertsample
 {
     public class UpsertSampleRequest : Sample
     {

@@ -7,20 +7,20 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace vp.functions.User
+namespace vp.functions.stripe
 {
-    public class ProvisionStripeStandard
+    public class StripeProvisionUser
     {
         private IStripeService _stripeService { get; set; }
         private IUserService _userService { get; set; }
 
-        public ProvisionStripeStandard(IStripeService stripeService, IUserService userService)
+        public StripeProvisionUser(IStripeService stripeService, IUserService userService)
         {
             _stripeService = stripeService;
             _userService = userService;
         }
 
-        [FunctionName("account_upgrade")]
+        [FunctionName(FunctionNames.StripeProvisionUser)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -30,12 +30,13 @@ namespace vp.functions.User
             {
                 accountId = _userService.AuthenticateUserForm(req, log);
             }
-            catch {
+            catch
+            {
                 return new UnauthorizedResult();
             }
 
             var stripeProfile = _stripeService.GetStripeProfile(accountId);
-            if(stripeProfile == null)
+            if (stripeProfile == null)
             {
                 stripeProfile = await _stripeService.CreateNewAccount(accountId);
             }

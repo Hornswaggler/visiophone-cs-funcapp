@@ -1,7 +1,7 @@
 ﻿using System;
 using vp.util;
 
-namespace vp.orchestrations
+namespace vp.orchestrations.processaudio
 {
     public class ProcessAudioTransaction
     {

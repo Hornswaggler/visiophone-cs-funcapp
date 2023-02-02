@@ -6,12 +6,12 @@ using vp.services;
 
 namespace vp.functions.sample
 {
-    public class SampleFunctionBase
+    public class SampleBase
     {
         protected readonly IUserService _userService;
         protected readonly ISampleService _sampleService;
 
-        public SampleFunctionBase(IUserService userService, ISampleService sampleService)
+        public SampleBase(IUserService userService, ISampleService sampleService)
         {
             _userService = userService;
             _sampleService = sampleService;

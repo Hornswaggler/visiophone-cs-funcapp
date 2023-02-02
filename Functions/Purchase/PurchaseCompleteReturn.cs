@@ -9,21 +9,20 @@ using System.Threading.Tasks;
 using vp.models;
 using vp.services;
 
-namespace vp.functions.sample
+namespace vp.functions.purchase
 {
-    public class CheckoutSessionCompletedWebhook
+    public class PurchaseCompleteReturn
     {
         private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
-        public CheckoutSessionCompletedWebhook(ISampleService sampleService, IUserService userService, IStripeService stripeService)
+        public PurchaseCompleteReturn(ISampleService sampleService, IUserService userService, IStripeService stripeService)
         {
             _sampleService = sampleService;
-            _userService = userService;
             _stripeService = stripeService;
         }
 
-        [FunctionName("handle_checkout_session_completed")]
+        //TODO: double check the security on this function 
+        [FunctionName(FunctionNames.PurchaseCompleteReturn)]
         public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
         ILogger log)
@@ -50,7 +49,9 @@ namespace vp.functions.sample
                         });
                     }
                 }
-            } catch  {
+            }
+            catch
+            {
                 return new UnauthorizedResult();
             }
 

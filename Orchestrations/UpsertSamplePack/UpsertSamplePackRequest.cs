@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using vp.orchestrations.upsertsample;
 
-namespace vp.orchestrations
+namespace vp.orchestrations.upsertSamplePack
 {
     public class UpsertSamplePackRequest
     {
