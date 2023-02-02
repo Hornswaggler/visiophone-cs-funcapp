@@ -23,9 +23,9 @@ namespace vp.functions.stripe
         [FunctionName(FunctionNames.StripeProfileGet)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            ILogger log)
+            ILogger logger)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await _userService.AuthenticateUser(req))
             {
                 return new UnauthorizedResult();
             }

@@ -31,7 +31,7 @@ namespace vp.functions.stripe
             ILogger log, ClaimsPrincipal principal
         )
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await _userService.AuthenticateUser(req))
             {
                 return new UnauthorizedResult();
             }

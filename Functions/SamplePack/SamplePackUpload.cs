@@ -9,19 +9,15 @@ using Newtonsoft.Json;
 using Stripe;
 using System;
 using System.Threading.Tasks;
-using vp.functions.sample;
 using vp.orchestrations;
 using vp.orchestrations.upsertSamplePack;
 using vp.services;
 
 namespace vp.functions.samplePack
 {
-    public class SamplePackUpload : SampleBase
+    public class SamplePackUpload : AuthBase
     {
-        public SamplePackUpload(
-            IUserService userService,
-            ISampleService sampleService
-        ) : base(userService, sampleService) { }
+        public SamplePackUpload(IUserService userService) : base(userService) { }
 
         [FunctionName(FunctionNames.SamplePackUpload)]
         public async Task<IActionResult> Run (
@@ -33,7 +29,7 @@ namespace vp.functions.samplePack
             Account account;
             try
             {
-                account = AuthorizeStripeUser(req, log);
+                account = AuthorizeStripeUser(req);
             }
             catch (UnauthorizedAccessException e)
             {

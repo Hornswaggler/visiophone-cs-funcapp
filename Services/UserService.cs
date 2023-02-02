@@ -27,7 +27,8 @@ namespace vp.services
             _stripeService = stripeService;
         }
 
-        public async Task<bool> AuthenticateUser(HttpRequest req, ILogger log) {
+        public async Task<bool> AuthenticateUser(HttpRequest req)
+        {
             (bool authenticationStatus, IActionResult authenticationResponse) =
                 await req.HttpContext.AuthenticateAzureFunctionAsync();
 
@@ -37,13 +38,12 @@ namespace vp.services
                 {
                     ObjectResult objectResult = (ObjectResult)authenticationResponse;
                     string errorResponse = ((ProblemDetails)objectResult.Value).Detail;
-                    log.LogWarning(errorResponse);
                 }
                 catch (Exception)
                 {
                     //consume
                 }
-                
+
                 return false;
             }
 
@@ -76,7 +76,7 @@ namespace vp.services
 
         public async Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log) {
 
-            if (!await AuthenticateUser(req, log))
+            if (!await AuthenticateUser(req))
             {
                 return null;
             }

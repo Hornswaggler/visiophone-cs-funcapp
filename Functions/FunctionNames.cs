@@ -11,6 +11,8 @@ namespace vp.functions
         public const string SampleUpload = "F_SampleUpload";
 
         public const string SamplePackUpload = "F_SamplePackUpload";
+        public const string SamplePackSearch = "F_SamplePackSearch";
+
         public const string StripeProfileGet = "F_StripeProfileGet";
         public const string StripeProvisionUser = "F_StripeProvisionUser";
         public const string StripeProvisionUserReturn = "F_StripeProvisionUserReturn";

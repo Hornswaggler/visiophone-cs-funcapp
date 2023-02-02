@@ -13,12 +13,16 @@ namespace vp.functions.purchase
 {
     public class PurchaseCompleteReturn
     {
-        private readonly ISampleService _sampleService;
         private readonly IStripeService _stripeService;
-        public PurchaseCompleteReturn(ISampleService sampleService, IUserService userService, IStripeService stripeService)
+        private readonly IPurchaseService _purchaseService;
+
+        public PurchaseCompleteReturn(
+            ISampleService sampleService,
+            IStripeService stripeService,
+            IPurchaseService purchaseService)
         {
-            _sampleService = sampleService;
             _stripeService = stripeService;
+            _purchaseService = purchaseService;
         }
 
         //TODO: double check the security on this function 
@@ -42,7 +46,7 @@ namespace vp.functions.purchase
 
                     foreach (var priceId in priceIds)
                     {
-                        await _sampleService.AddPurchase(new Purchase
+                        await _purchaseService.AddPurchase(new Purchase
                         {
                             accountId = session.Metadata["vp_accountId"],
                             priceId = priceId,

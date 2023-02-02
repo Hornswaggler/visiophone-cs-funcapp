@@ -22,7 +22,7 @@ namespace vp.functions.sample
         }
 
         [FunctionName(FunctionNames.SamplePurchase)]
-        public IActionResult Run(
+        public IActionResult Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {

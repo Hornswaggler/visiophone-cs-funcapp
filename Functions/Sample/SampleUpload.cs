@@ -14,10 +14,9 @@ using vp.services;
 
 namespace vp.functions.sample
 {
-    public class SampleUpload : SampleBase
+    public class SampleUpload : AuthBase
     {
-        public SampleUpload(IUserService userService, ISampleService sampleService)
-            : base(userService, sampleService) { }
+        public SampleUpload(IUserService userService) : base(userService) { }
 
         [FunctionName(FunctionNames.SampleUpload)]
         public async Task<IActionResult> Run (
@@ -28,7 +27,7 @@ namespace vp.functions.sample
             Account account;
             try
             {
-                account = AuthorizeStripeUser(req, log);
+                account = AuthorizeStripeUser(req);
             }
             catch (UnauthorizedAccessException e)
             {

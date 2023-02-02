@@ -24,7 +24,7 @@ namespace vp.functions.user
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await _userService.AuthenticateUser(req))
             {
                 return new UnauthorizedResult();
             }

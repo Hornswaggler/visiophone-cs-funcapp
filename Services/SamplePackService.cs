@@ -1,24 +1,32 @@
 ﻿using MongoDB.Driver;
 using System.Threading.Tasks;
+using vp.DTO;
 using vp.models;
 
 namespace vp.services
 {
-    public class SamplePackService : ISamplePackService
+    public class SamplePackService : MongoSearchBase<SamplePack>, ISamplePackService
     {
-        private readonly MongoClient _mongoClient;
-        private readonly IMongoDatabase _database;
         private readonly IMongoCollection<SamplePack> _samplePacks;
 
-        public SamplePackService(MongoClient mongoClient) {
-            _mongoClient = mongoClient;
-            _database = _mongoClient.GetDatabase("visiophone");
-            _samplePacks = _database.GetCollection<SamplePack>("samplePacks");
+        public SamplePackService(MongoClient mongoClient) : base(mongoClient) {
+            _samplePacks = _database.GetCollection<SamplePack>(Config.SamplePackCollectionName);
+        }
+
+        protected async Task<SearchQueryResult<SamplePack>> GetSamplePacksByField(SearchQuery request, string field)
+        {
+            return await FindByField(_samplePacks, request.query, field, request.index);
         }
 
         public async Task<SamplePack> AddSamplePack(SamplePack samplePack) {
             await _samplePacks.InsertOneAsync(samplePack);
             return samplePack;
         }
+
+        public async Task<SearchQueryResult<SamplePack>> GetSamplePacksByName(SearchQuery request)
+        {
+            return await GetSamplePacksByField(request, "name");
+        }
+
     }
 }

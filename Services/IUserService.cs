@@ -7,7 +7,8 @@ namespace vp.services
 {
     public interface IUserService
     {
-        Task<bool> AuthenticateUser(HttpRequest req, ILogger log);
+        Task<bool> AuthenticateUser(HttpRequest req);
+
         Task<Stripe.Account> AuthenticateSeller(HttpRequest req, ILogger log);
         string AuthenticateUserForm(HttpRequest req, ILogger log);
         string GetUserAccountId(ClaimsPrincipal claimsPrincipal);

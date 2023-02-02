@@ -8,5 +8,7 @@ namespace vp.services
     public interface ISamplePackService
     {
         Task<SamplePack> AddSamplePack(SamplePack samplePack);
+        Task<SearchQueryResult<SamplePack>> GetSamplePacksByName(SearchQuery request);
+
     }
 }
