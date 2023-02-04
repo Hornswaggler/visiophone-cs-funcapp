@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using vp.util;
 
 namespace vp.orchestrations.processaudio
@@ -8,6 +9,11 @@ namespace vp.orchestrations.processaudio
         public string transactionId { get; set; } = $"{Guid.NewGuid()}";
         public string incomingFileName { get; set; } = "";
         public string tempFolderPath { get; set; } = "";
+
+        public List<TranscodeParams> transcodeProfiles { get; set; } = new List<TranscodeParams>();
+        public List<string> transcodePaths { get; set; } = new List<string>();
+
+        public List<string> errors { get; set; } = new List<string>();
 
         public string getPreviewFilename()
         {

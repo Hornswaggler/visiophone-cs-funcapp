@@ -11,30 +11,30 @@ using vp.util;
 
 namespace vp.orchestrations.processaudio
 {
+    //TODO: ENSURE THE OPERATION(S) that occur on local disk are in a single orchestration / sub orch
+    //Otherwise idempotency is broken!
     public static class ProcessAudioActivities
     {
         private static readonly IAudioProcessor videoProcessor = Utils.IsInDemoMode ?
             new MockAudioProcessor() : new FfmpegAudioProcessor();
 
         [FunctionName(ActivityNames.GetTranscodeProfiles)]
-        public static TranscodeParams[] GetTranscodeProfiles(
-            [ActivityTrigger] object input,
+        public static ProcessAudioTransaction GetTranscodeProfiles(
+            [ActivityTrigger] ProcessAudioTransaction processAudioTransaction,
             ILogger log)
         {
             // TODO: Migrate this to the Config object...
-            string transcodeProfiles = Environment.GetEnvironmentVariable("TranscodeProfiles");
+            //string transcodeProfiles = Environment.GetEnvironmentVariable("TranscodeProfiles");
 
-            if (string.IsNullOrEmpty(transcodeProfiles))
-            {
-                return new[]
+            processAudioTransaction.transcodeProfiles.Add(
+                new TranscodeParams
                 {
-                new TranscodeParams {
                     OutputExtension = Config.SamplePreviewFileFormat,
                     FfmpegParams = $"-b:a {Config.PreviewBitrate}k"
                 }
-            };
-            }
-            return JsonConvert.DeserializeObject<TranscodeParams[]>(transcodeProfiles);
+            );
+          
+            return processAudioTransaction;
         }
 
         [FunctionName(ActivityNames.TranscodeAudio)]
@@ -90,6 +90,7 @@ namespace vp.orchestrations.processaudio
             }
             finally
             {
+                //TODO: Move this to its own activity...
                 Utils.TryDeleteFiles(log, new[] { incomingFile });
             }
         }

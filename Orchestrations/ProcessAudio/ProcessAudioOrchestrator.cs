@@ -11,13 +11,14 @@ namespace vp.orchestrations.processaudio
     public static class ProcessAudioOrchestrators
     {
         [FunctionName(OrchestratorNames.ProcessAudio)]
-        public static async Task<object> ProcessAudio(
+        public static async Task<ProcessAudioTransaction> ProcessAudio(
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            ProcessAudioTransaction processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
+            ProcessAudioTransaction processAudioTransaction;
             try
             {
+                processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
                 string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
 
                 processAudioTransaction.tempFolderPath = tempFolderPath;
@@ -25,50 +26,79 @@ namespace vp.orchestrations.processaudio
                 processAudioTransaction = await ctx.CallActivityWithRetryAsync<ProcessAudioTransaction>(
                     ActivityNames.StageAudioForTranscode,
                     new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                    processAudioTransaction);
+                    processAudioTransaction
+                );
 
-                var transcodedLocations = await
-                    ctx.CallSubOrchestratorAsync<string[]>(OrchestratorNames.Transcode, processAudioTransaction);
 
-                foreach (string location in transcodedLocations)
+                processAudioTransaction = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
+                    OrchestratorNames.Transcode, 
+                    processAudioTransaction
+                );
+
+                foreach (string location in processAudioTransaction.transcodePaths)
                 {
                     await ctx.CallActivityAsync(ActivityNames.PublishAudio, location);
                 }
 
-                return transcodedLocations;
+                return processAudioTransaction;
             }
             catch (Exception e)
             {
                 if (!ctx.IsReplaying)
                     log.LogError("Failed to process video with error " + e.Message);
 
+                processAudioTransaction = new ProcessAudioTransaction();
+
                 // TODO: Fix This....
                 //await ctx.CallActivityAsync(ActivityNames.Cleanup, incomingFilename);
-                return new { Error = "Failed to process video", e.Message };
+                processAudioTransaction.errors.Add($"Failed to process video: {e.Message}");
+
+                return processAudioTransaction;
             }
         }
 
         [FunctionName(OrchestratorNames.Transcode)]
-        public static async Task<string[]> Transcode(
+        public static async Task<ProcessAudioTransaction> Transcode(
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            ProcessAudioTransaction processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
+            ProcessAudioTransaction processAudioTransaction;
+            try
+            {
+                processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
+                processAudioTransaction = await ctx.CallActivityAsync<ProcessAudioTransaction>(ActivityNames.GetTranscodeProfiles, processAudioTransaction);
 
-            var transcodeProfiles = await
-                ctx.CallActivityAsync<TranscodeParams[]>(ActivityNames.GetTranscodeProfiles, null);
+                var transcodeTasks = new List<Task<string>>();
+                foreach (var transcodeProfile in processAudioTransaction.transcodeProfiles)
+                {
+                    transcodeProfile.InputFile = processAudioTransaction.getTempFilePath();
+                    transcodeProfile.OutputFile = processAudioTransaction.getPreviewFilePath();
+                    var transcodeTask = ctx.CallActivityAsync<string>
+                        (ActivityNames.TranscodeAudio, transcodeProfile);
+                    transcodeTasks.Add(transcodeTask);
+                }
+                var locations = await Task.WhenAll(transcodeTasks);
 
-            var transcodeTasks = new List<Task<string>>();
-            foreach (var transcodeProfile in transcodeProfiles)
-            { 
-                transcodeProfile.InputFile = processAudioTransaction.getTempFilePath();
-                transcodeProfile.OutputFile = processAudioTransaction.getPreviewFilePath();
-                var transcodeTask = ctx.CallActivityAsync<string>
-                    (ActivityNames.TranscodeAudio, transcodeProfile);
-                transcodeTasks.Add(transcodeTask);
+                foreach(string location in locations)
+                {
+                    processAudioTransaction.transcodePaths.Add(location);
+                }
+
+                return processAudioTransaction;
+            } catch (Exception e)
+            {
+                if (!ctx.IsReplaying)
+                    log.LogError("Failed to process video with error " + e.Message);
+
+                processAudioTransaction = new ProcessAudioTransaction();
+
+                // TODO: Fix This....
+                //await ctx.CallActivityAsync(ActivityNames.Cleanup, incomingFilename);
+                processAudioTransaction.errors.Add($"Failed to transcode video: {e.Message}");
+
+                return processAudioTransaction;
             }
-            var locations = await Task.WhenAll(transcodeTasks);
-            return locations;
+            
         }
     }
 }

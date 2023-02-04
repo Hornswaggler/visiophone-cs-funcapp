@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using vp.models;
 using vp.orchestrations.upsertsample;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace vp.orchestrations.upsertSamplePack
 {
@@ -18,8 +20,13 @@ namespace vp.orchestrations.upsertSamplePack
         {
             SamplePack result;
             UpsertSamplePackTransaction upsertSamplePackTransaction = ctx.GetInput<UpsertSamplePackTransaction>();
+
+            //TODO: Assign the instance Id to the image... (and also to each sample...) really???
+            //ctx.InstanceId
+
             try
             {
+                //TODO: Is this supposed to be context when all?
                 var samples = await Task.WhenAll(
                     upsertSamplePackTransaction.request.sampleRequests.Select(
                         sampleRequest =>
@@ -29,9 +36,9 @@ namespace vp.orchestrations.upsertSamplePack
 
                             return ctx.CallSubOrchestratorAsync<Sample>(
                                 OrchestratorNames.UpsertSample,
-                                new UpsertSampleTransaction(
+                                (new UpsertSampleTransaction(
                                     upsertSamplePackTransaction.account,
-                                    sampleRequest));
+                                    sampleRequest)));
                         }
                     )
                 );
@@ -39,21 +46,23 @@ namespace vp.orchestrations.upsertSamplePack
                 var request = upsertSamplePackTransaction.request;
                 var samplePack = new SamplePack
                 {
+                    _id = request._id,
                     name = request.name,
                     description = request.description,
                     samples = samples.Select(sample => sample).ToList()
                 };
-
-               result = await ctx.CallActivityWithRetryAsync<SamplePack>(
+    
+                result = await ctx.CallActivityWithRetryAsync<SamplePack>(
                     ActivityNames.UpsertSamplePackMetadata,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     samplePack
                 );
+
                 return result;
             }
             catch (Exception e)
             {
-                log.LogError("failed to process sample pack", e);
+                log.LogError($"Failed to process sample pack: {e.Message}", e);
                 //TODO: rollback transaction here
             }
             return null;

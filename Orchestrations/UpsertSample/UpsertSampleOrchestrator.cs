@@ -21,7 +21,7 @@ namespace vp.orchestrations.upsertsample
                 incomingFileName = transaction.request.sampleFileName
             };
 
-            var processAudioResult = await ctx.CallSubOrchestratorAsync<string[]>(
+            var processAudioResult = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
                 OrchestratorNames.ProcessAudio,
                 audioTransaction
             );
