@@ -9,6 +9,8 @@
         public const string UpsertStripeData = "A_UpsertStripeData";
         public const string UpsertSample = "A_UpsertSampleMetaData";
         public const string UpsertSamplePackMetadata = "A_UpsertSamplePackMetaData";
+        public const string UpsertSamplePackTransferImage = "A_UpsertSamplePackTransferImage";
+        public const string CleanupStagingData = "CleanupStagingData";
     }
 }
 

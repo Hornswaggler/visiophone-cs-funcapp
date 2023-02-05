@@ -9,6 +9,9 @@ namespace vp.orchestrations.processaudio
         public string transactionId { get; set; } = $"{Guid.NewGuid()}";
         public string incomingFileName { get; set; } = "";
         public string tempFolderPath { get; set; } = "";
+        public string tempFilePath { get; set; } = "";
+        public string sampleId { get; set; } = "";
+        public string fileExtension { get; set; } = "";
 
         public List<TranscodeParams> transcodeProfiles { get; set; } = new List<TranscodeParams>();
         public List<string> transcodePaths { get; set; } = new List<string>();

@@ -70,6 +70,8 @@ namespace vp.functions.samplePack
                 foreach (var sampleRequest in sampleRequests)
                 {
                     sampleRequest._id = ObjectId.GenerateNewId().ToString();
+
+                    var ext = Utils.GetExtensionForFileName(sampleRequest.sampleFileName);
                     string newFileName = Utils.GetFileNameForId(sampleRequest._id, sampleRequest.sampleFileName);
 
                     Utils.UploadFormFile(
@@ -78,6 +80,7 @@ namespace vp.functions.samplePack
                         newFileName);
 
                     sampleRequest.sampleFileName = newFileName;
+                    sampleRequest.fileExtension = ext;
                 }
             }
             catch (Exception e)
@@ -89,7 +92,11 @@ namespace vp.functions.samplePack
 
             try
             {
-                string newFileName = Utils.GetFileNameForId(samplePackRequest._id, samplePackRequest.imageFileName);
+                string newFileName = Utils.GetFileNameForId(
+                    samplePackRequest._id,
+                    samplePackRequest.imageFileName
+                );
+
                 Utils.UploadFormFile(
                     form.Files[transaction.request.imageFileName],
                     Config.UploadStagingContainerName,

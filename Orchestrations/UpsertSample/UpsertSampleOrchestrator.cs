@@ -18,6 +18,8 @@ namespace vp.orchestrations.upsertsample
             UpsertSampleTransaction transaction = ctx.GetInput<UpsertSampleTransaction>();
             ProcessAudioTransaction audioTransaction = new ProcessAudioTransaction
             {
+                fileExtension = transaction.request.fileExtension,
+                sampleId = transaction.request._id,
                 incomingFileName = transaction.request.sampleFileName
             };
 

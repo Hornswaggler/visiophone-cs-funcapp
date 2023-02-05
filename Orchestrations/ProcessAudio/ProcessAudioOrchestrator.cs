@@ -29,7 +29,6 @@ namespace vp.orchestrations.processaudio
                     processAudioTransaction
                 );
 
-
                 processAudioTransaction = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
                     OrchestratorNames.Transcode, 
                     processAudioTransaction
@@ -37,7 +36,7 @@ namespace vp.orchestrations.processaudio
 
                 foreach (string location in processAudioTransaction.transcodePaths)
                 {
-                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, location);
+                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, processAudioTransaction);
                 }
 
                 return processAudioTransaction;

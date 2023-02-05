@@ -43,6 +43,18 @@ namespace vp.orchestrations.upsertSamplePack
                     )
                 );
 
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.UpsertSamplePackTransferImage,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.CleanupStagingData,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
                 var request = upsertSamplePackTransaction.request;
                 var samplePack = new SamplePack
                 {

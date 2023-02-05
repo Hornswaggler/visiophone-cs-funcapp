@@ -33,6 +33,7 @@ namespace vp
         public static string AUTH_OPENID_CONNECT_CONFIG = "AUTH_OPENID_CONNECT_CONFIG";
         public static string CHECKOUT_SESSION_COMPLETED_SECRET = "CHECKOUT_SESSION_COMPLETED_SECRET";
         public static string UPLOAD_STAGING_CONTAINER = "UPLOAD_STAGING_CONTAINER";
+        public static string SAMPLE_FILES_CONTAINER_NAME = "SAMPLE_FILES_CONTAINER_NAME";
         public static int BufferSize  = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;
 
@@ -62,6 +63,7 @@ namespace vp
         public static string PurchaseCollectionName = Environment.GetEnvironmentVariable(PURCHASE_COLLECTION_NAME);
         public static string SamplePackCollectionName = Environment.GetEnvironmentVariable(SAMPLE_PACK_COLLECTION_NAME);
         public static string UploadStagingContainerName = Environment.GetEnvironmentVariable(UPLOAD_STAGING_CONTAINER);
+        public static string SampleFilesContainerName = Environment.GetEnvironmentVariable(SAMPLE_FILES_CONTAINER_NAME);
 
         public static int ResultsPerRequest;
 

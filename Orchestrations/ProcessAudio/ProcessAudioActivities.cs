@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using vp.util;
 
 namespace vp.orchestrations.processaudio
@@ -53,6 +53,7 @@ namespace vp.orchestrations.processaudio
             [ActivityTrigger] ProcessAudioTransaction processAudioTransaction,
             ILogger log)
         {
+            var tempFilePath = processAudioTransaction.getTempFilePath();
             using (var fs = new FileStream(processAudioTransaction.getTempFilePath(), FileMode.Create))
             {
                 BlockBlobClient blobClient = BlobFactory.MakeBlockBlobClient(
@@ -60,39 +61,64 @@ namespace vp.orchestrations.processaudio
                     processAudioTransaction.incomingFileName);
 
                 await blobClient.DownloadToAsync(fs);
+                processAudioTransaction.tempFilePath = tempFilePath;
                 return processAudioTransaction;
             }
         }
 
         [FunctionName(ActivityNames.PublishAudio)]
-        public static async Task<string> PublishAudio(
-            [ActivityTrigger] string incomingFile,
+        public static async Task<ProcessAudioTransaction> PublishAudio(
+            [ActivityTrigger] ProcessAudioTransaction processAudioTransaction,
             ILogger log)
         {
+            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
+
             try
             {
-                // TODO: Fix this drivel
-                string blobName = incomingFile
-                    .Substring(incomingFile.LastIndexOf('\\') + 1)
-                    .Replace("\\", "")
-                    .Replace("\"", "")
-                    .Replace("]", "");
+                BlobContainerClient previewContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
+                BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
 
-                BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-                BlobContainerClient container = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
-                var blobClient = container.GetBlockBlobClient(blobName);
-
-                log.LogInformation("Publishing mp3 preview");
-
-                await videoProcessor.PublishAudio(incomingFile, blobClient);
-
-                return "Preview Published Succesfully";
+                await Task.WhenAll(processAudioTransaction.transcodeProfiles.Select(
+                    profile =>
+                    {
+                        var blobClient = previewContainer.GetBlockBlobClient($"{processAudioTransaction.sampleId}{profile.OutputExtension}");
+                        return videoProcessor.PublishAudio(profile.OutputFile, blobClient);
+                    }
+                ).Concat(processAudioTransaction.transcodeProfiles.Select(
+                    profile =>
+                    {
+                        var blobClient = sampleContainer.GetBlockBlobClient($"{processAudioTransaction.sampleId}.{processAudioTransaction.fileExtension}");
+                        return videoProcessor.PublishAudio(profile.InputFile, blobClient);
+                    }
+                )));
             }
-            finally
+            catch (Exception e)
             {
-                //TODO: Move this to its own activity...
-                Utils.TryDeleteFiles(log, new[] { incomingFile });
+                //TODO: Rollback :|
+                var error = $"FAILED to publish audio: {e.Message}";
+                log.LogError($"FAILED to publish audio: {e.Message}", e);
+                throw new Exception(error, e);
             }
+            finally {
+                try
+                {
+                    foreach(var profile in processAudioTransaction.transcodeProfiles)
+                    {
+                        Utils.TryDeleteFiles(log, new[] { profile.InputFile });
+                        Utils.TryDeleteFiles(log, new[] { profile.OutputFile });
+                    }
+  
+                }catch (Exception e)
+                {
+                    //TODO: Rollback :|
+                    var error = $"FAILED to cleanup files!: {e.Message}";
+                    log.LogError(error, e);
+                    throw new Exception(error, e);
+                }
+
+            }
+
+            return processAudioTransaction;
         }
     }
 }
