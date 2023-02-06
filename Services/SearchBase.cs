@@ -18,13 +18,15 @@ namespace vp.services
             _database = _mongoClient.GetDatabase(Config.DatabaseName);
         }
 
-        protected async Task<SearchQueryResult<T>> FindByField(IMongoCollection<T> collection, string query = "", string field = "", int index = 0) {
+        protected async Task<SearchQueryResult<T>> FindByField(IMongoCollection<T> collection, string query = "", string field = "", int index = 0, bool asc = true) {
             var builder = Builders<T>.Filter;
             BsonRegularExpression queryExpr = new BsonRegularExpression(new Regex($"^{query}.*", RegexOptions.IgnoreCase));
+            var sort = asc ? Builders<T>.Sort.Ascending(field) : Builders<T>.Sort.Descending(field);
             FilterDefinition<T> filter = builder.Regex(field, queryExpr);
 
             FindOptions<T> options = new FindOptions<T>
             {
+                Sort = sort,
                 Limit = Config.ResultsPerRequest,
                 Skip = index
             };
@@ -33,7 +35,10 @@ namespace vp.services
             return new SearchQueryResult<T>
             {
                 data = result,
-                nextResultIndex = result.Count == 0 ? -1 : index + Config.ResultsPerRequest
+                nextResultIndex = 
+                    result.Count == 0 
+                    ? -1 
+                    : index + Config.ResultsPerRequest
             };
         }
 
