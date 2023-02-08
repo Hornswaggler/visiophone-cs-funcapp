@@ -6,36 +6,34 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 using vp.services;
 using vp.DTO;
 
-namespace vp.Functions.Sample
+namespace vp.functions.sample
 {
-    public class SampleSearch 
+    public class SampleSearch : AuthBase
     {
-        private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
+        protected readonly ISampleService _sampleService;
 
-        public SampleSearch(ISampleService sampleService, IUserService userService)
+        public SampleSearch(IUserService userService, ISampleService sampleService) 
+            : base(userService) 
         {
             _sampleService = sampleService;
-            _userService = userService;
         }
 
-        [FunctionName("sample_search")]
+        [FunctionName(FunctionNames.SampleSearch)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!await _userService.AuthenticateUser(req, log)) {
+            if (!await AuthorizeUser(req)) {
                 return new UnauthorizedResult();
             }
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            SampleRequest request = JsonConvert.DeserializeObject<SampleRequest>(requestBody);
+            SearchQuery request = JsonConvert.DeserializeObject<SearchQuery>(requestBody);
 
-            return new OkObjectResult(await _sampleService.GetSamples(request));
+            return new OkObjectResult(await _sampleService.GetSamplesByName(request));
         }
     }
 }

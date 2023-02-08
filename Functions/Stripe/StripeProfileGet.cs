@@ -7,25 +7,25 @@ using vp.services;
 using Microsoft.AspNetCore.Mvc;
 using vp.DTO;
 
-namespace vp.Functions.User
+namespace vp.functions.stripe
 {
-    public class GetStripeProfile
+    public class StripeProfileGet
     {
         private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
 
-        public GetStripeProfile(IUserService userService, ISampleService sampleService, IStripeService stripeService)
+        public StripeProfileGet(IUserService userService, ISampleService sampleService, IStripeService stripeService)
         {
             _userService = userService;
             _stripeService = stripeService;
         }
 
-        [FunctionName("get_stripe_profile")]
+        [FunctionName(FunctionNames.StripeProfileGet)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            ILogger log)
+            ILogger logger)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await _userService.AuthenticateUser(req))
             {
                 return new UnauthorizedResult();
             }

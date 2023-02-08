@@ -6,6 +6,12 @@ namespace vp.models
 {
     public abstract class BaseModel
     {
+        protected BaseModel() { }
+        protected BaseModel(string id)
+        {
+            _id = id;
+        }
+
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonIgnoreIfDefault]

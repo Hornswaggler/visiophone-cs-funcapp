@@ -8,23 +8,23 @@ using vp.services;
 using vp.util;
 using Microsoft.AspNetCore.Mvc;
 
-namespace vp.Functions.User
+namespace vp.functions.user
 {
-    public class SetUserProfile
+    public class UserProfileSet
     {
         private readonly IUserService _userService;
 
-        public SetUserProfile(IUserService userService)
+        public UserProfileSet(IUserService userService)
         {
             _userService = userService;
         }
 
-        [FunctionName("set_user_profile")]
+        [FunctionName(FunctionNames.UserProfileSet)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await _userService.AuthenticateUser(req))
             {
                 return new UnauthorizedResult();
             }

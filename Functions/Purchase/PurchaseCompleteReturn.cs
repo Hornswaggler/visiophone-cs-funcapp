@@ -9,21 +9,24 @@ using System.Threading.Tasks;
 using vp.models;
 using vp.services;
 
-namespace vp.Functions.Sample
+namespace vp.functions.purchase
 {
-    public class CheckoutSessionCompletedWebhook
+    public class PurchaseCompleteReturn
     {
-        private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
-        public CheckoutSessionCompletedWebhook(ISampleService sampleService, IUserService userService, IStripeService stripeService)
+        private readonly IPurchaseService _purchaseService;
+
+        public PurchaseCompleteReturn(
+            ISampleService sampleService,
+            IStripeService stripeService,
+            IPurchaseService purchaseService)
         {
-            _sampleService = sampleService;
-            _userService = userService;
             _stripeService = stripeService;
+            _purchaseService = purchaseService;
         }
 
-        [FunctionName("handle_checkout_session_completed")]
+        //TODO: double check the security on this function 
+        [FunctionName(FunctionNames.PurchaseCompleteReturn)]
         public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
         ILogger log)
@@ -43,14 +46,16 @@ namespace vp.Functions.Sample
 
                     foreach (var priceId in priceIds)
                     {
-                        await _sampleService.AddPurchase(new Purchase
+                        await _purchaseService.AddPurchase(new Purchase
                         {
                             accountId = session.Metadata["vp_accountId"],
                             priceId = priceId,
                         });
                     }
                 }
-            } catch  {
+            }
+            catch
+            {
                 return new UnauthorizedResult();
             }
 

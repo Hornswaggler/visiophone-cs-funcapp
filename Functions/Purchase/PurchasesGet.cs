@@ -2,35 +2,38 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace visiophone_cs_funcapp.Functions.Sample
+namespace vp.functions.purchase
 {
-    public class GetPurchases
+    public class PurchaseGet : AuthBase
     {
         private readonly ISampleService _sampleService;
-        private readonly IUserService _userService;
+        private readonly IPurchaseService _purchaseService;
 
-        public GetPurchases(ISampleService sampleService, IUserService userService)
+        public PurchaseGet(
+            IUserService userService,
+            ISampleService sampleService,
+            IPurchaseService purchaseService
+        ) : base(userService)
         {
             _sampleService = sampleService;
-            _userService = userService;
+            _purchaseService = purchaseService;
         }
 
-        [FunctionName("get_purchases")]
+        [FunctionName(FunctionNames.PurchaseGet)]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req)
         {
-            if (!await _userService.AuthenticateUser(req, log))
+            if (!await AuthorizeUser(req))
             {
                 return new UnauthorizedResult();
             }
+
             var accountId = _userService.GetUserAccountId(req.HttpContext.User);
-            var purchases =  await _sampleService.GetPurchases(accountId);
+            var purchases = await _purchaseService.GetPurchases(accountId);
 
             List<string> priceIds = new List<string>();
             foreach (var purchase in purchases)

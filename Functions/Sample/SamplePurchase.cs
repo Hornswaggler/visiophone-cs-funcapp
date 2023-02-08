@@ -7,9 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
 
-namespace visiophone_cs_funcapp.Functions.Sample
+namespace vp.functions.sample
 {
     public class SamplePurchase
     {
@@ -22,8 +21,8 @@ namespace visiophone_cs_funcapp.Functions.Sample
             _stripeService = stripeService;
         }
 
-        [FunctionName("sample_purchase")]
-        public IActionResult Run(
+        [FunctionName(FunctionNames.SamplePurchase)]
+        public IActionResult Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {

@@ -39,10 +39,12 @@ namespace vp
             settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
 
             builder.Services.AddSingleton((s) => new MongoClient(settings));
-            builder.Services.AddTransient<ISampleService, SampleService>();
-            builder.Services.AddTransient<IUserService, UserService>();
-            builder.Services.AddTransient<IStripeService, StripeService>();
-
+            builder.Services.AddSingleton<ISampleService, SampleService>();
+            builder.Services.AddSingleton<ISamplePackService, SamplePackService>();
+            builder.Services.AddSingleton<IPurchaseService, PurchaseService>();
+            builder.Services.AddSingleton<IUserService, UserService>();
+            builder.Services.AddSingleton<IStripeService, StripeService>();
+            
             ConfigureServices(builder.Services);
         }
 

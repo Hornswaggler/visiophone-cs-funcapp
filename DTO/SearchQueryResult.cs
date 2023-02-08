@@ -3,9 +3,9 @@ using vp.models;
 
 namespace vp.DTO
 {
-    public class SampleQueryResult
+    public class SearchQueryResult<T>
     {
-        public List<Sample> samples { get; set; }
+        public List<T> data { get; set; }
 
         public int nextResultIndex { get; set; }
     }
