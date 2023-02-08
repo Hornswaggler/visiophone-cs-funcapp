@@ -4,13 +4,13 @@
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,
-        "excludedTypes": "Request;Exception"
+        "excludedTypes": "Request"
       }
     }
   },
   "extensions": {
     "durableTask": {
-      "hubName": "VisiophoneDurableTaskHubLocalJed"
+      "hubName": "%TASK_HUB_NAME%"
     }
   }
 }
