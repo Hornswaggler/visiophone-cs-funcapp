@@ -1,9 +1,9 @@
 # .NET Core Function App to Windows on Azure
 - task: AzureKeyVault@2
   inputs:
-    KeyVaultName: 'visiophone-kv-east-us2'
-    SecretsFilter: '*'
-    RunAsPreJob: false
+    - KeyVaultName: 'visiophone-kv-east-us2'
+    - SecretsFilter: '*'
+    - RunAsPreJob: false
 # Build a .NET Core function app and deploy it to Azure as a Windows function App.
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
