@@ -33,7 +33,7 @@ stages:
     steps:
     - task: AzureKeyVault@2
       inputs:
-        azureSubscription: $(azureSubscription)
+        azureSubscription: '$(azureSubscription)'
         KeyVaultName: 'visiophone-kv-east-us2'
         SecretsFilter: '*'
         RunAsPreJob: false
