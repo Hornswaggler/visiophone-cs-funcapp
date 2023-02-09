@@ -33,10 +33,10 @@ stages:
     steps:
     - task: AzureKeyVault@2
       inputs:
-        - azureSubscription: $(azureSubscription)
-        - KeyVaultName: 'visiophone-kv-east-us2'
-        - SecretsFilter: '*'
-        - RunAsPreJob: false
+        azureSubscription: $(azureSubscription)
+        KeyVaultName: 'visiophone-kv-east-us2'
+        SecretsFilter: '*'
+        RunAsPreJob: false
 
     - task: DotNetCoreCLI@2
       displayName: Build
