@@ -14,21 +14,18 @@ namespace vp.orchestrations.upsertSamplePack
     public class UpsertSamplePackOrchestrator
     {
         [FunctionName(OrchestratorNames.UpsertSamplePack)]
-        public static async Task<SamplePack> UpsertSamplePack(
+        public static async Task<SamplePack<Sample>> UpsertSamplePack(
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            SamplePack result;
+            SamplePack<Sample> result;
             UpsertSamplePackTransaction upsertSamplePackTransaction = ctx.GetInput<UpsertSamplePackTransaction>();
-
-            //TODO: Assign the instance Id to the image... (and also to each sample...) really???
-            //ctx.InstanceId
 
             try
             {
                 //TODO: Is this supposed to be context when all?
                 var samples = await Task.WhenAll(
-                    upsertSamplePackTransaction.request.sampleRequests.Select(
+                    upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
                         {
                             sampleRequest.sellerId = upsertSamplePackTransaction.account.Id;
@@ -56,7 +53,7 @@ namespace vp.orchestrations.upsertSamplePack
                 );
 
                 var request = upsertSamplePackTransaction.request;
-                var samplePack = new SamplePack
+                var samplePack = new SamplePack<Sample>
                 {
                     _id = request._id,
                     name = request.name,
@@ -64,7 +61,7 @@ namespace vp.orchestrations.upsertSamplePack
                     samples = samples.Select(sample => sample).ToList()
                 };
     
-                result = await ctx.CallActivityWithRetryAsync<SamplePack>(
+                result = await ctx.CallActivityWithRetryAsync<SamplePack<Sample>>(
                     ActivityNames.UpsertSamplePackMetadata,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     samplePack

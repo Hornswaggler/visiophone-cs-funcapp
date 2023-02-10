@@ -19,8 +19,8 @@ namespace vp.orchestrations.upsertSamplePack
         }
 
         [FunctionName(ActivityNames.UpsertSamplePackMetadata)]
-        public async Task<SamplePack> UpsertSamplePackMetadata(
-            [ActivityTrigger] SamplePack samplePack)
+        public async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
+            [ActivityTrigger] SamplePack<Sample> samplePack)
         {
             var result = await _samplePackService.AddSamplePack(samplePack);
             return result;
@@ -35,9 +35,9 @@ namespace vp.orchestrations.upsertSamplePack
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
 
             BlobContainerClient destContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
-            var destBlob = destContainer.GetBlobClient(upsertSamplePackTransaction.request.imageFileName);
+            var destBlob = destContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
             
-            await destBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, upsertSamplePackTransaction.request.imageFileName));
+            await destBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, upsertSamplePackTransaction.request.imgUrl));
 
             return upsertSamplePackTransaction;
         }
@@ -50,13 +50,13 @@ namespace vp.orchestrations.upsertSamplePack
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
 
             BlobContainerClient srcContainer = _blobServiceClient.GetBlobContainerClient(Config.UploadStagingContainerName);
-            var imgBlob = srcContainer.GetBlobClient(upsertSamplePackTransaction.request.imageFileName);
+            var imgBlob = srcContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
 
             await imgBlob.DeleteIfExistsAsync();
 
-            foreach(var sampleRequest in upsertSamplePackTransaction.request.sampleRequests)
+            foreach(var sampleRequest in upsertSamplePackTransaction.request.samples)
             {
-                var sampleBlob = srcContainer.GetBlobClient(sampleRequest.sampleFileName);
+                var sampleBlob = srcContainer.GetBlobClient(sampleRequest.clipUri);
                 await sampleBlob.DeleteIfExistsAsync();
             }
 

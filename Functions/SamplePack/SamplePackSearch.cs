@@ -14,8 +14,8 @@ namespace vp.functions.samplepack
     public class SamplePackSearch : AuthBase
     {
         ISamplePackService _samplePackService;
-        public SamplePackSearch(IUserService userService, ISamplePackService samplePackService) 
-            : base(userService)
+        public SamplePackSearch(IUserService userService, ISamplePackService samplePackService, IValidationService validationService) 
+            : base(userService, validationService)
         { 
             _samplePackService = samplePackService;
         }

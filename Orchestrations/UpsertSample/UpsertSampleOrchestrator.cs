@@ -20,7 +20,7 @@ namespace vp.orchestrations.upsertsample
             {
                 fileExtension = transaction.request.fileExtension,
                 sampleId = transaction.request._id,
-                incomingFileName = transaction.request.sampleFileName
+                incomingFileName = transaction.request.clipUri
             };
 
             var processAudioResult = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(

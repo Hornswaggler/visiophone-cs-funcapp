@@ -16,8 +16,9 @@ namespace vp.functions.purchase
         public PurchaseGet(
             IUserService userService,
             ISampleService sampleService,
-            IPurchaseService purchaseService
-        ) : base(userService)
+            IPurchaseService purchaseService,
+            IValidationService validationService
+        ) : base(userService, validationService)
         {
             _sampleService = sampleService;
             _purchaseService = purchaseService;

@@ -1,16 +1,11 @@
 ﻿using System.Collections.Generic;
+using vp.models;
 using vp.orchestrations.upsertsample;
 
 namespace vp.orchestrations.upsertSamplePack
 {
-    public class UpsertSamplePackRequest
+    public class UpsertSamplePackRequest : SamplePack<UpsertSampleRequest>
     {
-        public string _id { get; set; }
-        public string name { get; set; }
-        public string description { get; set; }
-
-        public string imageFileName { get; set; }
-
-        public List<UpsertSampleRequest> sampleRequests;
+        public string imgUrl { get; set; }
     }
 }

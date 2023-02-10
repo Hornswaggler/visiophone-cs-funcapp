@@ -7,8 +7,8 @@ namespace vp.services
 {
     public interface ISamplePackService
     {
-        Task<SamplePack> AddSamplePack(SamplePack samplePack);
-        Task<SearchQueryResult<SamplePack>> GetSamplePacksByName(SearchQuery request);
+        Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack);
+        Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByName(SearchQuery request);
 
     }
 }

@@ -15,8 +15,8 @@ namespace vp.functions.sample
     {
         protected readonly ISampleService _sampleService;
 
-        public SampleSearch(IUserService userService, ISampleService sampleService) 
-            : base(userService) 
+        public SampleSearch(IUserService userService, ISampleService sampleService, IValidationService validationService) 
+            : base(userService, validationService) 
         {
             _sampleService = sampleService;
         }

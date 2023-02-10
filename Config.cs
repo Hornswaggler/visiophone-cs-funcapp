@@ -4,6 +4,7 @@ namespace vp
 {
     public class Config
     {
+        private static string BASE_URL = "BASE_URL";
         private static string STORAGE_CONNECTION_STRING = "STORAGE_CONNECTION_STRING";
         private static string SAMPLE_CONTAINER_NAME = "SAMPLE_CONTAINER_NAME";
         private static string COVER_ART_CONTAINER_NAME = "COVER_ART_CONTAINER_NAME";
@@ -37,7 +38,7 @@ namespace vp
         public static int BufferSize  = 1 * 1024 * 1024;
         public static int PreviewBitrate = 128;
 
-
+        public static string BaseUrl = Environment.GetEnvironmentVariable(BASE_URL);
         public static string StorageConnectionString  = Environment.GetEnvironmentVariable(STORAGE_CONNECTION_STRING);
         public static string SampleBlobContainerName  = Environment.GetEnvironmentVariable(SAMPLE_CONTAINER_NAME);
         public static string MongoConnectionString  = Environment.GetEnvironmentVariable(MONGO_CONNECTION_STRING);
