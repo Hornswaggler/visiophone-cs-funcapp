@@ -5,7 +5,9 @@
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- {branch}
+- master
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/build/ci-build-git?view=azure-devops&tabs=yaml
+- feature/*
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
