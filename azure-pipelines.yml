@@ -7,7 +7,7 @@
 trigger:
 - master
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/build/ci-build-git?view=azure-devops&tabs=yaml
-- feature/*
+- features/*
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
