@@ -88,4 +88,4 @@ stages:
                     package: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
                     deployToSlotOrASE: true
                     resourceGroupName: "$(resourceGroupName)"
-                    slotName: staging
+                    slotName: staging #fix this name, then create the corresponding slot in the func
