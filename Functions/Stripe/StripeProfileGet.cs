@@ -32,9 +32,8 @@ namespace vp.functions.stripe
 
             try
             {
-                var profile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
-                var result = new StripeProfileDTO(profile);
-
+                var profile = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
+                StripeProfileDTO result = profile as StripeProfileDTO;
                 if (profile.isStripeApproved)
                 {
                     result.uploads = _stripeService.GetProductsForUser(profile.stripeId);

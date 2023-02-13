@@ -23,6 +23,11 @@ namespace vp.functions
             return await _userService.AuthenticateUser(req);
         }
 
+        protected string AuthorizeUserForm(HttpRequest req)
+        {
+            return _userService.AuthenticateUserForm(req, _logger);
+        }
+
         protected Account AuthorizeStripeUser(HttpRequest req)
         {
             var stripeAccount = _userService.AuthenticateSeller(req, _logger);
