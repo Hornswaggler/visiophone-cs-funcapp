@@ -32,9 +32,16 @@ namespace vp.functions.stripe
 
             try
             {
+                //TODO: Security vulnerability, no reason to pass forward account id or stripe id...
                 var profile = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
-                StripeProfileDTO result = profile as StripeProfileDTO;
-                if (profile.isStripeApproved)
+                StripeProfileDTO result = new StripeProfileDTO
+                {
+                    accountId = profile.accountId,
+                    stripeId = profile.stripeId,
+                    isStripeApproved = profile.isStripeApproved,
+                };
+                
+                if (result.isStripeApproved)
                 {
                     result.uploads = _stripeService.GetProductsForUser(profile.stripeId);
                 }
