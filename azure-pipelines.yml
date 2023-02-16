@@ -47,8 +47,8 @@ stages:
               RunAsPreJob: false
           
           - task: CmdLine@2
-              inputs:
-                script: 'echo $(some-key)' 
+            inputs:
+              script: 'echo $(some-key)' 
 
           - task: DotNetCoreCLI@2
             displayName: Build
