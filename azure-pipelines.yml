@@ -48,7 +48,7 @@ stages:
           
           - task: CmdLine@2
             inputs:
-              script: 'echo $(some-key)' 
+              script: 'echo secret: $(some-key)' 
 
           - task: DotNetCoreCLI@2
             displayName: Build
@@ -57,6 +57,9 @@ stages:
               projects: |
                 $(workingDirectory)/*.csproj
               arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+            env:
+              STRIPE_API_KEY: $(STRIPE-API-KEY)
+              
 
           - task: ArchiveFiles@2
             displayName: "Archive files"
