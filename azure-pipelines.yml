@@ -13,10 +13,10 @@ variables:
   # Azure Resource Manager connection created during pipeline creation
   azureSubscription: $(azureSubscription)
 
-  # Function app name
+  # Function App Name
   functionAppName: "visiophone-east-us2-cs-functions"
 
-  # Agent VM image name
+  # Agent VM Image Name
   vmImageName: "windows-2022"
 
   # Working Directory
