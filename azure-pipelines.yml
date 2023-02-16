@@ -4,6 +4,8 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
 
+# reference for keyvault vs variable groups in pipeline:  https://zimmergren.net/using-azure-key-vault-secrets-from-azure-devops-pipeline/
+
 trigger:
   - master
   # https://learn.microsoft.com/en-us/azure/devops/pipelines/build/ci-build-git?view=azure-devops&tabs=yaml
