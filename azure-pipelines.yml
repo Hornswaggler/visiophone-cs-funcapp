@@ -45,6 +45,10 @@ stages:
               KeyVaultName: "visiophone-kv-east-us2"
               SecretsFilter: "*"
               RunAsPreJob: false
+          
+          - task: CmdLine@2
+              inputs:
+              script: 'echo $(some-key)' 
 
           - task: DotNetCoreCLI@2
             displayName: Build
