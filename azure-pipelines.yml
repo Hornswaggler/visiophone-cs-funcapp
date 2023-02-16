@@ -11,12 +11,12 @@ trigger:
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: '$(azureSubscription)'
+  azureSubscription: "814a3a07-78b8-4732-903b-cf82eb8a4e4b"
 
-  # Function App Name
+  # Function app name
   functionAppName: "visiophone-east-us2-cs-functions"
 
-  # Agent VM Image Name
+  # Agent VM image name
   vmImageName: "windows-2022"
 
   # Working Directory
