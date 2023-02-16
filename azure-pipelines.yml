@@ -11,7 +11,7 @@ trigger:
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: $(azureSubscription)
+  azureSubscription: '$(azureSubscription)'
 
   # Function App Name
   functionAppName: "visiophone-east-us2-cs-functions"
