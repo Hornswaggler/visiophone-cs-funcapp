@@ -37,6 +37,8 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageName)
+        variables:
+          STRIPE_API_KEY: $(STRIPE-API-KEY)  # here or in the deployment?
 
         steps:
           - task: AzureKeyVault@2
@@ -57,9 +59,9 @@ stages:
               projects: |
                 $(workingDirectory)/*.csproj
               arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
-            env:
-              STRIPE_API_KEY: $(STRIPE-API-KEY)
-              
+            # env:
+            #   STRIPE_API_KEY: $(STRIPE-API-KEY)
+
 
           - task: ArchiveFiles@2
             displayName: "Archive files"
@@ -82,8 +84,11 @@ stages:
       - deployment: Deploy
         displayName: Deploy
         environment: "development"
+        variables:
+          STRIPE_API_KEY: $(STRIPE-API-KEY)
         pool:
           vmImage: $(vmImageName)
+
 
         strategy:
           runOnce:
@@ -99,3 +104,4 @@ stages:
                     # deployToSlotOrASE: true
                     resourceGroupName: "$(resourceGroupName)" 
                     # slotName: staging # fix this name, then create the corresponding slot in the
+                    STRIPE_API_KEY: $(STRIPE-API-KEY)
