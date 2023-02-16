@@ -11,7 +11,7 @@ trigger:
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: "814a3a07-78b8-4732-903b-cf82eb8a4e4b"
+  azureSubscription: $(azureSubscription)
 
   # Function app name
   functionAppName: "visiophone-east-us2-cs-functions"
@@ -87,5 +87,5 @@ stages:
                     appName: $(functionAppName)
                     package: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
                     deployToSlotOrASE: true
-                    resourceGroupName: "$(resourceGroupName)"
+                    resourceGroupName: "$(resourceGroupName)" 
                     # slotName: staging #fix this name, then create the corresponding slot in the
