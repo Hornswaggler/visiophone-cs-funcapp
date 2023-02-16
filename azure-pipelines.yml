@@ -86,6 +86,6 @@ stages:
                     appType: functionApp
                     appName: $(functionAppName)
                     package: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
-                    deployToSlotOrASE: true
+                    # deployToSlotOrASE: true
                     resourceGroupName: "$(resourceGroupName)" 
                     # slotName: staging #fix this name, then create the corresponding slot in the
