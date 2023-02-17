@@ -9,6 +9,6 @@ namespace vp.services
     {
         Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack);
         Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByName(SearchQuery request);
-
+        Task<SamplePack<Sample>> GetSamplePackById(string samplePackId);
     }
 }

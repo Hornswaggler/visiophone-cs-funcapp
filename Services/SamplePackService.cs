@@ -18,6 +18,12 @@ namespace vp.services
             return await FindByField(_samplePacks, request.query, field, request.index);
         }
 
+        public async Task<SamplePack<Sample>> GetSamplePackById(string samplePackId)
+        {
+            var result = await GetById<SamplePack<Sample>>(_samplePacks, samplePackId);
+            return result;
+        }
+
         public async Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack) {
             await _samplePacks.InsertOneAsync(samplePack);
             return samplePack;

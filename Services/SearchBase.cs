@@ -42,6 +42,12 @@ namespace vp.services
             };
         }
 
+        protected async Task<T> GetById<T>(IMongoCollection<T> collection, string id)
+        {
+            var result = await collection.FindAsync<T>(Builders<T>.Filter.Eq("_id", ObjectId.Parse(id)));
+            return result.FirstOrDefault();
+        }
+
         protected async Task<T> InsertOne(IMongoCollection<T> collection, T entity)
         {
             await collection.InsertOneAsync(entity);
