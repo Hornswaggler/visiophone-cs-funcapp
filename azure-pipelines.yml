@@ -37,8 +37,8 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageName)
-        variables:
-          STRIPE_API_KEY: $(STRIPE-API-KEY)  # here or in the deployment?
+        # variables:
+        #   STRIPE_API_KEY: $(STRIPE-API-KEY)  # here or in the deployment?
 
         steps:
           - task: AzureKeyVault@2
