@@ -14,11 +14,11 @@ trigger:
 variables:
   # Azure Resource Manager connection created during pipeline creation
   azureSubscription: "814a3a07-78b8-4732-903b-cf82eb8a4e4b"
-  someKey: $(some-key)
+  # someKey: $(some-key)
 
   # Function app name
   # functionAppName: "visiophone-east-us2-cs-functions"
-  functionAppName: "$(functionAppName)"
+  # functionAppName: "visiophone-east-us2-cs-functions"
 
   # Agent VM image name
   vmImageName: "windows-2022"
@@ -27,7 +27,7 @@ variables:
   workingDirectory: "$(System.DefaultWorkingDirectory)/"
 
   # Resource Group Name
-  resourceGroupName: "visophone-east-us2"
+  # resourceGroupName: "visophone-east-us2"
 
 stages:
   - stage: Build
@@ -42,12 +42,12 @@ stages:
         #   STRIPE_API_KEY: $(STRIPE-API-KEY)  # here or in the deployment?
 
         steps:
-          - task: AzureKeyVault@2
-            inputs:
-              azureSubscription: "$(azureSubscription)"
-              KeyVaultName: "visiophone-kv-east-us2"
-              SecretsFilter: "*"
-              RunAsPreJob: false
+          # - task: AzureKeyVault@2
+          #   inputs:
+          #     azureSubscription: "$(azureSubscription)"
+          #     KeyVaultName: "visiophone-kv-east-us2"
+          #     SecretsFilter: "*"
+          #     RunAsPreJob: false
           
           - task: CmdLine@2
             inputs:
