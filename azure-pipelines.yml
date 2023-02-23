@@ -17,7 +17,8 @@ variables:
   someKey: $(some-key)
 
   # Function app name
-  functionAppName: "visiophone-east-us2-cs-functions"
+  # functionAppName: "visiophone-east-us2-cs-functions"
+  functionAppName: "$(functionAppName)"
 
   # Agent VM image name
   vmImageName: "windows-2022"
