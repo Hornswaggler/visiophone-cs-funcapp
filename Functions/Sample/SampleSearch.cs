@@ -21,7 +21,7 @@ namespace vp.functions.sample
             _sampleService = sampleService;
         }
 
-        [FunctionName(FunctionNames.SampleSearch)]
+        //[FunctionName(FunctionNames.SampleSearch)]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)

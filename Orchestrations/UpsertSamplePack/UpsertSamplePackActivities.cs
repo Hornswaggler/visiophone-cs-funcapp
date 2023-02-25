@@ -2,6 +2,10 @@
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using vp.models;
 using vp.services;
@@ -61,6 +65,52 @@ namespace vp.orchestrations.upsertSamplePack
             }
 
             return upsertSamplePackTransaction;
+        }
+
+        [FunctionName(ActivityNames.UpsertStripeData)]
+
+        public static async Task<UpsertSamplePackTransaction> UpsertStripeData(
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSammpleTransaction,
+            ILogger log)
+        {
+            var sampleMetadata = upsertSammpleTransaction.request;
+            var account = upsertSammpleTransaction.account;
+
+            var sampleIds = JsonConvert.SerializeObject(
+                sampleMetadata.samples.Select(sample => sample._id).ToArray());
+
+            var sampleDescriptions = sampleMetadata.samples.Aggregate("", (acc, sample) =>
+            {
+                return $"{(acc == "" ? "" : $"{acc}, ")}{sample.name}";
+            });
+
+            var options = new Stripe.ProductCreateOptions
+            {
+                //TODO: Magic number
+                Name = sampleMetadata.name,
+                Description = $"{sampleMetadata.description}: {sampleDescriptions}",
+
+                //Default to the currency of the User Account (Probably is affiliated w/ the account?)
+                DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
+                {
+                    Currency = account.DefaultCurrency,
+                    UnitAmountDecimal = sampleMetadata.cost
+                },
+                Metadata = new Dictionary<string, string>
+                {
+                    { "accountId", $"{account.Id}" },
+                    { "sampleIds", $"{sampleIds}"}
+                }
+            };
+
+            var service = new Stripe.ProductService();
+            var stripeProduct = await service.CreateAsync(options);
+            sampleMetadata.priceId = stripeProduct.DefaultPriceId;
+            sampleMetadata.sellerId = account.Id;
+
+            upsertSammpleTransaction.request = sampleMetadata;
+
+            return upsertSammpleTransaction;
         }
     }
 }

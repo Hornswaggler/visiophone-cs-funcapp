@@ -18,7 +18,7 @@ namespace vp.functions.sample
     {
         public SampleUpload(IUserService userService, IValidationService validationService) : base(userService, validationService) { }
 
-        [FunctionName(FunctionNames.SampleUpload)]
+        //[FunctionName(FunctionNames.SampleUpload)]
         public async Task<IActionResult> Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,

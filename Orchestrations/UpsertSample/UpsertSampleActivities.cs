@@ -18,40 +18,41 @@ namespace vp.orchestrations.upsertsample
             _sampleService = sampleService;
         }
 
-        [FunctionName(ActivityNames.UpsertStripeData)]
+        //TODO: Do we need this?
+        //[FunctionName(ActivityNames.UpsertStripeData)]
 
-        public static async Task<UpsertSampleTransaction> UpsertStripeData(
-            [ActivityTrigger] UpsertSampleTransaction upsertSammpleTransaction,
-            ILogger log)
-        {
-            var sampleMetadata = upsertSammpleTransaction.request;
-            var account = upsertSammpleTransaction.account;
+        //public static async Task<UpsertSampleTransaction> UpsertStripeData(
+        //    [ActivityTrigger] UpsertSampleTransaction upsertSammpleTransaction,
+        //    ILogger log)
+        //{
+        //    var sampleMetadata = upsertSammpleTransaction.request;
+        //    var account = upsertSammpleTransaction.account;
 
-            var options = new Stripe.ProductCreateOptions
-            {
-                //TODO: Magic number
-                Name = sampleMetadata.name,
-                Description = sampleMetadata.description,
-                DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
-                {
-                    Currency = "USD",
-                    UnitAmountDecimal = sampleMetadata.cost
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { "accountId", $"{account.Id}" },
-                }
-            };
+        //    var options = new Stripe.ProductCreateOptions
+        //    {
+        //        //TODO: Magic number
+        //        Name = sampleMetadata.name,
+        //        Description = sampleMetadata.description,
+        //        DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
+        //        {
+        //            Currency = "USD",
+        //            UnitAmountDecimal = sampleMetadata.cost
+        //        },
+        //        Metadata = new Dictionary<string, string>
+        //        {
+        //            { "accountId", $"{account.Id}" },
+        //        }
+        //    };
 
-            var service = new Stripe.ProductService();
-            var stripeProduct = await service.CreateAsync(options);
-            sampleMetadata.priceId = stripeProduct.DefaultPriceId;
-            sampleMetadata.sellerId = account.Id;
+        //    var service = new Stripe.ProductService();
+        //    var stripeProduct = await service.CreateAsync(options);
+        //    sampleMetadata.priceId = stripeProduct.DefaultPriceId;
+        //    sampleMetadata.sellerId = account.Id;
 
-            upsertSammpleTransaction.request = sampleMetadata;
+        //    upsertSammpleTransaction.request = sampleMetadata;
 
-            return upsertSammpleTransaction;
-        }
+        //    return upsertSammpleTransaction;
+        //}
 
         [FunctionName(ActivityNames.UpsertSample)]
         public async Task<Sample> UpsertSampleMetaData (

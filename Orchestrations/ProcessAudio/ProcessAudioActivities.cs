@@ -45,7 +45,17 @@ namespace vp.orchestrations.processaudio
             log.LogInformation($"Transcoding {transcodeParams.InputFile} with params " +
                 $"{transcodeParams.FfmpegParams} with extension {transcodeParams.OutputExtension}");
 
-            return await videoProcessor.TranscodeAsync(transcodeParams, log);
+            string result = "";
+            try
+            {
+                result = await videoProcessor.TranscodeAsync(transcodeParams, log);
+            } catch (Exception e)
+            {
+                log.LogCritical($"Failed to transcode media: {e.Message}", e);
+            }
+            
+
+            return result;
         }
 
         [FunctionName(ActivityNames.StageAudioForTranscode)]

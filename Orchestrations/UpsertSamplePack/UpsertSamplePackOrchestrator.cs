@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using vp.models;
 using vp.orchestrations.upsertsample;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace vp.orchestrations.upsertSamplePack
 {
@@ -23,14 +21,10 @@ namespace vp.orchestrations.upsertSamplePack
 
             try
             {
-                //TODO: Is this supposed to be context when all?
                 var samples = await Task.WhenAll(
                     upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
                         {
-                            sampleRequest.sellerId = upsertSamplePackTransaction.account.Id;
-                            sampleRequest.seller = upsertSamplePackTransaction.userName;
-
                             return ctx.CallSubOrchestratorAsync<Sample>(
                                 OrchestratorNames.UpsertSample,
                                 (new UpsertSampleTransaction(
@@ -52,20 +46,37 @@ namespace vp.orchestrations.upsertSamplePack
                     upsertSamplePackTransaction
                 );
 
+                // COMBINE FOR IDEMPOTENCY
+                /////////////////////////////
+
+                //Generate Price Id in Stripe for Sample Pack
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.UpsertStripeData,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
                 var request = upsertSamplePackTransaction.request;
                 var samplePack = new SamplePack<Sample>
                 {
                     _id = request._id,
                     name = request.name,
+                    cost = request.cost,
+                    priceId = request.priceId,
                     description = request.description,
-                    samples = samples.Select(sample => sample).ToList()
+                    samples = samples.Select(sample => sample).ToList(),
+                    sellerId = upsertSamplePackTransaction.account.Id,
+                    seller = upsertSamplePackTransaction.userName
                 };
-    
+
                 result = await ctx.CallActivityWithRetryAsync<SamplePack<Sample>>(
                     ActivityNames.UpsertSamplePackMetadata,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     samplePack
                 );
+
+
+                ///////////////////////////////
 
                 return result;
             }

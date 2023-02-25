@@ -6,7 +6,8 @@ namespace vp.orchestrations.processaudio
 {
     public class ProcessAudioTransaction
     {
-        public string transactionId { get; set; } = $"{Guid.NewGuid()}";
+        public string incomingFileId { get; set; } = $"{Guid.NewGuid()}";
+        public string outgoingFileId { get; set; } = $"{Guid.NewGuid()}";
         public string incomingFileName { get; set; } = "";
         public string tempFolderPath { get; set; } = "";
         public string tempFilePath { get; set; } = "";
@@ -20,11 +21,11 @@ namespace vp.orchestrations.processaudio
 
         public string getPreviewFilename()
         {
-            return $"{transactionId}{Config.SamplePreviewFileFormat}";
+            return $"{incomingFileId}{Config.SamplePreviewFileFormat}";
         }
         public string getOutgoingFileName()
         {
-            return $"{transactionId}{Utils.GetFileExtension(incomingFileName)}";
+            return $"{outgoingFileId}{Utils.GetFileExtension(incomingFileName)}";
         }
 
         public string getTempFilePath()

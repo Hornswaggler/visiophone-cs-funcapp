@@ -12,19 +12,15 @@ namespace vp.orchestrations.processaudio
     {
         public static async Task Transcode(string inputPath, string ffmpegParams, string outputFile, ILogger log)
         {
-            var prefix = ffmpegParams.Contains("-i ") ? "" : $"-i \"{inputPath}\" ";
+            //TODO: Move the duration to the configuration (or make it a parameter)
+            var prefix = $"-ss 00:00:00 -to 00:00:30 -i \"{inputPath}\" ";
             var arguments = $"{prefix}{ffmpegParams} \"{outputFile}\"";
             await RunFfmpeg(arguments, log);
         }
 
         private static string GetFfmpegPath()
         {
-            var home = Environment.GetEnvironmentVariable("HOME");
-            if (string.IsNullOrEmpty(home))
-            {
-                return Path.Combine(GetAssemblyDirectory(), Config.HOME);
-            }
-            return Path.Combine(home, Config.FFMPEG_PATH);
+            return Path.Combine(GetAssemblyDirectory(), Config.Home);
         }
 
         public static string GetAssemblyDirectory()

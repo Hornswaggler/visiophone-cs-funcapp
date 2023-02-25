@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using vp.DTO;
 using vp.models;
@@ -34,5 +35,12 @@ namespace vp.services
             return await GetSamplePacksByField(request, "name");
         }
 
+        public async Task<List<SamplePack<Sample>>> GetSamplePackPurchasesByPriceIds(List<string> priceIds)
+        {
+            var filter = Builders<SamplePack<Sample>>.Filter.In(p => p.priceId, priceIds);
+            var query = await _samplePacks.FindAsync(filter);
+            var result = await query.ToListAsync();
+            return result;
+        }
     }
 }

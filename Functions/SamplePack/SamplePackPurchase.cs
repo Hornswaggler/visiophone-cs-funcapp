@@ -7,29 +7,32 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using vp.functions;
 
-namespace vp.functions.sample
+namespace visiophone_cs_funcapp.Functions.SamplePack
 {
-    public class SamplePurchase
+    public class SamplePackPurchase
     {
         private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
 
-        public SamplePurchase(IUserService userService, IStripeService stripeService)
+        public SamplePackPurchase(IUserService userService, IStripeService stripeService)
         {
             _userService = userService;
             _stripeService = stripeService;
         }
 
-        [FunctionName(FunctionNames.SamplePurchase)]
-        public IActionResult Run (
+        [FunctionName(FunctionNames.SamplePackPurchase)]
+        public IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {
             string accountId = "";
-            try {
+            try
+            {
                 accountId = _userService.AuthenticateUserForm(req, log);
-            } catch
+            }
+            catch
             {
                 return new UnauthorizedResult();
             }

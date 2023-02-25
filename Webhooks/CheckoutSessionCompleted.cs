@@ -14,6 +14,7 @@ namespace vp.webhooks
             IPurchaseService purchaseService
         )
         {
+            //TODO: THis should be in an orchestration in case it fails, it can be rerun!!!
             var stripeSession = eventData.Object as Stripe.Checkout.Session;
 
             var session = stripeService.GetCheckoutSession(stripeSession.Id);
@@ -25,6 +26,7 @@ namespace vp.webhooks
                 {
                     accountId = session.Metadata["vp_accountId"],
                     priceId = priceId,
+                    type = "samplePacks"
                 });
             }
            

@@ -28,10 +28,6 @@ namespace vp.orchestrations.upsertsample
                 audioTransaction
             );
 
-            transaction = await ctx.CallActivityWithRetryAsync<UpsertSampleTransaction>(
-                ActivityNames.UpsertStripeData,
-                new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                transaction);
 
             var request = transaction.request;
             var sample = SampleFactory.MakeSampleForSampleRequest(transaction.request);

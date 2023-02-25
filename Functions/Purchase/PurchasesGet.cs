@@ -10,17 +10,17 @@ namespace vp.functions.purchase
 {
     public class PurchaseGet : AuthBase
     {
-        private readonly ISampleService _sampleService;
+        private readonly ISamplePackService _samplePackService;
         private readonly IPurchaseService _purchaseService;
 
         public PurchaseGet(
             IUserService userService,
-            ISampleService sampleService,
+            ISamplePackService samplePackService,
             IPurchaseService purchaseService,
             IValidationService validationService
         ) : base(userService, validationService)
         {
-            _sampleService = sampleService;
+            _samplePackService = samplePackService;
             _purchaseService = purchaseService;
         }
 
@@ -42,7 +42,7 @@ namespace vp.functions.purchase
                 priceIds.Add(purchase.priceId);
             }
 
-            return new OkObjectResult(await _sampleService.GetSamples(priceIds));
+            return new OkObjectResult(await _samplePackService.GetSamplePackPurchasesByPriceIds(priceIds));
         }
     }
 }
