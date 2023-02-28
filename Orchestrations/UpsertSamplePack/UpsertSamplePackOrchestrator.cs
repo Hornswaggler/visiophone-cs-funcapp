@@ -65,7 +65,7 @@ namespace vp.orchestrations.upsertSamplePack
                     priceId = request.priceId,
                     description = request.description,
                     samples = samples.Select(sample => sample).ToList(),
-                    sellerId = upsertSamplePackTransaction.account.Id,
+                    sellerId = upsertSamplePackTransaction.account.stripeId,
                     seller = upsertSamplePackTransaction.userName
                 };
 

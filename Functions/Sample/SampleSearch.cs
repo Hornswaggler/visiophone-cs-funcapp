@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using vp.services;
-using vp.DTO;
+using vp.functions.samplepack;
 
 namespace vp.functions.sample
 {
@@ -31,7 +31,7 @@ namespace vp.functions.sample
             }
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            SearchQuery request = JsonConvert.DeserializeObject<SearchQuery>(requestBody);
+            SearchQueryRequest request = JsonConvert.DeserializeObject<SearchQueryRequest>(requestBody);
 
             return new OkObjectResult(await _sampleService.GetSamplesByName(request));
         }

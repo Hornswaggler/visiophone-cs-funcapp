@@ -20,5 +20,9 @@ namespace vp.models
         public decimal? cost { get; set; } = 0;
         public string sellerId { get; set; } = "";
         public string seller { get; set; } = "";
+        //TODO: Aggregate what's in pack? or search within collection records?
+        // SHOULD BE ABLE TO LEVERAGE TREE BASED INDICES INSTEAD OF HASHMAP INDICES!!! 
+        //public List<string> tags { get; set; } = new List<string>();
+        //public string keys { get; set; } = "";
     }
 }

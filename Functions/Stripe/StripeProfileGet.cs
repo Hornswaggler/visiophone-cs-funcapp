@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using vp.services;
 using Microsoft.AspNetCore.Mvc;
-using vp.DTO;
 
 namespace vp.functions.stripe
 {
@@ -32,20 +31,7 @@ namespace vp.functions.stripe
 
             try
             {
-                //TODO: Security vulnerability, no reason to pass forward account id or stripe id...
-                var profile = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
-                StripeProfileDTO result = new StripeProfileDTO
-                {
-                    accountId = profile.accountId,
-                    stripeId = profile.stripeId,
-                    isStripeApproved = profile.isStripeApproved,
-                };
-                
-                if (result.isStripeApproved)
-                {
-                    result.uploads = _stripeService.GetProductsForUser(profile.stripeId);
-                }
-
+                var result = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
                 return new OkObjectResult(result);
             }
             catch
@@ -53,7 +39,7 @@ namespace vp.functions.stripe
                 //consume
             }
 
-            return new OkObjectResult(new StripeProfileDTO());
+            return new OkObjectResult(new StripeProfileResult());
         }
     }
 }

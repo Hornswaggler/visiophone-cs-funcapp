@@ -27,12 +27,5 @@ namespace vp.functions
         {
             return _userService.AuthenticateUserForm(req, _logger);
         }
-
-        protected Account AuthorizeStripeUser(HttpRequest req)
-        {
-            var stripeAccount = _userService.AuthenticateSeller(req, _logger);
-            if (stripeAccount.Result == null) throw new UnauthorizedAccessException();
-            return stripeAccount.Result;
-        }
     }
 }

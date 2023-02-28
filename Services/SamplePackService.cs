@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using vp.DTO;
+using vp.functions.samplepack;
 using vp.models;
 
 namespace vp.services
@@ -14,7 +14,7 @@ namespace vp.services
             _samplePacks = _database.GetCollection<SamplePack<Sample>>(Config.SamplePackCollectionName);
         }
 
-        protected async Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByField(SearchQuery request, string field)
+        protected async Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByField(SearchQueryRequest request, string field)
         {
             return await FindByField(_samplePacks, request.query, field, request.index);
         }
@@ -25,14 +25,25 @@ namespace vp.services
             return result;
         }
 
+        public async Task<List<SamplePack<Sample>>> GetSamplePacksByIds(List<string> samplePackIds)
+        {
+            var result = await GetByIds(_samplePacks, samplePackIds);
+            return result;
+        }
+
         public async Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack) {
             await _samplePacks.InsertOneAsync(samplePack);
             return samplePack;
         }
 
-        public async Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByName(SearchQuery request)
+        public async Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksByName(SearchQueryRequest request)
         {
             return await GetSamplePacksByField(request, "name");
+        }
+
+        public async Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksBySellerId(SearchQueryRequest request)
+        {
+            return await GetSamplePacksByField(request, "sellerId");
         }
 
         public async Task<List<SamplePack<Sample>>> GetSamplePackPurchasesByPriceIds(List<string> priceIds)

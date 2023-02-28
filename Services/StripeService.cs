@@ -4,6 +4,7 @@ using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.functions.stripe;
 using vp.models;
 
 namespace vp.services
@@ -68,7 +69,7 @@ namespace vp.services
             return accountLink.Url;
         }
 
-        public async Task<StripeProfile> GetStripeProfile(string accountId, bool throwNoExist = false) {
+        public async Task<StripeProfileResult> GetStripeProfile(string accountId, bool throwNoExist = false) {
             StripeProfile profile = (await _profileCollection.FindAsync(u => u.accountId.Equals(accountId))).FirstOrDefault();
             
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
@@ -78,11 +79,12 @@ namespace vp.services
             }
 
             var account = await GetStripeAccount(profile);
-            return new StripeProfile
+            return new StripeProfileResult
             {
                 accountId = profile.accountId,
                 stripeId = profile.stripeId,
-                isStripeApproved = account.DetailsSubmitted
+                isStripeApproved = account.DetailsSubmitted,
+                defaultCurrency = account.DefaultCurrency
             };
         }
 
@@ -165,26 +167,14 @@ namespace vp.services
             return priceIds;
         }
 
-        public List<Sample> GetProductsForUser(string stripeId)
+        public List<Product> GetProductsForUser(string stripeId)
         {
             var options = new ProductSearchOptions
             {
                 Query = $"active:'true' AND metadata['accountId']:'{stripeId}'",
             };
             var result = _productService.Search(options);
-            var products = result.Data as List<Product>;
-
-            List<Sample> samples = new List<Sample>();
-            foreach(Product product in products)
-            {
-                samples.Add(new Sample
-                {
-                    name = product.Name,
-                    description = product.Description,
-                });
-            }
-
-            return samples;
+            return result.Data;
         }
     }
 }

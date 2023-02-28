@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.models;
 using vp.services;
 
 namespace vp.functions.stripe
@@ -39,7 +40,7 @@ namespace vp.functions.stripe
 
             var returnUri = JsonConvert.DeserializeObject<Dictionary<string, string>>(req.Form["payload"]);
 
-            var stripeProfile = await _stripeService.GetStripeProfile(accountId);
+            StripeProfile stripeProfile = await _stripeService.GetStripeProfile(accountId);
             if (stripeProfile == null)
             {
                 stripeProfile = await _stripeService.CreateNewAccount(accountId);

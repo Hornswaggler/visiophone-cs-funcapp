@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using vp.models;
 
-namespace vp.DTO
-{
+namespace vp.functions.samplepack{
     public class SearchQueryResult<T>
     {
         public List<T> data { get; set; }

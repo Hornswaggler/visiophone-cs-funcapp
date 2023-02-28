@@ -6,8 +6,7 @@ using Newtonsoft.Json;
 using System.Threading.Tasks;
 using vp.services;
 
-namespace vp.functions.samplepack
-{
+namespace vp.functions.samplepack{
     public class SamplePackGetById : AuthBase
     {
         ISamplePackService _samplePackService;
@@ -27,7 +26,7 @@ namespace vp.functions.samplepack
                 AuthorizationLevel.Anonymous,
                 "get",
                 Route = $"{FunctionNames.SamplePackGetById}/{{id}}")] HttpRequest req,
-                string? id
+                string id = ""
         )
         {
             if (!await _userService.AuthenticateUser(req))

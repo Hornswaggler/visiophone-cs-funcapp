@@ -2,15 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.IO;
 using System.Threading.Tasks;
-using vp.DTO;
 using vp.services;
 
-namespace vp.functions.samplepack
-{
+namespace vp.functions.samplepack{
     public class SamplePackSearch : AuthBase
     {
         ISamplePackService _samplePackService;
@@ -30,7 +27,7 @@ namespace vp.functions.samplepack
             }
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            SearchQuery request = JsonConvert.DeserializeObject<SearchQuery>(requestBody);
+            SearchQueryRequest request = JsonConvert.DeserializeObject<SearchQueryRequest>(requestBody);
 
             return new OkObjectResult(await _samplePackService.GetSamplePacksByName(request));
         }

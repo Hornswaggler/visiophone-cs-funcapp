@@ -1,9 +1,7 @@
 ﻿using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,7 +27,6 @@ namespace vp.orchestrations.upsertSamplePack
             var result = await _samplePackService.AddSamplePack(samplePack);
             return result;
         }
-
 
         [FunctionName(ActivityNames.UpsertSamplePackTransferImage)]
         public async Task<UpsertSamplePackTransaction> UpsertSamplePackTransferImage(
@@ -70,14 +67,11 @@ namespace vp.orchestrations.upsertSamplePack
         [FunctionName(ActivityNames.UpsertStripeData)]
 
         public static async Task<UpsertSamplePackTransaction> UpsertStripeData(
-            [ActivityTrigger] UpsertSamplePackTransaction upsertSammpleTransaction,
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSampleTransaction,
             ILogger log)
         {
-            var sampleMetadata = upsertSammpleTransaction.request;
-            var account = upsertSammpleTransaction.account;
-
-            var sampleIds = JsonConvert.SerializeObject(
-                sampleMetadata.samples.Select(sample => sample._id).ToArray());
+            var sampleMetadata = upsertSampleTransaction.request;
+            var account = upsertSampleTransaction.account;
 
             var sampleDescriptions = sampleMetadata.samples.Aggregate("", (acc, sample) =>
             {
@@ -93,24 +87,25 @@ namespace vp.orchestrations.upsertSamplePack
                 //Default to the currency of the User Account (Probably is affiliated w/ the account?)
                 DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
                 {
-                    Currency = account.DefaultCurrency,
+                    Currency = account.defaultCurrency,
                     UnitAmountDecimal = sampleMetadata.cost
                 },
                 Metadata = new Dictionary<string, string>
                 {
-                    { "accountId", $"{account.Id}" },
-                    { "sampleIds", $"{sampleIds}"}
+                    { "accountId", $"{account.stripeId}" },
+                    { "_id", $"{upsertSampleTransaction.request._id}" },
+                    { "type", "samplePacks"}
                 }
             };
 
             var service = new Stripe.ProductService();
             var stripeProduct = await service.CreateAsync(options);
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
-            sampleMetadata.sellerId = account.Id;
+            sampleMetadata.sellerId = account.accountId;
 
-            upsertSammpleTransaction.request = sampleMetadata;
+            upsertSampleTransaction.request = sampleMetadata;
 
-            return upsertSammpleTransaction;
+            return upsertSampleTransaction;
         }
     }
 }

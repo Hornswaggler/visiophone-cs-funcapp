@@ -7,16 +7,17 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Stripe;
+using vp.functions.stripe;
 using vp.orchestrations;
 using vp.orchestrations.upsertsample;
 using vp.services;
 
 namespace vp.functions.sample
 {
-    public class SampleUpload : AuthBase
+    public class SampleUpload : AuthStripeBase
     {
-        public SampleUpload(IUserService userService, IValidationService validationService) : base(userService, validationService) { }
+        public SampleUpload(IUserService userService, IStripeService stripeService, IValidationService validationService) 
+            : base(userService, stripeService, validationService) { }
 
         //[FunctionName(FunctionNames.SampleUpload)]
         public async Task<IActionResult> Run (
@@ -24,10 +25,10 @@ namespace vp.functions.sample
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            Account account;
+            StripeProfileResult account;
             try
             {
-                account = AuthorizeStripeUser(req);
+                account = await AuthorizeStripeUser(req);
             }
             catch (UnauthorizedAccessException e)
             {
@@ -50,9 +51,6 @@ namespace vp.functions.sample
                     log.LogError($"Sample failed validation: {errorstring}");
                     return new BadRequestObjectResult(errorstring);
                 }
-
-                upsertSampleRequest.seller = userName;
-                upsertSampleRequest.sellerId = account.Id;
             }
             catch (Exception e)
             {
