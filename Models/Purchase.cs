@@ -6,6 +6,9 @@ namespace vp.models
     {
         public string accountId { get; set; } = "";
         public string priceId { get; set; } = "";
+
+        //TODO: Validation (SAMPLE / SAMPLE_PACK)
+        public string type { get; set; } = "";
         public Purchase() : base()
         {
         }

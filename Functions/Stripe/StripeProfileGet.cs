@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using vp.services;
 using Microsoft.AspNetCore.Mvc;
-using vp.DTO;
 
 namespace vp.functions.stripe
 {
@@ -32,14 +31,7 @@ namespace vp.functions.stripe
 
             try
             {
-                var profile = _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
-                var result = new StripeProfileDTO(profile);
-
-                if (profile.isStripeApproved)
-                {
-                    result.uploads = _stripeService.GetProductsForUser(profile.stripeId);
-                }
-
+                var result = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
                 return new OkObjectResult(result);
             }
             catch
@@ -47,7 +39,7 @@ namespace vp.functions.stripe
                 //consume
             }
 
-            return new OkObjectResult(new StripeProfileDTO());
+            return new OkObjectResult(new StripeProfileResult());
         }
     }
 }

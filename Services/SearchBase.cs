@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using vp.DTO;
+using vp.functions.samplepack;
 
 namespace vp.services
 {
@@ -40,6 +40,20 @@ namespace vp.services
                     ? -1 
                     : index + Config.ResultsPerRequest
             };
+        }
+
+        protected async Task<T> GetById<T>(IMongoCollection<T> collection, string id)
+        {
+            var result = await collection.FindAsync<T>(Builders<T>.Filter.Eq("_id", ObjectId.Parse(id)));
+            return result.FirstOrDefault();
+        }
+
+        protected async Task<List<T>> GetByIds<T>(IMongoCollection<T> collection, List<string> ids)
+        {
+            var objectIds = ids.Select(id => ObjectId.Parse(id));
+            var result = await collection.FindAsync<T>(Builders<T>.Filter.In("_id", objectIds));
+
+            return result.ToList();
         }
 
         protected async Task<T> InsertOne(IMongoCollection<T> collection, T entity)

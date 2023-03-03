@@ -1,20 +1,23 @@
-﻿using Stripe.Checkout;
+﻿using Stripe;
+using Stripe.Checkout;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using vp.functions.stripe;
 using vp.models;
 
 namespace vp.services
 {
     public interface IStripeService
     {
-        Task<Stripe.Account> GetStripeAccount(StripeProfile stripeProfile);
+        Task<Account> GetStripeAccount(StripeProfile stripeProfile);
         Task<StripeProfile> CreateNewAccount(string accountId);
-        StripeProfile GetStripeProfile(string accountId, bool throwNoExist = false);
+        Task<StripeProfileResult> GetStripeProfile(string accountId, bool throwNoExist = false);
         Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile);
-        Task<Stripe.AccountLink> CreateAccountLink(string stripeId);
+        Task<AccountLink> CreateAccountLink(string stripeId, string returnUri);
         Session CreateSession(string accountId, List<string> priceIds);
-        List<Sample> GetProductsForUser(string stripeId);
+        List<Product> GetProductsForUser(string stripeId);
         Session GetCheckoutSession(string sessionId);
         List<string> GetPriceIdsForSession(string sessionId);
+        Task<string> GetAccountLink(StripeProfile profile, string returnUri);
     }
 }

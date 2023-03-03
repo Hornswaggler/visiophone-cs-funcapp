@@ -4,7 +4,7 @@ using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using vp.DTO;
+using vp.functions.stripe;
 using vp.models;
 
 namespace vp.services
@@ -63,8 +63,14 @@ namespace vp.services
             return await _accountService.GetAsync(stripeProfile.stripeId);
         }
 
-        public StripeProfile GetStripeProfile(string accountId, bool throwNoExist = false) {
-            StripeProfile profile = _profileCollection.Find(u => u.accountId.Equals(accountId)).FirstOrDefault();
+        public async Task<string> GetAccountLink(StripeProfile profile, string returnUri)
+        {
+            var accountLink = await CreateAccountLink(profile.stripeId, returnUri);
+            return accountLink.Url;
+        }
+
+        public async Task<StripeProfileResult> GetStripeProfile(string accountId, bool throwNoExist = false) {
+            StripeProfile profile = (await _profileCollection.FindAsync(u => u.accountId.Equals(accountId))).FirstOrDefault();
             
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
             else if(profile == null)
@@ -72,14 +78,14 @@ namespace vp.services
                 return null;
             }
 
-            StripeProfileDTO result = new StripeProfileDTO
+            var account = await GetStripeAccount(profile);
+            return new StripeProfileResult
             {
                 accountId = profile.accountId,
                 stripeId = profile.stripeId,
-                isStripeApproved = profile.isStripeApproved,
+                isStripeApproved = account.DetailsSubmitted,
+                defaultCurrency = account.DefaultCurrency
             };
-
-            return profile;
         }
 
         public async Task<StripeProfile> CreateNewAccount(string accountId)
@@ -101,6 +107,10 @@ namespace vp.services
                         Requested = true,
                     },
                 },
+                Metadata = new Dictionary<string, string>
+                {
+                    {"visiophone_account_id" , accountId }
+                }
             };
 
             var stripeAccount = await _accountService.CreateAsync(options);
@@ -112,18 +122,18 @@ namespace vp.services
             });
         }
 
-        public async Task<AccountLink> CreateAccountLink(string stripeId) {
+        public async Task<AccountLink> CreateAccountLink(string stripeId, string returnUri) {
             return await _linkService.CreateAsync(new AccountLinkCreateOptions
             {
                 Account = stripeId,
-                RefreshUrl = Config.ProvisionStripeStandardRefreshUrl,
-                ReturnUrl = Config.ProvisionStripeStandardReturnUrl,
+                RefreshUrl = returnUri,
+                ReturnUrl = returnUri,
                 Type = "account_onboarding",
             });
         }
 
         public async Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile) {
-            StripeProfile lastProfile = GetStripeProfile(stripeProfile.accountId);
+            StripeProfile lastProfile = await GetStripeProfile(stripeProfile.accountId);
 
             var filter = Builders<StripeProfile>.Filter.Where(profile => profile.accountId == stripeProfile.accountId);
             await _profileCollection.ReplaceOneAsync(filter, stripeProfile, new ReplaceOptions { IsUpsert = true });
@@ -157,26 +167,14 @@ namespace vp.services
             return priceIds;
         }
 
-        public List<Sample> GetProductsForUser(string stripeId)
+        public List<Product> GetProductsForUser(string stripeId)
         {
             var options = new ProductSearchOptions
             {
                 Query = $"active:'true' AND metadata['accountId']:'{stripeId}'",
             };
             var result = _productService.Search(options);
-            var products = result.Data as List<Product>;
-
-            List<Sample> samples = new List<Sample>();
-            foreach(Product product in products)
-            {
-                samples.Add(new Sample
-                {
-                    name = product.Name,
-                    description = product.Description,
-                });
-            }
-
-            return samples;
+            return result.Data;
         }
     }
 }

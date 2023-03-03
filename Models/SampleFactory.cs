@@ -10,13 +10,10 @@ namespace vp.models
             {
                 _id = request._id,
                 name = request.name,
-                tag = request.tag,
+                tags = request.tags,
+                key = request.key,
                 description = request.description,
-                seller = request.seller,
                 bpm = request.bpm,
-                cost = request.cost,
-                priceId = request.priceId,
-                sellerId = request.sellerId
             };
         }
     }

@@ -44,7 +44,9 @@ namespace vp
             builder.Services.AddSingleton<IPurchaseService, PurchaseService>();
             builder.Services.AddSingleton<IUserService, UserService>();
             builder.Services.AddSingleton<IStripeService, StripeService>();
-            
+            builder.Services.AddSingleton<IValidationService, ValidationService>();
+            builder.Services.AddSingleton<IStorageService, StorageService>();
+
             ConfigureServices(builder.Services);
         }
 

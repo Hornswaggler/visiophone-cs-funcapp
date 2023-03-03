@@ -1,8 +1,8 @@
 ﻿using MongoDB.Driver;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using vp.DTO;
 using vp.models;
+using vp.functions.samplepack;
+using System;
 
 namespace vp.services
 {
@@ -16,26 +16,27 @@ namespace vp.services
             _samples = _database.GetCollection<Sample>(Config.SampleCollectionName);
         }
 
-        protected async Task<SearchQueryResult<Sample>> GetSamplesByField(SearchQuery request, string field)
+        protected async Task<SearchQueryResult<Sample>> GetSamplesByField(SearchQueryRequest request, string field)
         {
             return await FindByField(_samples, request.query, field, request.index);
         }
 
         public async Task<Sample> AddSample(Sample sample)
         {
-            await _samples.InsertOneAsync(sample);
+            try
+            {
+                await _samples.InsertOneAsync(sample);
+
+            } catch(Exception e)
+            {
+                int i = 0;
+                i++;
+            }
             return sample;
         }
 
-        public async Task<List<Sample>> GetSamples(List<string> priceIds)
-        {
-            var filter = Builders<Sample>.Filter.In(p => p.priceId, priceIds);
-            var query = await _samples.FindAsync(filter);
-            var result = await query.ToListAsync();
-            return result;
-        }
 
-        public async Task<SearchQueryResult<Sample>> GetSamplesByName(SearchQuery request)
+        public async Task<SearchQueryResult<Sample>> GetSamplesByName(SearchQueryRequest request)
         {
             return await GetSamplesByField(request, "name");
         }

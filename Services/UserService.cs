@@ -81,7 +81,7 @@ namespace vp.services
                 return null;
             }
 
-            var stripeProfile = _stripeService.GetStripeProfile(GetUserAccountId(req.HttpContext.User));
+            var stripeProfile = await _stripeService.GetStripeProfile(GetUserAccountId(req.HttpContext.User));
             if (stripeProfile == null)
             {
                 return null;

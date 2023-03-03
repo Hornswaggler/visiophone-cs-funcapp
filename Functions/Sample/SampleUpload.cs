@@ -7,27 +7,28 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Stripe;
+using vp.functions.stripe;
 using vp.orchestrations;
 using vp.orchestrations.upsertsample;
 using vp.services;
 
 namespace vp.functions.sample
 {
-    public class SampleUpload : AuthBase
+    public class SampleUpload : AuthStripeBase
     {
-        public SampleUpload(IUserService userService) : base(userService) { }
+        public SampleUpload(IUserService userService, IStripeService stripeService, IValidationService validationService) 
+            : base(userService, stripeService, validationService) { }
 
-        [FunctionName(FunctionNames.SampleUpload)]
+        //[FunctionName(FunctionNames.SampleUpload)]
         public async Task<IActionResult> Run (
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
-            Account account;
+            StripeProfileResult account;
             try
             {
-                account = AuthorizeStripeUser(req);
+                account = await AuthorizeStripeUser(req);
             }
             catch (UnauthorizedAccessException e)
             {
@@ -42,8 +43,14 @@ namespace vp.functions.sample
             {
                 var formData = req.Form["data"];
                 upsertSampleRequest = JsonConvert.DeserializeObject<UpsertSampleRequest>(formData);
-                upsertSampleRequest.seller = userName;
-                upsertSampleRequest.sellerId = account.Id;
+
+                var errors = await _validationService.ValidateEntity(upsertSampleRequest, "sample");
+                if (errors.Count > 0)
+                {
+                    var errorstring = JsonConvert.SerializeObject(errors.Keys);
+                    log.LogError($"Sample failed validation: {errorstring}");
+                    return new BadRequestObjectResult(errorstring);
+                }
             }
             catch (Exception e)
             {
@@ -57,9 +64,9 @@ namespace vp.functions.sample
             try
             {
                 util.Utils.UploadFormFile(
-                    form.Files[upsertSampleRequest.sampleFileName], 
+                    form.Files[upsertSampleRequest.clipUri], 
                     Config.SampleBlobContainerName, 
-                    upsertSampleRequest.sampleFileName);
+                    upsertSampleRequest.clipUri);
             }
             catch (Exception e)
             {
@@ -75,7 +82,7 @@ namespace vp.functions.sample
                 transactionMetadata
             );
 
-            return new OkObjectResult(upsertSampleRequest);
+            return new OkObjectResult(orchestrationId);
         }
     }
 }

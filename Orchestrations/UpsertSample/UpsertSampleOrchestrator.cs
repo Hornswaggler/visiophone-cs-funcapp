@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,7 @@ namespace vp.orchestrations.upsertsample
             {
                 fileExtension = transaction.request.fileExtension,
                 sampleId = transaction.request._id,
-                incomingFileName = transaction.request.sampleFileName
+                incomingFileName = transaction.request.clipUri
             };
 
             var processAudioResult = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
@@ -28,20 +27,9 @@ namespace vp.orchestrations.upsertsample
                 audioTransaction
             );
 
-            transaction = await ctx.CallActivityWithRetryAsync<UpsertSampleTransaction>(
-                ActivityNames.UpsertStripeData,
-                new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                transaction);
-
-            var request = transaction.request;
             var sample = SampleFactory.MakeSampleForSampleRequest(transaction.request);
-            var result = await ctx.CallActivityWithRetryAsync<Sample>(
-                ActivityNames.UpsertSample,
-                new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                sample
-            );
 
-            return result;
+            return sample;
         }
     }
 }
