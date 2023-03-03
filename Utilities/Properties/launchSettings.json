@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Utilities": {
+      "commandName": "Project",
+      "commandLineArgs": "SETTINGS=C:\\projects\\visiophone-cs-funcapp\\visiophone-cs-funcapp\\local.settings.json\r\nSAMPLE_DATA_PATH=C:\\projects\\visiophone-test-data"
+    }
+  }
+}
