@@ -8,26 +8,17 @@
 
 trigger:
   - master
-  # https://learn.microsoft.com/en-us/azure/devops/pipelines/build/ci-build-git?view=azure-devops&tabs=yaml
   - features/*
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
   azureSubscription: "814a3a07-78b8-4732-903b-cf82eb8a4e4b"
-  # someKey: $(some-key)
-
-  # Function app name
-  # functionAppName: "visiophone-east-us2-cs-functions"
-  # functionAppName: "visiophone-east-us2-cs-functions"
 
   # Agent VM image name
   vmImageName: "windows-2022"
 
   # Working Directory
   workingDirectory: "$(System.DefaultWorkingDirectory)/"
-
-  # Resource Group Name
-  # resourceGroupName: "visophone-east-us2"
 
 stages:
   - stage: Build
@@ -38,17 +29,8 @@ stages:
         displayName: Build
         pool:
           vmImage: $(vmImageName)
-        # variables:
-        #   STRIPE_API_KEY: $(STRIPE-API-KEY)  # here or in the deployment?
 
         steps:
-          # - task: AzureKeyVault@2
-          #   inputs:
-          #     azureSubscription: "$(azureSubscription)"
-          #     KeyVaultName: "visiophone-kv-east-us2"
-          #     SecretsFilter: "*"
-          #     RunAsPreJob: false
-          
           - task: CmdLine@2
             inputs:
               script: 'echo secret: $(some-key)' 
@@ -60,9 +42,6 @@ stages:
               projects: |
                 $(workingDirectory)/*.csproj
               arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
-            # env:
-            #   STRIPE_API_KEY: $(STRIPE-API-KEY)
-
 
           - task: ArchiveFiles@2
             displayName: "Archive files"
@@ -75,34 +54,3 @@ stages:
 
           - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
             artifact: drop
-
-  # - stage: Deploy
-  #   displayName: Deploy stage
-  #   dependsOn: Build
-  #   condition: succeeded()
-
-  #   jobs:
-  #     - deployment: Deploy
-  #       displayName: Deploy
-  #       environment: "development"
-  #       variables:
-  #         STRIPE_API_KEY: $(STRIPE-API-KEY)
-  #       pool:
-  #         vmImage: $(vmImageName)
-
-
-  #       strategy:
-  #         runOnce:
-  #           deploy:
-  #             steps:
-  #               - task: AzureFunctionApp@1
-  #                 displayName: "Azure functions app deploy"
-  #                 inputs:
-  #                   azureSubscription: "$(azureSubscription)"
-  #                   appType: functionApp
-  #                   appName: $(functionAppName)
-  #                   package: "$(Pipeline.Workspace)/drop/$(Build.BuildId).zip"
-  #                   # deployToSlotOrASE: true
-  #                   resourceGroupName: "$(resourceGroupName)" 
-  #                   # slotName: staging # fix this name, then create the corresponding slot in the
-  #                   STRIPE_API_KEY: $(STRIPE-API-KEY)
