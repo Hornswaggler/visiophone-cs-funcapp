@@ -1,4 +1,4 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.Azure.Cosmos;
 using Stripe;
 using Stripe.Checkout;
 using System;
@@ -9,26 +9,22 @@ using vp.models;
 
 namespace vp.services
 {
-    public class StripeService : IStripeService
+    public class StripeService : BaseEntity<StripeProfile>, IStripeService
     {
-        private readonly MongoClient _mongoClient;
-        private readonly IMongoDatabase _database;
-        private readonly IMongoCollection<StripeProfile> _profileCollection;
+        private readonly Container _stripeProfilesCosmos;
         private readonly AccountService _accountService;
         private readonly AccountLinkService _linkService;
         private readonly ProductService _productService;
         private readonly SessionService _sessionService;
 
-        public StripeService(MongoClient mongoClient)
+        public StripeService(CosmosClient cosmosClient) : base(cosmosClient)
         {
             StripeConfiguration.ApiKey = Config.StripeAPIKey;
-            _mongoClient = mongoClient;
-            _database = _mongoClient.GetDatabase("visiophone");
             _accountService = new AccountService();
             _productService = new ProductService();
             _linkService = new AccountLinkService();
             _sessionService = new SessionService();
-            _profileCollection = _database.GetCollection<StripeProfile>("stripeProfiles");
+            _stripeProfilesCosmos = _cosmosClient.GetContainer(Config.DatabaseName, Config.StripeProfileCollectionName);
         }
 
         public Session CreateSession(string accountId, List<string> priceIds) {
@@ -70,8 +66,8 @@ namespace vp.services
         }
 
         public async Task<StripeProfileResult> GetStripeProfile(string accountId, bool throwNoExist = false) {
-            StripeProfile profile = (await _profileCollection.FindAsync(u => u.accountId.Equals(accountId))).FirstOrDefault();
-            
+            StripeProfile profile = await GetByField(_stripeProfilesCosmos, "accountId", accountId);
+
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
             else if(profile == null)
             {
@@ -115,11 +111,16 @@ namespace vp.services
 
             var stripeAccount = await _accountService.CreateAsync(options);
 
-            return await SetStripeProfile(new StripeProfile
+            var profile = new StripeProfile
             {
+                id = Guid.NewGuid().ToString(),
                 accountId = accountId,
                 stripeId = stripeAccount.Id,
-            });
+            };
+
+            await _stripeProfilesCosmos.UpsertItemAsync(profile);
+
+            return profile;
         }
 
         public async Task<AccountLink> CreateAccountLink(string stripeId, string returnUri) {
@@ -130,15 +131,6 @@ namespace vp.services
                 ReturnUrl = returnUri,
                 Type = "account_onboarding",
             });
-        }
-
-        public async Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile) {
-            StripeProfile lastProfile = await GetStripeProfile(stripeProfile.accountId);
-
-            var filter = Builders<StripeProfile>.Filter.Where(profile => profile.accountId == stripeProfile.accountId);
-            await _profileCollection.ReplaceOneAsync(filter, stripeProfile, new ReplaceOptions { IsUpsert = true });
-
-            return stripeProfile;
         }
 
         public Session GetCheckoutSession(string sessionId) {

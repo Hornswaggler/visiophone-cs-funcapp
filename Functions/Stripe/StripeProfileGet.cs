@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using vp.services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace vp.functions.stripe
 {
@@ -13,7 +14,7 @@ namespace vp.functions.stripe
         private readonly IUserService _userService;
         private readonly IStripeService _stripeService;
 
-        public StripeProfileGet(IUserService userService, ISampleService sampleService, IStripeService stripeService)
+        public StripeProfileGet(IUserService userService, IStripeService stripeService)
         {
             _userService = userService;
             _stripeService = stripeService;
@@ -32,7 +33,7 @@ namespace vp.functions.stripe
             try
             {
                 var result = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
-                return new OkObjectResult(result);
+                return new OkObjectResult(JsonConvert.SerializeObject(result));
             }
             catch
             {

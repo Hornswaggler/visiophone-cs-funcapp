@@ -1,8 +1,6 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-using MongoDB.Driver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Security.Authentication;
 using vp;
 using vp.services;
 using Microsoft.Extensions.Options;
@@ -10,6 +8,7 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Azure.Functions.Identity.Web.Extensions;
+using Microsoft.Azure.Cosmos;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace vp
@@ -35,17 +34,18 @@ namespace vp
                 .Build();
 
             builder.Services.AddSingleton<IConfiguration>(Configuration);
-            MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(Config.MongoConnectionString));
-            settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
-
-            builder.Services.AddSingleton((s) => new MongoClient(settings));
-            builder.Services.AddSingleton<ISampleService, SampleService>();
             builder.Services.AddSingleton<ISamplePackService, SamplePackService>();
             builder.Services.AddSingleton<IPurchaseService, PurchaseService>();
             builder.Services.AddSingleton<IUserService, UserService>();
             builder.Services.AddSingleton<IStripeService, StripeService>();
             builder.Services.AddSingleton<IValidationService, ValidationService>();
             builder.Services.AddSingleton<IStorageService, StorageService>();
+
+            CosmosClient client = new(
+                connectionString: Config.CosmosConnectionString
+            );
+
+            builder.Services.AddSingleton(s => client);
 
             ConfigureServices(builder.Services);
         }

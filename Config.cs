@@ -17,17 +17,20 @@ namespace vp
         public static string StorageAccountName = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_NAME");
         public static string StorageAccountKey = Environment.GetEnvironmentVariable("STORAGE_ACCOUNT_KEY");
         public static string StorageConnectionString = Environment.GetEnvironmentVariable("STORAGE_CONNECTION_STRING");
-            //$"DefaultEndpointsProtocol=https;AccountName={StorageAccountName};AccountKey={StorageAccountKey};EndpointSuffix=core.windows.net";
+        //$"DefaultEndpointsProtocol=https;AccountName={StorageAccountName};AccountKey={StorageAccountKey};EndpointSuffix=core.windows.net";
+        public static string CosmosEndpoint = Environment.GetEnvironmentVariable("COSMOS_ENDPOINT");
+        public static string CosmosKey = Environment.GetEnvironmentVariable("COSMOS_KEY");
+        public static string CosmosConnectionString = Environment.GetEnvironmentVariable("COSMOS_CONNECTION_STRING");
 
         public static string SampleFilesContainerName = Environment.GetEnvironmentVariable("SAMPLE_FILES_CONTAINER_NAME");
         public static string CoverArtContainerName = Environment.GetEnvironmentVariable("COVER_ART_CONTAINER_NAME");
         public static string SampleTranscodeContainerName = Environment.GetEnvironmentVariable("SAMPLE_TRANSCODES_CONTAINER_NAME");
         public static string SampleBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_CONTAINER_NAME");
 
-        public static string MongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
         public static string DatabaseName = Environment.GetEnvironmentVariable("DATABASE_NAME");
         public static string SampleCollectionName = Environment.GetEnvironmentVariable("SAMPLE_COLLECTION_NAME");
         public static string PurchaseCollectionName = Environment.GetEnvironmentVariable("PURCHASE_COLLECTION_NAME");
+        public static string StripeProfileCollectionName = Environment.GetEnvironmentVariable("STRIPE_PROFILE_COLLECTION_NAME");
         public static string SamplePackCollectionName = Environment.GetEnvironmentVariable("SAMPLE_PACK_COLLECTION_NAME");
         public static string UploadStagingContainerName = Environment.GetEnvironmentVariable("UPLOAD_STAGING_CONTAINER");
 

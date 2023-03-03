@@ -17,7 +17,6 @@ namespace vp.webhooks
         private readonly IPurchaseService _purchaseService;
 
         public StripeWebhookHandler(
-            ISampleService sampleService,
             IStripeService stripeService,
             IPurchaseService purchaseService)
         {

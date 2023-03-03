@@ -12,7 +12,6 @@ namespace vp.services
         Task<Account> GetStripeAccount(StripeProfile stripeProfile);
         Task<StripeProfile> CreateNewAccount(string accountId);
         Task<StripeProfileResult> GetStripeProfile(string accountId, bool throwNoExist = false);
-        Task<StripeProfile> SetStripeProfile(StripeProfile stripeProfile);
         Task<AccountLink> CreateAccountLink(string stripeId, string returnUri);
         Session CreateSession(string accountId, List<string> priceIds);
         List<Product> GetProductsForUser(string stripeId);

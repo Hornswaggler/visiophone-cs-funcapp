@@ -5,9 +5,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 using Newtonsoft.Json;
-using Stripe;
 using System;
 using System.Threading.Tasks;
 using vp.functions.stripe;
@@ -56,7 +54,7 @@ namespace vp.functions.samplepack {
                     return new BadRequestObjectResult(errorstring);
                 }
 
-                samplePackRequest._id = ObjectId.GenerateNewId().ToString();
+                samplePackRequest._id = Guid.NewGuid().ToString();
                 transaction = new UpsertSamplePackTransaction
                 {
                     account = account,
@@ -77,7 +75,7 @@ namespace vp.functions.samplepack {
                 var sampleRequests = transaction.request.samples;
                 foreach (var sampleRequest in sampleRequests)
                 {
-                    sampleRequest._id = ObjectId.GenerateNewId().ToString();
+                    sampleRequest._id = Guid.NewGuid().ToString();
 
                     var ext = Utils.GetExtensionForFileName(sampleRequest.clipUri);
                     string newFileName = Utils.GetFileNameForId(sampleRequest._id, sampleRequest.clipUri);

@@ -1,27 +1,28 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.Azure.Cosmos;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using vp.models;
 
 namespace vp.services
 {
-    public class PurchaseService : MongoSearchBase<Purchase>, IPurchaseService
+    public class PurchaseService : BaseEntity<Purchase>, IPurchaseService
     {
-        private readonly IMongoCollection<Purchase> _purchases;
+        private readonly Container _purchasesContainer;
 
-        public PurchaseService(MongoClient mongoClient) : base(mongoClient) {
-            _purchases = _database.GetCollection<Purchase>(Config.PurchaseCollectionName);
+        public PurchaseService(CosmosClient cosmosClient) : base( cosmosClient) {
+            _purchasesContainer = _cosmosClient.GetContainer(Config.DatabaseName, Config.PurchaseCollectionName);
         }
 
         public async Task<Purchase> AddPurchase(Purchase purchase)
         {
-            return await InsertOne(_purchases, purchase);
+            purchase.id = Guid.NewGuid().ToString();
+            return await InsertOneAsync(_purchasesContainer, purchase);
         }
 
         public async Task<List<Purchase>> GetPurchases(string accountId)
         {
-            var purchaseQuery = await _purchases.FindAsync<Purchase>(p => p.accountId.Equals(accountId));
-            return await purchaseQuery.ToListAsync();
+            return await FindWhere(_purchasesContainer, "accountId", accountId);
         }
     }
 }

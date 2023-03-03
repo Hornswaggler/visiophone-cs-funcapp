@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -16,14 +15,10 @@ namespace vp.services
 {
     public class UserService : IUserService
     {
-        private readonly MongoClient _mongoClient;
-        private readonly IMongoDatabase _database;
         private readonly IStripeService _stripeService;
 
-        public UserService(MongoClient mongoClient, IConfiguration configuration, IStripeService stripeService)
+        public UserService(IConfiguration configuration, IStripeService stripeService)
         {
-            _mongoClient = mongoClient;
-            _database = _mongoClient.GetDatabase("visiophone");
             _stripeService = stripeService;
         }
 
