@@ -36,8 +36,8 @@ namespace vp.functions.user
             {
                 sampleLinks.Add(
                     new KeyValuePair<string, Uri>(
-                        sample._id,
-                        _storageService.GetSASTokenForSampleBlob($"{sample._id}.wav")
+                        sample.id,
+                        _storageService.GetSASTokenForSampleBlob($"{sample.id}.wav")
                     )
                 );
             }

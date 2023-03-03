@@ -93,7 +93,7 @@ namespace vp.orchestrations.upsertSamplePack
                 Metadata = new Dictionary<string, string>
                 {
                     { "accountId", $"{account.stripeId}" },
-                    { "_id", $"{upsertSampleTransaction.request._id}" },
+                    { "id", $"{upsertSampleTransaction.request.id}" },
                     { "type", "samplePacks"}
                 }
             };

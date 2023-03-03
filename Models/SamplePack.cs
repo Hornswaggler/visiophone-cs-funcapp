@@ -7,7 +7,7 @@ namespace vp.models
     {
         public SamplePack() : base() { }
 
-        public SamplePack(string _id, string name, string description, List<T> samples) : base(_id) {
+        public SamplePack(string id, string name, string description, List<T> samples) : base(id) {
             this.name = name;
             this.description = description;
             this.samples = samples;

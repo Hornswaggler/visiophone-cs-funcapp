@@ -18,7 +18,7 @@ namespace vp.orchestrations.upsertsample
             ProcessAudioTransaction audioTransaction = new ProcessAudioTransaction
             {
                 fileExtension = transaction.request.fileExtension,
-                sampleId = transaction.request._id,
+                sampleId = transaction.request.id,
                 incomingFileName = transaction.request.clipUri
             };
 

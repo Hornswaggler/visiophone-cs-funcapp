@@ -105,7 +105,7 @@ namespace vp.services
                 },
                 Metadata = new Dictionary<string, string>
                 {
-                    {"visiophone_account_id" , accountId }
+                    {"visiophone_accountid" , accountId }
                 }
             };
 

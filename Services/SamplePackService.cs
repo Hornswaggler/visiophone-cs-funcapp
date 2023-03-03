@@ -26,7 +26,7 @@ namespace vp.services
 
 
         public async Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack) {
-            samplePack.id = samplePack._id;
+            samplePack.id = samplePack.id;
             await _cosmosSamplePacks.CreateItemAsync(samplePack);
 
             return samplePack;

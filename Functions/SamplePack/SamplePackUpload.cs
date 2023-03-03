@@ -54,7 +54,7 @@ namespace vp.functions.samplepack {
                     return new BadRequestObjectResult(errorstring);
                 }
 
-                samplePackRequest._id = Guid.NewGuid().ToString();
+                samplePackRequest.id = Guid.NewGuid().ToString();
                 transaction = new UpsertSamplePackTransaction
                 {
                     account = account,
@@ -75,10 +75,10 @@ namespace vp.functions.samplepack {
                 var sampleRequests = transaction.request.samples;
                 foreach (var sampleRequest in sampleRequests)
                 {
-                    sampleRequest._id = Guid.NewGuid().ToString();
+                    sampleRequest.id = Guid.NewGuid().ToString();
 
                     var ext = Utils.GetExtensionForFileName(sampleRequest.clipUri);
-                    string newFileName = Utils.GetFileNameForId(sampleRequest._id, sampleRequest.clipUri);
+                    string newFileName = Utils.GetFileNameForId(sampleRequest.id, sampleRequest.clipUri);
 
                     Utils.UploadFormFile(
                         form.Files[sampleRequest.clipUri],
@@ -99,7 +99,7 @@ namespace vp.functions.samplepack {
             try
             {
                 string newFileName = Utils.GetFileNameForId(
-                    samplePackRequest._id,
+                    samplePackRequest.id,
                     samplePackRequest.imgUrl
                 );
 

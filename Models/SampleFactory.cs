@@ -8,7 +8,7 @@ namespace vp.models
         {
             return new Sample
             {
-                _id = request._id,
+                id = request.id,
                 name = request.name,
                 tags = request.tags,
                 key = request.key,

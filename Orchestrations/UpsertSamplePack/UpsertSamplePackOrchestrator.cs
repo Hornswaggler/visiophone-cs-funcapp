@@ -59,7 +59,7 @@ namespace vp.orchestrations.upsertSamplePack
                 var request = upsertSamplePackTransaction.request;
                 var samplePack = new SamplePack<Sample>
                 {
-                    _id = request._id,
+                    id = request.id,
                     name = request.name,
                     cost = request.cost,
                     priceId = request.priceId,
