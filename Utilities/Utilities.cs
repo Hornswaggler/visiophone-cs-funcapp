@@ -76,6 +76,7 @@ namespace vp.utilities
 
         public async Task<int> InitializeEnvironmentData(bool duplicates = false) {
             BlobContainerClient coverArtContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
+            BlobContainerClient avatarContainer = _blobServiceClient.GetBlobContainerClient(Config.StorageContainerNameAvatars);
             BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
             BlobContainerClient transcodeContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
 
@@ -189,6 +190,23 @@ namespace vp.utilities
                 {
                     //consume (already exists)
                 }
+
+                //Migrate avatars
+                var testAccountIds = new List<string> { "a2492c46-47cc-4b51-9cf1-65e1dfafe68e", "a2c87319-bd83-4b88-8f27-80f91d1d8d80" };
+                foreach(var accountId in testAccountIds)
+                {
+                    try
+                    {
+                        var blobName = $"{accountId}.png";
+                        var sampleFilePath = $"{sampleDataPath}/avatars/{accountId}.png";
+                        UploadBlob(blobName, sampleFilePath, avatarContainer, "image/x-png");
+                    }
+                    catch
+                    {
+                        //consume (already exists)
+                    }
+                }
+               
             }
 
             return 0;
@@ -231,7 +249,10 @@ namespace vp.utilities
         public async Task InitializeStorage() {
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.StorageContainerNameAvatars);
+                await _blobServiceClient.CreateBlobContainerAsync(
+                    Config.StorageContainerNameAvatars,
+                    PublicAccessType.Blob
+                );
 
             }
             catch (Exception e)
@@ -241,7 +262,7 @@ namespace vp.utilities
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleTranscodeContainerName);
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleTranscodeContainerName, PublicAccessType.Blob);
 
             }
             catch (Exception e)
@@ -261,7 +282,9 @@ namespace vp.utilities
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.CoverArtContainerName);
+                await _blobServiceClient.CreateBlobContainerAsync(
+                    Config.CoverArtContainerName, PublicAccessType.Blob
+                );
 
             }
             catch (Exception e)
@@ -271,7 +294,7 @@ namespace vp.utilities
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleFilesContainerName);
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleFilesContainerName, PublicAccessType.Blob);
 
             }
             catch (Exception e)
@@ -323,15 +346,15 @@ namespace vp.utilities
                 log.LogWarning($"failed to delete: {Config.SampleTranscodeContainerName}: {e.Message}", e);
             }
 
-            try
-            {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingContainerName);
+            //try
+            //{
+            //    await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingContainerName);
 
-            }
-            catch (Exception e)
-            {
-                log.LogWarning($"failed to delete: {Config.UploadStagingContainerName}: {e.Message}", e);
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    log.LogWarning($"failed to delete: {Config.UploadStagingContainerName}: {e.Message}", e);
+            //}
 
             try
             {

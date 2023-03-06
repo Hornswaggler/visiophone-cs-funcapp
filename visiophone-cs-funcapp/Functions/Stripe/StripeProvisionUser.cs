@@ -41,7 +41,7 @@ namespace vp.functions.stripe
             var returnUri = JsonConvert.DeserializeObject<Dictionary<string, string>>(req.Form["payload"]);
 
             StripeProfile stripeProfile = await _stripeService.GetStripeProfile(accountId);
-            if (stripeProfile == null)
+            if (stripeProfile.id == null)
             {
                 stripeProfile = await _stripeService.CreateNewAccount(accountId);
             }

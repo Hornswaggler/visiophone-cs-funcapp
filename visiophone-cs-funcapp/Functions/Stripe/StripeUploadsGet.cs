@@ -47,7 +47,6 @@ namespace vp.functions.stripe
 
             try
             {
-                //var stripeProfile = await _stripeService.GetStripeProfile(_userService.GetUserAccountId(req.HttpContext.User), true);
                 List<Sample> result = new List<Sample>();
 
                 if (account.isStripeApproved)

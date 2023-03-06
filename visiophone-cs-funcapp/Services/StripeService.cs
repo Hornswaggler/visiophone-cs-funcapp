@@ -71,7 +71,10 @@ namespace vp.services
             if (throwNoExist && profile == null) throw new Exception($"failed to find stripe account record for user: ${accountId}");
             else if(profile == null)
             {
-                return null;
+                return new StripeProfileResult
+                {
+                    isStripeApproved =  false
+                };
             }
 
             var account = await GetStripeAccount(profile);
