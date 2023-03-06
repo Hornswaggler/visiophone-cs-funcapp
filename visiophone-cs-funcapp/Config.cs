@@ -26,6 +26,7 @@ namespace vp
         public static string CoverArtContainerName = Environment.GetEnvironmentVariable("COVER_ART_CONTAINER_NAME");
         public static string SampleTranscodeContainerName = Environment.GetEnvironmentVariable("SAMPLE_TRANSCODES_CONTAINER_NAME");
         public static string SampleBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_CONTAINER_NAME");
+        public static string StorageContainerNameAvatars = Environment.GetEnvironmentVariable("STORAGE_CONTAINER_NAME_AVATARS");
 
         public static string DatabaseName = Environment.GetEnvironmentVariable("DATABASE_NAME");
         public static string SampleCollectionName = Environment.GetEnvironmentVariable("SAMPLE_COLLECTION_NAME");

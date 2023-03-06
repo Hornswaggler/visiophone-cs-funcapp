@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Stripe;
 using System.Text;
@@ -12,24 +13,23 @@ namespace vp.utilities
 {
     public  class Utilities
     {
-        private readonly SamplePackService samplePackService;
-        private readonly BlobContainerClient coverArtContainer;
-        private readonly BlobContainerClient sampleContainer;
-        private readonly BlobContainerClient transcodeContainer;
-        private readonly StripeService stripeService;
+        CosmosClient cosmosClient;
+        BlobServiceClient _blobServiceClient;
+        ILogger log;
 
-        public Utilities() {
-            CosmosClient client = new(
-                connectionString: Config.CosmosConnectionString
+        public Utilities(ILogger log) {
+
+            this.log = log;
+
+            cosmosClient = new (
+                connectionString: Config.CosmosConnectionString,
+                new CosmosClientOptions()
+                {
+                    ApplicationRegion = Regions.EastUS2,
+                }
             );
 
-            samplePackService = new SamplePackService(client);
-            stripeService = new StripeService(client);
-
-            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-            sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
-            transcodeContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
-            coverArtContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
+            _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
         }
 
         private void UploadBlob(string blobName, string samplePath, BlobContainerClient container, string mimeType)
@@ -75,6 +75,13 @@ namespace vp.utilities
         }
 
         public async Task<int> InitializeEnvironmentData(bool duplicates = false) {
+            BlobContainerClient coverArtContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
+            BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
+            BlobContainerClient transcodeContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
+
+            StripeService stripeService = new StripeService(cosmosClient);
+            SamplePackService samplePackService = new SamplePackService(cosmosClient);
+
             var sampleDataPath = Environment.GetEnvironmentVariable("SAMPLE_DATA_PATH");
             var samplePacks = LoadEntitiesFromFile<SamplePack<Sample>>(
                 $"{sampleDataPath}/samplePacks/samplePacks.json"
@@ -82,7 +89,6 @@ namespace vp.utilities
 
             foreach (var samplePack in samplePacks)
             {
-
                 Dictionary<string, string> idMap = new Dictionary<string, string>();
 
                 if(duplicates)
@@ -186,6 +192,166 @@ namespace vp.utilities
             }
 
             return 0;
+        }
+
+        public async Task InitializeDatabaseSchema() {
+            try
+            {
+                Database db = await cosmosClient.CreateDatabaseIfNotExistsAsync(Config.DatabaseName);
+
+                await db.CreateContainerIfNotExistsAsync(
+                    new ContainerProperties
+                    {
+                        Id = Config.SamplePackCollectionName,
+                        PartitionKeyPath = "/sellerId"
+                    }
+                );
+
+                await db.CreateContainerIfNotExistsAsync(
+                    new ContainerProperties
+                    {
+                        Id = Config.StripeProfileCollectionName,
+                        PartitionKeyPath = "/accountId"
+                    }
+                );
+
+                await db.CreateContainerIfNotExistsAsync(
+                    new ContainerProperties
+                    {
+                        Id = Config.PurchaseCollectionName,
+                        PartitionKeyPath = "/accountId"
+                    }
+                );
+            } catch (Exception e)
+            {
+                log.LogError(e.Message, e);
+            }
+        }
+
+        public async Task InitializeStorage() {
+            try
+            {
+                await _blobServiceClient.CreateBlobContainerAsync(Config.StorageContainerNameAvatars);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to create: {Config.StorageContainerNameAvatars}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleTranscodeContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to create: {Config.SampleTranscodeContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.CreateBlobContainerAsync(Config.UploadStagingContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to create: {Config.UploadStagingContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.CreateBlobContainerAsync(Config.CoverArtContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.CoverArtContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleFilesContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.SampleFilesContainerName}: {e.Message}", e);
+            }
+        }
+
+        public async Task DeleteDatabase() {
+            try
+            {
+                var samplePackClient = cosmosClient.GetDatabase(Config.DatabaseName);
+                await samplePackClient.DeleteAsync();
+            } 
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete database: {Config.DatabaseName}");
+            }
+        }
+
+        public async Task DeleteStorage() {
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleBlobContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.SampleBlobContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.StorageContainerNameAvatars);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.StorageContainerNameAvatars}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleTranscodeContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.SampleTranscodeContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.UploadStagingContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.CoverArtContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.CoverArtContainerName}: {e.Message}", e);
+            }
+
+            try
+            {
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleFilesContainerName);
+
+            }
+            catch (Exception e)
+            {
+                log.LogWarning($"failed to delete: {Config.SampleFilesContainerName}: {e.Message}", e);
+            }
         }
     }
 }
