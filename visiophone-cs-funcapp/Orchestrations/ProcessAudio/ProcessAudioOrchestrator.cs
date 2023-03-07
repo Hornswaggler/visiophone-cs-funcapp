@@ -19,25 +19,25 @@ namespace vp.orchestrations.processaudio
             try
             {
                 processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
-                string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
+                //string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
 
-                processAudioTransaction.tempFolderPath = tempFolderPath;
+                //processAudioTransaction.tempFolderPath = tempFolderPath;
 
-                processAudioTransaction = await ctx.CallActivityWithRetryAsync<ProcessAudioTransaction>(
-                    ActivityNames.StageAudioForTranscode,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 4),
-                    processAudioTransaction
-                );
+                //processAudioTransaction = await ctx.CallActivityWithRetryAsync<ProcessAudioTransaction>(
+                //    ActivityNames.StageAudioForTranscode,
+                //    new RetryOptions(TimeSpan.FromSeconds(5), 4),
+                //    processAudioTransaction
+                //);
 
                 processAudioTransaction = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
                     OrchestratorNames.Transcode, 
                     processAudioTransaction
                 );
 
-                foreach (string location in processAudioTransaction.transcodePaths)
-                {
-                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, processAudioTransaction);
-                }
+                //foreach (string location in processAudioTransaction.transcodePaths)
+                //{
+                //    await ctx.CallActivityAsync(ActivityNames.PublishAudio, processAudioTransaction);
+                //}
 
                 return processAudioTransaction;
             }
@@ -67,6 +67,17 @@ namespace vp.orchestrations.processaudio
                 processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
                 processAudioTransaction = await ctx.CallActivityAsync<ProcessAudioTransaction>(ActivityNames.GetTranscodeProfiles, processAudioTransaction);
 
+
+                string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
+
+                processAudioTransaction.tempFolderPath = tempFolderPath;
+
+                processAudioTransaction = await ctx.CallActivityWithRetryAsync<ProcessAudioTransaction>(
+                    ActivityNames.StageAudioForTranscode,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 4),
+                    processAudioTransaction
+                );
+
                 var transcodeTasks = new List<Task<string>>();
                 foreach (var transcodeProfile in processAudioTransaction.transcodeProfiles)
                 {
@@ -81,6 +92,11 @@ namespace vp.orchestrations.processaudio
                 foreach(string location in locations)
                 {
                     processAudioTransaction.transcodePaths.Add(location);
+                }
+
+                foreach (string location in processAudioTransaction.transcodePaths)
+                {
+                    await ctx.CallActivityAsync(ActivityNames.PublishAudio, processAudioTransaction);
                 }
 
                 return processAudioTransaction;
