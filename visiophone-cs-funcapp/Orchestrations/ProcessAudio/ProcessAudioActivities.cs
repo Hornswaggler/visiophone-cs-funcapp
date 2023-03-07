@@ -114,8 +114,8 @@ namespace vp.orchestrations.processaudio
                 {
                     foreach(var profile in processAudioTransaction.transcodeProfiles)
                     {
-                        Utils.TryDeleteFiles(log, new[] { profile.InputFile });
-                        Utils.TryDeleteFiles(log, new[] { profile.OutputFile });
+                        //Utils.TryDeleteFiles(log, new[] { profile.InputFile });
+                        //Utils.TryDeleteFiles(log, new[] { profile.OutputFile });
                     }
   
                 }catch (Exception e)
