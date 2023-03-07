@@ -62,9 +62,10 @@ namespace vp.orchestrations.processaudio
             ILogger log)
         {
             ProcessAudioTransaction processAudioTransaction;
+            processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
+
             try
             {
-                processAudioTransaction = ctx.GetInput<ProcessAudioTransaction>();
                 processAudioTransaction = await ctx.CallActivityAsync<ProcessAudioTransaction>(ActivityNames.GetTranscodeProfiles, processAudioTransaction);
 
 
@@ -102,8 +103,12 @@ namespace vp.orchestrations.processaudio
                 return processAudioTransaction;
             } catch (Exception e)
             {
-                if (!ctx.IsReplaying)
-                    log.LogError("Failed to process video with error " + e.Message);
+
+                log.LogError($"Failed to process video with error {e.Message}, sampleId: {processAudioTransaction.sampleId}, tempFilePath: {processAudioTransaction.tempFilePath}", e);
+
+
+                //if (!ctx.IsReplaying)
+                //    log.LogError("Failed to process video with error " + e.Message);
 
                 processAudioTransaction = new ProcessAudioTransaction();
 
@@ -111,7 +116,8 @@ namespace vp.orchestrations.processaudio
                 //await ctx.CallActivityAsync(ActivityNames.Cleanup, incomingFilename);
                 processAudioTransaction.errors.Add($"Failed to transcode video: {e.Message}");
 
-                return processAudioTransaction;
+                //return processAudioTransaction;
+                throw e;
             }
             
         }
