@@ -17,15 +17,15 @@ namespace vp.services
 
         public async Task<bool> InitializeValidationService()
         {
-            var rawValidators = await client.GetAsync($"{Config.BaseUrl}form-validations.json");
-            var rawValidationTypes = await client.GetAsync($"{Config.BaseUrl}validation-types.json");
+            var rawValidators = await client.GetAsync($"{Config.BaseUrl}/assets/form-validations.json");
+            var rawValidationTypes = await client.GetAsync($"{Config.BaseUrl}/assets/validation-types.json");
 
             var validationTypes = JsonConvert.DeserializeObject<List<string>>(await rawValidationTypes.Content.ReadAsStringAsync());
             var typeDefinitions = new Dictionary<string, dynamic>();
             var typeDefinitionasdfs = new Dictionary<string, ValidatorDefinition>();
             foreach (var validationType in validationTypes)
             {
-                var rawTypeValidators = await client.GetAsync($"{Config.BaseUrl}{validationType}.json");
+                var rawTypeValidators = await client.GetAsync($"{Config.BaseUrl}/assets/{validationType}.json");
                 var definition = JsonConvert.DeserializeObject<dynamic>(await rawTypeValidators.Content.ReadAsStringAsync());
                 typeDefinitions[validationType] = definition;
             }
