@@ -77,8 +77,12 @@ namespace vp.functions.samplepack {
                 {
                     sampleRequest.id = Guid.NewGuid().ToString();
 
+                    log.LogInformation($"samplePack: {transaction.request.id}, sample: {sampleRequest.id}");
+
                     var ext = Utils.GetExtensionForFileName(sampleRequest.clipUri);
                     string newFileName = Utils.GetFileNameForId(sampleRequest.id, sampleRequest.clipUri);
+
+                    log.LogInformation($"Sample file name: {newFileName}");
 
                     Utils.UploadFormFile(
                         form.Files[sampleRequest.clipUri],

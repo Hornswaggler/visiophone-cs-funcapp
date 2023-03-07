@@ -25,6 +25,8 @@ namespace vp.orchestrations.upsertSamplePack
                     upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
                         {
+                            log.LogInformation($"samplePack: {upsertSamplePackTransaction.request.id}, sample: {sampleRequest.id}");
+
                             return ctx.CallSubOrchestratorAsync<Sample>(
                                 OrchestratorNames.UpsertSample,
                                 (new UpsertSampleTransaction(
@@ -40,11 +42,11 @@ namespace vp.orchestrations.upsertSamplePack
                     upsertSamplePackTransaction
                 );
 
-                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
-                    ActivityNames.CleanupStagingData,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                    upsertSamplePackTransaction
-                );
+                //upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                //    ActivityNames.CleanupStagingData,
+                //    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                //    upsertSamplePackTransaction
+                //);
 
                 // COMBINE FOR IDEMPOTENCY
                 /////////////////////////////
