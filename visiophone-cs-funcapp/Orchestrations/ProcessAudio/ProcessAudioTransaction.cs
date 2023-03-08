@@ -12,6 +12,7 @@ namespace vp.orchestrations.processaudio
         public string tempFolderPath { get; set; } = "";
         public string tempFilePath { get; set; } = "";
         public string sampleId { get; set; } = "";
+        public string samplePackId { get; set; } = "";
         public string fileExtension { get; set; } = "";
 
         public List<TranscodeParams> transcodeProfiles { get; set; } = new List<TranscodeParams>();
@@ -21,21 +22,21 @@ namespace vp.orchestrations.processaudio
 
         public string getPreviewFilename()
         {
-            return $"{incomingFileId}{Config.SamplePreviewFileFormat}";
+            return $"{sampleId}{Config.SamplePreviewFileFormat}";
         }
         public string getOutgoingFileName()
         {
-            return $"{outgoingFileId}{Utils.GetFileExtension(incomingFileName)}";
+            return $"{sampleId}{Utils.GetFileExtension(incomingFileName)}";
         }
 
         public string getTempFilePath()
         {
-            return $"{tempFolderPath}\\{getOutgoingFileName()}";
+            return $"{tempFolderPath}\\inbound\\{getOutgoingFileName()}";
         }
 
         public string getPreviewFilePath()
         {
-            return $"{tempFolderPath}\\{getPreviewFilename()}";
+            return $"{tempFolderPath}\\outbound\\{getPreviewFilename()}";
         }
     }
 }

@@ -76,13 +76,15 @@ namespace vp.functions.sample
             }
 
             //TODO: What if anything should we do w/ this orchestration Id?
-            var transactionMetadata = new UpsertSampleTransaction(account, upsertSampleRequest);
-            var orchestrationId = await starter.StartNewAsync<UpsertSampleTransaction>(
-                OrchestratorNames.UpsertSample,
-                transactionMetadata
-            );
+            //var transactionMetadata = new UpsertSampleTransaction(account, upsertSampleRequest);
+            //var orchestrationId = await starter.StartNewAsync<UpsertSampleTransaction>(
+            //    OrchestratorNames.UpsertSample,
+            //    transactionMetadata
+            //);
 
-            return new OkObjectResult(orchestrationId);
+            //return new OkObjectResult(orchestrationId);
+            return new OkObjectResult("");
+
         }
     }
 }

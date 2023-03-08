@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -68,8 +69,19 @@ namespace vp.orchestrations.processaudio
             {
                 processAudioTransaction = await ctx.CallActivityAsync<ProcessAudioTransaction>(ActivityNames.GetTranscodeProfiles, processAudioTransaction);
 
+                var tempFolderPath = Path.Combine(
+                    Path.GetTempPath(),
+                    Config.SampleTranscodeContainerName,
+                    processAudioTransaction.samplePackId
+                );
 
-                string tempFolderPath = Utils.GetTempTranscodeFolder(ctx);
+                var inbound = Path.Combine(tempFolderPath, "inbound");
+                var outbound = Path.Combine(tempFolderPath, "outbound");
+
+                Directory.CreateDirectory(tempFolderPath);
+                Directory.CreateDirectory(inbound);
+                Directory.CreateDirectory(outbound);
+
 
                 processAudioTransaction.tempFolderPath = tempFolderPath;
 
@@ -82,8 +94,13 @@ namespace vp.orchestrations.processaudio
                 var transcodeTasks = new List<Task<string>>();
                 foreach (var transcodeProfile in processAudioTransaction.transcodeProfiles)
                 {
+
                     transcodeProfile.InputFile = processAudioTransaction.getTempFilePath();
                     transcodeProfile.OutputFile = processAudioTransaction.getPreviewFilePath();
+
+
+
+
                     var transcodeTask = ctx.CallActivityAsync<string>
                         (ActivityNames.TranscodeAudio, transcodeProfile);
                     transcodeTasks.Add(transcodeTask);

@@ -19,6 +19,7 @@ namespace vp.orchestrations.upsertsample
             {
                 fileExtension = transaction.request.fileExtension,
                 sampleId = transaction.request.id,
+                samplePackId = transaction.samplePackId,
                 incomingFileName = transaction.request.clipUri
             };
 

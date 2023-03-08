@@ -7,11 +7,13 @@ namespace vp.orchestrations.upsertsample
         //TODO: Security risk, take out what is needed...
         public StripeProfileResult account { get; set; }
         public UpsertSampleRequest request { get; set; }
+        public string samplePackId { get; set; }
 
-        public UpsertSampleTransaction(StripeProfileResult _account, UpsertSampleRequest _sampleMetadata)
+        public UpsertSampleTransaction(StripeProfileResult _account, UpsertSampleRequest _sampleMetadata, string samplePackId)
         {
             account = _account;
             request = _sampleMetadata;
+            this.samplePackId = samplePackId;
         }
     }
 }

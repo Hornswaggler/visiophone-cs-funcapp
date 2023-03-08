@@ -31,7 +31,8 @@ namespace vp.orchestrations.upsertSamplePack
                                 OrchestratorNames.UpsertSample,
                                 (new UpsertSampleTransaction(
                                     upsertSamplePackTransaction.account,
-                                    sampleRequest)));
+                                    sampleRequest,
+                                    upsertSamplePackTransaction.request.id)));
                         }
                     )
                 );
