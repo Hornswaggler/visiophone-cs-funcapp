@@ -12,3 +12,16 @@ The utilities.ps1 shell script includes 2 paths:
    - $sampleDataPath: path to the sample data set
 
 The sample data set can be found in the following repository: https://github.com/Hornswaggler/visiophone-test-data
+
+Commands:
+
+delete
+   Deletes all data in the database and blob containers
+create
+   Creates database collections and blob containers
+seed
+   inserts seed data from referenced directory 
+
+
+reset
+   Runs all of the above commands

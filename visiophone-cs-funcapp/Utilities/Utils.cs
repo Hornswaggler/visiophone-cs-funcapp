@@ -19,12 +19,20 @@ namespace vp.util {
     {
         public static bool IsInDemoMode => Environment.GetEnvironmentVariable("DemoMode") == "true";
 
-        public static string GetTempTranscodeFolder(IDurableOrchestrationContext ctx)
-        {
-            var outputFolder = Path.Combine(Path.GetTempPath(), Config.SampleTranscodeContainerName, $"{ctx.CurrentUtcDateTime:yyyy-MM-dd}");
-            Directory.CreateDirectory(outputFolder);
-            return outputFolder;
-        }
+        //public static string GetTempTranscodeFolder(IDurableOrchestrationContext ctx, string path)
+        //{
+        //    var outputFolder = Path.Combine(Path.GetTempPath(), Config.SampleTranscodeContainerName, path);
+        //    var inbound = Path.Combine(outputFolder, "inbound");
+        //    var outbound = Path.Combine(outputFolder, "outbound");
+
+
+
+        //    Directory.CreateDirectory(outputFolder);
+        //    Directory.CreateDirectory(inbound);
+        //    Directory.CreateDirectory(outbound);
+
+        //    return outputFolder;
+        //}
 
         public static string GetFileNameForId(string id, string incomingFileName) {
             return $"{id}.{GetExtensionForFileName(incomingFileName)}";
@@ -146,19 +154,19 @@ namespace vp.util {
             return true;
         }
 
-        private static HttpClient client;
-        public static async Task<string> DownloadToLocalFileAsync(string uri, IDurableOrchestrationContext ctx)
-        {
-            var extension = Path.GetExtension(new Uri(uri).LocalPath);
-            var outputFilePath = Path.Combine(GetTempTranscodeFolder(ctx), $"{Guid.NewGuid()}{extension}");
-            client = client ?? new HttpClient();
-            using (var downloadStream = await client.GetStreamAsync(uri))
-            using (var s = File.OpenWrite(outputFilePath))
-            {
-                await downloadStream.CopyToAsync(s);
-            }
-            return outputFilePath;
-        }
+        //private static HttpClient client;
+        //public static async Task<string> DownloadToLocalFileAsync(string uri, IDurableOrchestrationContext ctx)
+        //{
+        //    var extension = Path.GetExtension(new Uri(uri).LocalPath);
+        //    var outputFilePath = Path.Combine(GetTempTranscodeFolder(ctx), $"{Guid.NewGuid()}{extension}");
+        //    client = client ?? new HttpClient();
+        //    using (var downloadStream = await client.GetStreamAsync(uri))
+        //    using (var s = File.OpenWrite(outputFilePath))
+        //    {
+        //        await downloadStream.CopyToAsync(s);
+        //    }
+        //    return outputFilePath;
+        //}
 
         public static async Task<string> Transcode(TranscodeParams transcodeParams, ILogger log)
         {

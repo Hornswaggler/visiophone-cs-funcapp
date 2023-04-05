@@ -55,6 +55,8 @@ namespace vp.functions.samplepack {
                 }
 
                 samplePackRequest.id = Guid.NewGuid().ToString();
+                //TODO: Remove this... should be handled in the front end
+                samplePackRequest.cost = samplePackRequest.cost * 100;
                 transaction = new UpsertSamplePackTransaction
                 {
                     account = account,
