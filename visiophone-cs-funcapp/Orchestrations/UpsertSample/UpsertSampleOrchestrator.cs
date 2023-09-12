@@ -260,18 +260,18 @@ public class UpsertSampleOrchestrator
 
             //OLD CODE... :|
             UpsertSampleTransaction transaction = ctx.GetInput<UpsertSampleTransaction>();
-            ProcessAudioTransaction audioTransaction = new ProcessAudioTransaction
-            {
-                fileExtension = transaction.request.fileExtension,
-                sampleId = transaction.request.id,
-                samplePackId = transaction.samplePackId,
-                incomingFileName = transaction.request.clipUri
-            };
+            //ProcessAudioTransaction audioTransaction = new ProcessAudioTransaction
+            //{
+            //    fileExtension = transaction.request.fileExtension,
+            //    sampleId = transaction.request.id,
+            //    samplePackId = transaction.samplePackId,
+            //    incomingFileName = transaction.request.clipUri
+            //};
 
-            var processAudioResult = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
-                OrchestratorNames.ProcessAudio,
-                audioTransaction
-            );
+            //var processAudioResult = await ctx.CallSubOrchestratorAsync<ProcessAudioTransaction>(
+            //    OrchestratorNames.ProcessAudio,
+            //    audioTransaction
+            //);
 
 
 

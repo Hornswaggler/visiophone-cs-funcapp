@@ -5,6 +5,7 @@
 local.settings.json
 prod.settings.json
 _local.settings.json
+dev.settings.json
 
 # User-specific files
 *.suo

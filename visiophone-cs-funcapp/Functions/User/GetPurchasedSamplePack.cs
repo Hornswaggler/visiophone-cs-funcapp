@@ -8,6 +8,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
+using Azure.Storage.Sas;
 
 namespace vp.functions.user
 {
@@ -37,7 +38,7 @@ namespace vp.functions.user
                 sampleLinks.Add(
                     new KeyValuePair<string, Uri>(
                         sample.id,
-                        _storageService.GetSASTokenForSampleBlob($"{sample.id}.wav")
+                        _storageService.GetSASTokenForSampleBlob($"{sample.id}.wav", BlobSasPermissions.Read)
                     )
                 );
             }

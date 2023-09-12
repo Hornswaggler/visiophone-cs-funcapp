@@ -21,6 +21,7 @@ namespace vp.utilities
 
             this.log = log;
 
+            //TODO: Region hardcoded...
             cosmosClient = new (
                 connectionString: Config.CosmosConnectionString,
                 new CosmosClientOptions()

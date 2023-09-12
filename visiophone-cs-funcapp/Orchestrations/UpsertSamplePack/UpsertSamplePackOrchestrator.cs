@@ -16,11 +16,20 @@ using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using System.Net;
 using System.IO;
+using CloudConvert.API;
+using CloudConvert.API.Models.ExportOperations;
+using CloudConvert.API.Models.ImportOperations;
+using CloudConvert.API.Models.JobModels;
+using CloudConvert.API.Models.TaskOperations;
+using System.Collections.Generic;
+using vp.services;
 
 namespace vp.orchestrations.upsertSamplePack
 {
     public class UpsertSamplePackOrchestrator
     {
+        IStorageService _storageService;
+
         [FunctionName(OrchestratorNames.UpsertSamplePack)]
         public static async Task<SamplePack<Sample>> UpsertSamplePack(
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
@@ -28,6 +37,91 @@ namespace vp.orchestrations.upsertSamplePack
         {
             SamplePack<Sample> result;
             UpsertSamplePackTransaction upsertSamplePackTransaction = ctx.GetInput<UpsertSamplePackTransaction>();
+
+
+
+            ////TODO: Move credentials stuff to "Util"
+            //var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
+            //    subscriptionId: Config.StorageSubscriptionId,
+            //    resourceGroupName: Config.StorageResourceGroupName,
+            //    accountName: Config.StorageAccountName
+            //);
+
+            //var credential = new DefaultAzureCredential();
+            //var armClient = new ArmClient(credential);
+            //var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
+
+            //MediaAssetResource asset;
+
+
+            //foreach (var sample in upsertSamplePackTransaction.request.samples)
+            //{
+            //    string assetName = $"{sample.id}.wav";
+            //    try
+            //    {
+            //        //TODO: Hardcoded file type...
+            //        asset = await mediaServicesAccount.GetMediaAssets().GetAsync(assetName);
+
+            //        // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+            //        // an existing Asset, use an unique name.
+            //        Console.WriteLine($"Warning: The Asset named {assetName} already exists. It will be overwritten.");
+            //    }
+            //    catch (RequestFailedException)
+            //    {
+            //        // Call Media Services API to create an Asset.
+            //        // This method creates a container in storage for the Asset.
+            //        // The files (blobs) associated with the Asset will be stored in this container.
+            //        Console.WriteLine("Creating an input Asset...");
+            //        asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, assetName, new MediaAssetData())).Value;
+            //    }
+
+            //    //CLOUD CONVERT TEST CODE...
+            //    var CloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
+
+
+            //    var sasUriCollection = asset.GetStorageContainerUrisAsync(
+            //        new MediaAssetStorageContainerSasContent
+            //        {
+            //            Permissions = MediaAssetContainerPermission.Read,
+            //            ExpireOn = DateTime.UtcNow.AddHours(1)
+            //        }).GetAsyncEnumerator();
+            //    await sasUriCollection.MoveNextAsync();
+            //    var sasUri = sasUriCollection.Current;
+
+            //    _storageService.GetSASTokenForSampleBlob($"{sample.id}.wav")
+
+
+            //    var job = await CloudConvert.CreateJobAsync(new JobCreateRequest
+            //    {
+            //        Tasks = new
+            //        {
+            //            import_it = new ImportAzureBlobCreateRequest
+            //            {
+            //                Storage_Account = Config.StorageAccountName,
+            //                Container = Config.SampleBlobContainerName,
+            //                Sas_Token = sasUri.ToString()
+            //            },
+            //            convert = new ConvertCreateRequest
+            //            {
+            //                Input = "import_it",
+            //                Input_Format = "wav",
+            //                Output_Format = "mp3",
+            //                Engine = "ffmpeg",
+            //                Options = new Dictionary<string, object> {
+            //                    ["audio_codec"] = "mp3",
+            //                    ["audio_qscale"] = 0
+            //                }
+
+            //            },
+            //            export_it = new ExportUrlCreateRequest
+            //            {
+            //                Input = "convert"
+            //            }
+            //        }
+            //    });
+            //}
+
+            //END CLOUD CONVERT TEST CODE...
 
             try
             {
@@ -37,6 +131,8 @@ namespace vp.orchestrations.upsertSamplePack
                 //    await MediaServicesTranscode(sampleRequest);
                 //}
 
+
+                //TODO: OLD STUFF again... :|
                 var samples = await Task.WhenAll(
                     upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
@@ -54,6 +150,16 @@ namespace vp.orchestrations.upsertSamplePack
                 );
 
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.InitiateCloudConvertJob,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
+
+
+
+
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.UpsertSamplePackTransferImage,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     upsertSamplePackTransaction
@@ -67,6 +173,9 @@ namespace vp.orchestrations.upsertSamplePack
 
                 // COMBINE FOR IDEMPOTENCY
                 /////////////////////////////
+
+
+                //TODO: Trigger this from the cloud convert web HOOK!
 
                 //Generate Price Id in Stripe for Sample Pack
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(

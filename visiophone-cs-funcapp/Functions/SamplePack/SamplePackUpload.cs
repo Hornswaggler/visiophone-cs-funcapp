@@ -82,10 +82,11 @@ namespace vp.functions.samplepack {
                     log.LogInformation($"samplePack: {transaction.request.id}, sample: {sampleRequest.id}");
 
                     var ext = Utils.GetExtensionForFileName(sampleRequest.clipUri);
-                    string newFileName = Utils.GetFileNameForId(sampleRequest.id, sampleRequest.clipUri);
+                    string newFileName = $"{samplePackRequest.id}/{Utils.GetFileNameForId(sampleRequest.id, sampleRequest.clipUri)}";
 
                     log.LogInformation($"Sample file name: {newFileName}");
 
+                    //TODO: Rename to upload Blob (path instead of "filename")
                     Utils.UploadFormFile(
                         form.Files[sampleRequest.clipUri],
                         Config.UploadStagingContainerName,
@@ -104,10 +105,7 @@ namespace vp.functions.samplepack {
 
             try
             {
-                string newFileName = Utils.GetFileNameForId(
-                    samplePackRequest.id,
-                    samplePackRequest.imgUrl
-                );
+                string newFileName = $"{samplePackRequest.id}/{Utils.GetFileNameForId(samplePackRequest.id, samplePackRequest.imgUrl)}";
 
                 Utils.UploadFormFile(
                     form.Files[transaction.request.imgUrl],
