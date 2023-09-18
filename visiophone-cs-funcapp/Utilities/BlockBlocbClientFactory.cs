@@ -7,14 +7,18 @@ namespace vp.util
 {
     public class BlobFactory
     {
+        public static BlobContainerClient GetBlobContainerClient(string containerName) {
+            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
+            return _blobServiceClient.GetBlobContainerClient(containerName);
+        }
+
         public static BlockBlobClient MakeBlockBlobClient(string containerName, string blobName)
         {
-            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-            BlobContainerClient container = _blobServiceClient.GetBlobContainerClient(containerName);
+            //BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
+            //BlobContainerClient container = _blobServiceClient.GetBlobContainerClient(containerName);
 
             //BlobContainerSasPermissions permissions = new BlobContainerSasPermissions
             //{
-
             //}
 
             ////BlobSasBuilder sasBuilder = new BlobSasBuilder()
@@ -31,7 +35,7 @@ namespace vp.util
 
             ////container.GetBlobClient(blobName).GenerateSasUri(sasBuilder);
 
-            return container.GetBlockBlobClient(blobName);
+            return GetBlobContainerClient(containerName).GetBlockBlobClient(blobName);
         }
 
         public static Uri GetBlobSasToken(string containerName, string blobName)

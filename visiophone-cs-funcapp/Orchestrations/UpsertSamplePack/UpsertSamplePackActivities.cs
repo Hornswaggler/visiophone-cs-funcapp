@@ -192,10 +192,10 @@ namespace vp.orchestrations.upsertSamplePack
                     };
                 }
 
-                var job = await cloudConvert.CreateJobAsync(new JobCreateRequest
-                {
-                    Tasks = taskDefinitions
-                });
+                //var job = await cloudConvert.CreateJobAsync(new JobCreateRequest
+                //{
+                //    Tasks = taskDefinitions
+                //});
 
             }catch(Exception e)
             {

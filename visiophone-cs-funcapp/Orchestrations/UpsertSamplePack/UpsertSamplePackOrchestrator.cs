@@ -132,7 +132,7 @@ namespace vp.orchestrations.upsertSamplePack
                 //}
 
 
-                //TODO: OLD STUFF again... :|
+                //TODO: The file upload(s) are atomic
                 var samples = await Task.WhenAll(
                     upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
@@ -150,6 +150,14 @@ namespace vp.orchestrations.upsertSamplePack
                 );
 
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.UpsertSamplePackTransferImage,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
+
+                //TODO: Move this to sub orchestration...
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.InitiateCloudConvertJob,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     upsertSamplePackTransaction
@@ -159,11 +167,11 @@ namespace vp.orchestrations.upsertSamplePack
 
 
 
-                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
-                    ActivityNames.UpsertSamplePackTransferImage,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                    upsertSamplePackTransaction
-                );
+                //upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                //    ActivityNames.UpsertSamplePackTransferImage,
+                //    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                //    upsertSamplePackTransaction
+                //);
 
                 //upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                 //    ActivityNames.CleanupStagingData,

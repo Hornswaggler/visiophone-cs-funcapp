@@ -17,6 +17,7 @@ using vp.orchestrations.processaudio;
 namespace vp.util {
     static class Utils
     {
+        //TODO: WTF is this...
         public static bool IsInDemoMode => Environment.GetEnvironmentVariable("DemoMode") == "true";
 
         //public static string GetTempTranscodeFolder(IDurableOrchestrationContext ctx, string path)
@@ -122,7 +123,7 @@ namespace vp.util {
 
         public static async Task<bool> PurgeWebJobHistory(
             IDurableOrchestrationClient starter,
-            DateTime from ,
+            DateTime from,
             DateTime to,
             ILogger log)
         {
