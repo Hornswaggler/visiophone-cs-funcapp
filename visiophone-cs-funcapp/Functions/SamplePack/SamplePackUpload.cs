@@ -69,7 +69,7 @@ namespace vp.functions.samplepack {
                 samplePackRequest.id = Guid.NewGuid().ToString();
                 //TODO: Remove this... should be handled in the front end
                 samplePackRequest.cost = samplePackRequest.cost * 100;
-                samplePackRequest.stagingImgBlobPath = $"{samplePackRequest.id}/{Utils.GetFileNameForId(samplePackRequest.id, samplePackRequest.imgUrl)}";
+                samplePackRequest.stagingImgBlobPath = Utils.GetFileNameForId(samplePackRequest.id, samplePackRequest.imgUrl);
                 transaction = new UpsertSamplePackTransaction
                 {
                     account = account,
@@ -81,7 +81,7 @@ namespace vp.functions.samplepack {
                 {
                     sample.id = Guid.NewGuid().ToString();
                     sample.fileExtension = Utils.GetExtensionForFileName(sample.clipUri);
-                    sample.stagingBlobPath = $"{samplePackRequest.id}/{Utils.GetFileNameForId(sample.id, sample.clipUri)}";
+                    sample.blobName = Utils.GetFileNameForId(sample.id, sample.clipUri);
                 }
             } catch (Exception e)
             {
@@ -93,6 +93,7 @@ namespace vp.functions.samplepack {
             try
             {
                 UploadSamplePackFormFiles(transaction, form);
+                //TODO: Delete this...
                 //throw new Exception("The shit hit the fan! Everything is sideways");
             }
             catch (Exception e)
@@ -138,13 +139,15 @@ namespace vp.functions.samplepack {
                 Utils.UploadFormFile(
                     form.Files[sample.clipUri],
                     Config.UploadStagingContainerName,
-                    sample.stagingBlobPath);
+                    sample.blobName,
+                    $"{transaction.request.id}/{Config.BlobImportDirectoryName}/");
             }
 
             Utils.UploadFormFile(
                 form.Files[transaction.request.imgUrl],
                 Config.UploadStagingContainerName,
-                transaction.request.stagingImgBlobPath);
+                transaction.request.stagingImgBlobPath,
+                $"{transaction.request.id}/{Config.BlobImportDirectoryName}/");
             }
 
     }

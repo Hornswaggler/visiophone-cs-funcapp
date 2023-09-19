@@ -49,6 +49,9 @@ namespace vp.orchestrations.upsertSamplePack
         )
         {
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
+            throw new Exception("The shit hit the fan! Everything is sideways");
+
+
 
             BlobContainerClient destContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
             var destBlob = destContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
@@ -79,83 +82,25 @@ namespace vp.orchestrations.upsertSamplePack
             return upsertSamplePackTransaction;
         }
 
-        [FunctionName(ActivityNames.InitiateCloudConvertJob)]
-        public async Task<UpsertSamplePackTransaction> InitiateCloudConvertJob(
+        [FunctionName(ActivityNames.ConvertSamplePackAssets)]
+        public async Task<UpsertSamplePackTransaction> ConvertSamplePackAssets(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction, ILogger log)
         {
+            var cloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
 
-            //TODO: Move credentials stuff to "Util"
-            //var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
-            //    subscriptionId: Config.StorageSubscriptionId,
-            //    resourceGroupName: Config.StorageResourceGroupName,
-            //    accountName: Config.SampleTranscodeContainerName
-            //);
-
-            //var credential = new DefaultAzureCredential();
-            //var armClient = new ArmClient(credential);
-            //var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
-
-            //MediaAssetResource asset;
-
-
-            //foreach (var sample in upsertSamplePackTransaction.request.samples)
-            //{
-            //    string importSampleFileName = $"{sample.id}.wav";
-            //    string exportSampleFileName = $"{sample.id}.mp3";
-
-                //try
-                //{
-                //    //TODO: Hardcoded file type...
-                //    asset = await mediaServicesAccount.GetMediaAssets().GetAsync(exportSampleFileName);
-
-                //    // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                //    // an existing Asset, use an unique name.
-                //    Console.WriteLine($"Warning: The Asset named {exportSampleFileName} already exists. It will be overwritten.");
-                //}
-                //catch (RequestFailedException)
-                //{
-                //    // Call Media Services API to create an Asset.
-                //    // This method creates a container in storage for the Asset.
-                //    // The files (blobs) associated with the Asset will be stored in this container.
-                //    Console.WriteLine("Creating an input Asset...");
-                //    asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, exportSampleFileName, new MediaAssetData())).Value;
-                //}
-
-                ////CLOUD CONVERT TEST CODE...
-                var cloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
-
-
-            //var sasUriCollection = asset.GetStorageContainerUrisAsync(
-            //    new MediaAssetStorageContainerSasContent
-            //    {
-            //        Permissions = MediaAssetContainerPermission.Read,
-            //        ExpireOn = DateTime.UtcNow.AddHours(1)
-            //    }).GetAsyncEnumerator();
-            //await sasUriCollection.MoveNextAsync();
-            //var exportSasToken = sasUriCollection.Current;
-
-
-
-
-
-
-
-
-            //var importSasToken = _storageService.GetSASTokenForUploadBlob(importSampleFileName, BlobSasPermissions.Read);
-            //var exportSasToken = _storageService.GetSASTokenForTranscodeBlob(exportSampleFileName, BlobSasPermissions.Read | BlobSasPermissions.Write);
-
-            //TODO: do not await... let callbacks handle this
             try
             {
                 dynamic taskDefinitions = new Dictionary<string, object>();
+
+                //Sample Conversion(s)
                 foreach (var sample in upsertSamplePackTransaction.request.samples)
                 {
-                    string importSampleFileName = $"{upsertSamplePackTransaction.request.id}/{sample.id}.wav";
-                    string exportSampleFileName = $"{sample.id}.mp3";
+                    string importSampleFileName = $"{upsertSamplePackTransaction.request.id}/{sample.importBlobName}";
+                    string exportSampleFileName = $"{upsertSamplePackTransaction.request.id}/{sample.exportClipBlobName}";
 
                     //TODO: ... UGH
                     var importSasToken = $"?{_storageService.GetSASTokenForUploadBlob(importSampleFileName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
-                    var exportSasToken = $"?{_storageService.GetSASTokenForTranscodeBlob(exportSampleFileName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
+                    var exportSasToken = $"?{_storageService.GetSASTokenForUploadBlob(exportSampleFileName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
 
                     string importTaskName = $"import_{sample.id}";
                     string convertTaskName = $"convert_{sample.id}";
@@ -172,12 +117,12 @@ namespace vp.orchestrations.upsertSamplePack
                     taskDefinitions[convertTaskName] = new ConvertCreateRequest
                     {
                         Input = importTaskName,
-                        Input_Format = "wav",
-                        Output_Format = "mp3",
+                        Input_Format = $"{sample.fileExtension}",
+                        Output_Format = $"{Config.ClipExportFileFormat}",
                         Engine = "ffmpeg",
                         Options = new Dictionary<string, object>
                         {
-                            ["audio_codec"] = "mp3",
+                            ["audio_codec"] = $"{Config.ClipExportFileFormat}",
                             ["audio_qscale"] = 0
                         }
                     };
@@ -186,18 +131,27 @@ namespace vp.orchestrations.upsertSamplePack
                     {
                         Input = convertTaskName,
                         Storage_Account = Config.StorageAccountName,
-                        Container = Config.SampleTranscodeContainerName,
+                        Container = Config.SampleBlobContainerName,
                         Sas_Token = exportSasToken.ToString(),
                         Blob = exportSampleFileName
                     };
                 }
 
-                //var job = await cloudConvert.CreateJobAsync(new JobCreateRequest
+                //Sample Pack Thumbnail conversion
+                //taskDefinitions["import_sample_pack_image"] = new ImportAzureBlobCreateRequest
                 //{
-                //    Tasks = taskDefinitions
-                //});
+                //    Storage_Account = Config.StorageAccountName,
+                //    Container = Config.SampleBlobContainerName,
+                //    Sas_Token = importSas
+                //}
 
-            }catch(Exception e)
+                //TODO: do not await... let callbacks handle this
+                var job = await cloudConvert.CreateJobAsync(new JobCreateRequest
+                {
+                    Tasks = taskDefinitions
+                });
+            }
+            catch(Exception e)
             {
                 log.LogError($"Failed to initiate cloud convert: {e.Message}", e);
             }

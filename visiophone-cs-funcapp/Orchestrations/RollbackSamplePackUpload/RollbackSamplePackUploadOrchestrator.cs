@@ -24,7 +24,7 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
             blobs.Add(upsertSamplePackTransaction.request.stagingImgBlobPath);
             foreach(var sampleTransaction in upsertSamplePackTransaction.request.samples)
             {
-                blobs.Add(sampleTransaction.stagingBlobPath);
+                blobs.Add(sampleTransaction.blobName);
             }
             
             //TODO: replace with Task When All...

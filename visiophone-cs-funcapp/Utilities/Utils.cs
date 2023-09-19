@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using vp.orchestrations.processaudio;
 
 namespace vp.util {
     static class Utils
@@ -155,30 +154,9 @@ namespace vp.util {
             return true;
         }
 
-        //private static HttpClient client;
-        //public static async Task<string> DownloadToLocalFileAsync(string uri, IDurableOrchestrationContext ctx)
-        //{
-        //    var extension = Path.GetExtension(new Uri(uri).LocalPath);
-        //    var outputFilePath = Path.Combine(GetTempTranscodeFolder(ctx), $"{Guid.NewGuid()}{extension}");
-        //    client = client ?? new HttpClient();
-        //    using (var downloadStream = await client.GetStreamAsync(uri))
-        //    using (var s = File.OpenWrite(outputFilePath))
-        //    {
-        //        await downloadStream.CopyToAsync(s);
-        //    }
-        //    return outputFilePath;
-        //}
-
-        public static async Task<string> Transcode(TranscodeParams transcodeParams, ILogger log)
+        public static bool UploadStream(Stream stream, string blobPath, string containerName, string contentType)
         {
-            await FfmpegWrapper.Transcode(transcodeParams.InputFile, transcodeParams.FfmpegParams, transcodeParams.OutputFile, log);
-
-            return transcodeParams.OutputFile;
-        }
-
-        public static bool UploadStream(Stream stream, string name, string containerName, string contentType)
-        {
-            BlockBlobClient blobClient = BlobFactory.MakeSampleBlockBlobClient(name, containerName);
+            BlockBlobClient blobClient = BlobFactory.MakeSampleBlockBlobClient(blobPath, containerName);
 
             int offset = 0;
             int counter = 0;
@@ -211,11 +189,11 @@ namespace vp.util {
             return true;
         }
 
-        public static void UploadFormFile(IFormFile file, string containerName, string fileName)
+        public static void UploadFormFile(IFormFile file, string containerName, string blobName, string blobPrefix = "")
         {
             using (var stream = file.OpenReadStream())
             {
-                UploadStream(stream, $"{fileName}", containerName, file.ContentType);
+                UploadStream(stream, $"{blobPrefix}{blobName}", containerName, file.ContentType);
             }
         }
 

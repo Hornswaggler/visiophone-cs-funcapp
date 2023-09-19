@@ -41,13 +41,12 @@ namespace vp
 
         public static string CloudConvertAPIKey = Environment.GetEnvironmentVariable("CLOUD_CONVERT_API_KEY");
 
-        //TODO: Cleanup FFMPEG stuff...
-        public static string FfmpegPath = Environment.GetEnvironmentVariable("FFMPEG_PATH");
-        public static string Home = Environment.GetEnvironmentVariable("HOME_PATH");
+        //Import stuff...
+        public static string BlobImportDirectoryName = Environment.GetEnvironmentVariable("BLOB_IMPORT_DIRECTORY_NAME");
+        public static string BlobExportDirectoryName = Environment.GetEnvironmentVariable("BLOB_EXPORT_DIRECTORY_NAME");
+        public static string ClipExportFileFormat = Environment.GetEnvironmentVariable("CLIP_EXPORT_FILE_FORMAT");
+
         public static int BufferSize  = 1 * 1024 * 1024;
-        public static int PreviewBitrate = 128;
-        public static string SamplePreviewFileFormat = Environment.GetEnvironmentVariable("SAMPLE_PREVIEW_FILE_FORMAT");
-        public static string TranscodeProfiles  = Environment.GetEnvironmentVariable("TRANSCODE_PROFILES");
         
         public static string StripeAPIKey  = Environment.GetEnvironmentVariable("STRIPE_API_KEY");
         public static string StripeWebhookSigningSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SIGNING_SECRET");
