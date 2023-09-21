@@ -21,10 +21,12 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
             var blobClient = BlobFactory.GetBlobContainerClient(Config.SampleBlobContainerName);
 
             List<string> blobs = new List<string>();
-            blobs.Add(upsertSamplePackTransaction.request.stagingImgBlobPath);
-            foreach(var sampleTransaction in upsertSamplePackTransaction.request.samples)
+            blobs.Add(upsertSamplePackTransaction.request.importImgBlobName);
+            blobs.Add(upsertSamplePackTransaction.request.exportImgBlobName);
+
+            foreach (var sampleTransaction in upsertSamplePackTransaction.request.samples)
             {
-                blobs.Add(sampleTransaction.blobName);
+                blobs.Add(sampleTransaction.importBlobName);
             }
             
             //TODO: replace with Task When All...

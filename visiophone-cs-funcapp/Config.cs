@@ -39,12 +39,18 @@ namespace vp
         public static string SamplePackCollectionName = Environment.GetEnvironmentVariable("SAMPLE_PACK_COLLECTION_NAME");
         public static string UploadStagingContainerName = Environment.GetEnvironmentVariable("UPLOAD_STAGING_CONTAINER");
 
+        public static string SamplePreviewContainerName = Environment.GetEnvironmentVariable("SAMPLE_PREVIEW_CONTAINER_NAME");
+
         public static string CloudConvertAPIKey = Environment.GetEnvironmentVariable("CLOUD_CONVERT_API_KEY");
 
         //Import stuff...
         public static string BlobImportDirectoryName = Environment.GetEnvironmentVariable("BLOB_IMPORT_DIRECTORY_NAME");
         public static string BlobExportDirectoryName = Environment.GetEnvironmentVariable("BLOB_EXPORT_DIRECTORY_NAME");
         public static string ClipExportFileFormat = Environment.GetEnvironmentVariable("CLIP_EXPORT_FILE_FORMAT");
+
+        public static string ImageExportFileFormat = Environment.GetEnvironmentVariable("IMAGE_EXPORT_FILE_FORMAT");
+        public static int ImageExportWidth;
+        public static int ImageExportHeight;
 
         public static int BufferSize  = 1 * 1024 * 1024;
         
@@ -67,6 +73,26 @@ namespace vp
             {
                 throw new Exception($"Failed to parse RESULTS_PER_REQUEST");
             }
+
+            if (int.TryParse(Environment.GetEnvironmentVariable("IMAGE_EXPORT_WIDTH"), out int imageExportWidthOut))
+            {
+                ImageExportWidth = imageExportWidthOut;
+            }
+            else
+            {
+                throw new Exception($"Failed to parse IMAGE_EXPORT_WIDTH");
+            }
+
+            if (int.TryParse(Environment.GetEnvironmentVariable("IMAGE_EXPORT_HEIGHT"), out int imageExportHeightOut))
+            {
+                ImageExportHeight = imageExportHeightOut;
+            }
+            else
+            {
+                throw new Exception($"Failed to parse IMAGE_EXPORT_HEIGHT");
+            }
+
+
         }
     }
 }

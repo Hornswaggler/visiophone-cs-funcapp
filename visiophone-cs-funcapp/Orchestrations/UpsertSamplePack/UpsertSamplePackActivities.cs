@@ -15,7 +15,6 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 using vp.models;
@@ -43,40 +42,74 @@ namespace vp.orchestrations.upsertSamplePack
             return result;
         }
 
-        [FunctionName(ActivityNames.UpsertSamplePackTransferImage)]
-        public async Task<UpsertSamplePackTransaction> UpsertSamplePackTransferImage(
+        [FunctionName(ActivityNames.MigrateSamplePackAssets)]
+        public async Task<UpsertSamplePackTransaction> MigrateSamplePackAssets(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
         )
         {
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-            throw new Exception("The shit hit the fan! Everything is sideways");
 
+            BlobContainerClient previewContainer = _blobServiceClient.GetBlobContainerClient(Config.SamplePreviewContainerName);
+            BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
 
+            //Migrate Samples to preview and high quality containers
+            foreach (var sampleRequest in upsertSamplePackTransaction.request.samples)
+            {
+                var samplePreviewBlob = previewContainer.GetBlobClient($"{sampleRequest.previewBlobName}");
+                await samplePreviewBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, sampleRequest.exportBlobName));
+                
+                var sampleBlob = sampleContainer.GetBlobClient($"{sampleRequest.sampleBlobName}");
+                await sampleBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, sampleRequest.importBlobName));
+            }
 
-            BlobContainerClient destContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
-            var destBlob = destContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
-            
-            await destBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, upsertSamplePackTransaction.request.imgUrl));
+            //Migrate image to preview container
+            var imagePreviewBlob = previewContainer.GetBlobClient($"{upsertSamplePackTransaction.request.imgBlobName}");
+            await imagePreviewBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, upsertSamplePackTransaction.request.exportImgBlobName));
 
             return upsertSamplePackTransaction;
         }
+
+        //[FunctionName(ActivityNames.UpsertSamplePackTransferImage)]
+        //public async Task<UpsertSamplePackTransaction> UpsertSamplePackTransferImage(
+        //    [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
+        //)
+        //{
+        //    BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
+        //    throw new Exception("The shit hit the fan! Everything is sideways");
+
+
+
+        //    BlobContainerClient destContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
+        //    var destBlob = destContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
+
+        //    await destBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, upsertSamplePackTransaction.request.imgUrl));
+
+        //    return upsertSamplePackTransaction;
+        //}
 
         [FunctionName(ActivityNames.CleanupStagingData)]
         public async Task<UpsertSamplePackTransaction> CleanupStagingData(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
 )
         {
+            //TODO: implement this way: await blobClient.DeleteBlobIfExistsAsync(blob, DeleteSnapshotsOption.IncludeSnapshots);
+
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
 
             BlobContainerClient srcContainer = _blobServiceClient.GetBlobContainerClient(Config.UploadStagingContainerName);
-            var imgBlob = srcContainer.GetBlobClient(upsertSamplePackTransaction.request.imgUrl);
+            var importImageBlob = srcContainer.GetBlobClient(upsertSamplePackTransaction.request.importImgBlobName);
+            await importImageBlob.DeleteIfExistsAsync();
 
-            await imgBlob.DeleteIfExistsAsync();
+            var exportImageBlob = srcContainer.GetBlobClient(upsertSamplePackTransaction.request.exportImgBlobName);
+            await exportImageBlob.DeleteIfExistsAsync();
 
-            foreach(var sampleRequest in upsertSamplePackTransaction.request.samples)
+            foreach (var sampleRequest in upsertSamplePackTransaction.request.samples)
             {
-                var sampleBlob = srcContainer.GetBlobClient(sampleRequest.clipUri);
-                await sampleBlob.DeleteIfExistsAsync();
+                var importSampleBlob = srcContainer.GetBlobClient(sampleRequest.importBlobName);
+                await importSampleBlob.DeleteIfExistsAsync();
+
+                var exportSampleBlob = srcContainer.GetBlobClient(sampleRequest.exportBlobName);
+                await exportSampleBlob.DeleteIfExistsAsync();
             }
 
             return upsertSamplePackTransaction;
@@ -95,12 +128,9 @@ namespace vp.orchestrations.upsertSamplePack
                 //Sample Conversion(s)
                 foreach (var sample in upsertSamplePackTransaction.request.samples)
                 {
-                    string importSampleFileName = $"{upsertSamplePackTransaction.request.id}/{sample.importBlobName}";
-                    string exportSampleFileName = $"{upsertSamplePackTransaction.request.id}/{sample.exportClipBlobName}";
-
                     //TODO: ... UGH
-                    var importSasToken = $"?{_storageService.GetSASTokenForUploadBlob(importSampleFileName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
-                    var exportSasToken = $"?{_storageService.GetSASTokenForUploadBlob(exportSampleFileName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
+                    var importSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.importBlobName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
+                    var exportSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.exportBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
 
                     string importTaskName = $"import_{sample.id}";
                     string convertTaskName = $"convert_{sample.id}";
@@ -111,7 +141,7 @@ namespace vp.orchestrations.upsertSamplePack
                         Storage_Account = Config.StorageAccountName,
                         Container = Config.SampleBlobContainerName,
                         Sas_Token = importSasToken,
-                        Blob = importSampleFileName
+                        Blob = sample.importBlobName
                     };
 
                     taskDefinitions[convertTaskName] = new ConvertCreateRequest
@@ -133,7 +163,7 @@ namespace vp.orchestrations.upsertSamplePack
                         Storage_Account = Config.StorageAccountName,
                         Container = Config.SampleBlobContainerName,
                         Sas_Token = exportSasToken.ToString(),
-                        Blob = exportSampleFileName
+                        Blob = sample.exportBlobName
                     };
                 }
 

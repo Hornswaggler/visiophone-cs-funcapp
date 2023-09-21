@@ -189,14 +189,15 @@ namespace vp.util {
             return true;
         }
 
-        public static void UploadFormFile(IFormFile file, string containerName, string blobName, string blobPrefix = "")
+        public static void UploadFormFile(IFormFile file, string containerName, string blobName)
         {
             using (var stream = file.OpenReadStream())
             {
-                UploadStream(stream, $"{blobPrefix}{blobName}", containerName, file.ContentType);
+                UploadStream(stream, $"{blobName}", containerName, file.ContentType);
             }
         }
 
+        //TODO: is this used???
         public static void TryDeleteFiles(ILogger log, params string[] files)
         {
             foreach (var file in files)

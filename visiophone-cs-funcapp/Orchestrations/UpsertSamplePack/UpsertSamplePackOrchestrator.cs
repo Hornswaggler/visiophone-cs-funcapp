@@ -75,7 +75,11 @@ namespace vp.orchestrations.upsertSamplePack
                 );
 
 
-
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.MigrateSamplePackAssets,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
 
 
                 //upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
@@ -84,11 +88,11 @@ namespace vp.orchestrations.upsertSamplePack
                 //    upsertSamplePackTransaction
                 //);
 
-                //upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
-                //    ActivityNames.CleanupStagingData,
-                //    new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                //    upsertSamplePackTransaction
-                //);
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.CleanupStagingData,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
 
                 // COMBINE FOR IDEMPOTENCY
                 /////////////////////////////

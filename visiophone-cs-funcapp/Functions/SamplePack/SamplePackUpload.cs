@@ -69,7 +69,6 @@ namespace vp.functions.samplepack {
                 samplePackRequest.id = Guid.NewGuid().ToString();
                 //TODO: Remove this... should be handled in the front end
                 samplePackRequest.cost = samplePackRequest.cost * 100;
-                samplePackRequest.stagingImgBlobPath = Utils.GetFileNameForId(samplePackRequest.id, samplePackRequest.imgUrl);
                 transaction = new UpsertSamplePackTransaction
                 {
                     account = account,
@@ -81,7 +80,7 @@ namespace vp.functions.samplepack {
                 {
                     sample.id = Guid.NewGuid().ToString();
                     sample.fileExtension = Utils.GetExtensionForFileName(sample.clipUri);
-                    sample.blobName = Utils.GetFileNameForId(sample.id, sample.clipUri);
+                    sample.samplePackId = samplePackRequest.id;
                 }
             } catch (Exception e)
             {
@@ -92,7 +91,7 @@ namespace vp.functions.samplepack {
             //Upload the sample files to the staging area
             try
             {
-                UploadSamplePackFormFiles(transaction, form);
+                UploadSamplePackFiles(transaction, form);
                 //TODO: Delete this...
                 //throw new Exception("The shit hit the fan! Everything is sideways");
             }
@@ -130,7 +129,7 @@ namespace vp.functions.samplepack {
             }
         }
 
-        private void UploadSamplePackFormFiles(
+        private void UploadSamplePackFiles(
             UpsertSamplePackTransaction transaction,
             IFormCollection form)
         {
@@ -139,15 +138,13 @@ namespace vp.functions.samplepack {
                 Utils.UploadFormFile(
                     form.Files[sample.clipUri],
                     Config.UploadStagingContainerName,
-                    sample.blobName,
-                    $"{transaction.request.id}/{Config.BlobImportDirectoryName}/");
+                    sample.importBlobName);
             }
 
             Utils.UploadFormFile(
                 form.Files[transaction.request.imgUrl],
                 Config.UploadStagingContainerName,
-                transaction.request.stagingImgBlobPath,
-                $"{transaction.request.id}/{Config.BlobImportDirectoryName}/");
+                transaction.request.importImgBlobName);
             }
 
     }

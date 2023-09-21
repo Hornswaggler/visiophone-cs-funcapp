@@ -1,12 +1,44 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using vp.models;
 using vp.orchestrations.upsertsample;
+using vp.util;
 
 namespace vp.orchestrations.upsertSamplePack
 {
     public class UpsertSamplePackRequest : SamplePack<UpsertSampleRequest>
     {
         public string imgUrl { get; set; }
-        public string stagingImgBlobPath { get; set; }
+
+        public string imgUrlExtension
+        {
+            get => Utils.GetExtensionForFileName(imgUrl);
+        }
+
+        public string imgBlobName
+        {
+            get => $"{id}.{exportImgBlobExtension}";
+        }
+
+        public string importImgBlobName
+        {
+            get => $"{id}/{Config.BlobImportDirectoryName}/{id}.{imgUrlExtension}";
+        }
+
+        //TODO: FIX THIS!
+        public string exportImgBlobName
+        {
+            get => importImgBlobName;
+        }
+
+        //public string exportImgBlobName
+        //{
+        //    get => $"{id}/{Config.BlobExportDirectoryName}/{imgBlobName}";
+        //}
+
+        public string exportImgBlobExtension
+        {
+            get => $"{Config.ImageExportFileFormat}";
+        }
     }
 }
