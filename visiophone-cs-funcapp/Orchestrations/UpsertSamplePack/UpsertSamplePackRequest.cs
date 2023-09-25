@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using vp.models;
+﻿using vp.models;
 using vp.orchestrations.upsertsample;
 using vp.util;
 
@@ -25,16 +23,10 @@ namespace vp.orchestrations.upsertSamplePack
             get => $"{id}/{Config.BlobImportDirectoryName}/{id}.{imgUrlExtension}";
         }
 
-        //TODO: FIX THIS!
         public string exportImgBlobName
         {
-            get => importImgBlobName;
+            get => $"{id}/{Config.BlobExportDirectoryName}/{imgBlobName}";
         }
-
-        //public string exportImgBlobName
-        //{
-        //    get => $"{id}/{Config.BlobExportDirectoryName}/{imgBlobName}";
-        //}
 
         public string exportImgBlobExtension
         {

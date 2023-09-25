@@ -13,24 +13,24 @@ namespace vp.orchestrations.upsertsample
         }
 
         //TODO: Fix this :| 
-        //public string exportBlobName
-        //{
-        //    get => $"{(samplePackId == "" ? "" : $"{samplePackId}/")}{Config.BlobExportDirectoryName}/{previewBlobName}";
-        //}
-
-        public string exportBlobName {
-            get => $"{importBlobName}";
+        public string exportBlobName
+        {
+            get => $"{(samplePackId == "" ? "" : $"{samplePackId}/")}{Config.BlobExportDirectoryName}/{previewBlobName}";
         }
 
-        //public string previewBlobName
-        //{
-        //    get => $"{id}.{Config.ClipExportFileFormat}";
+        //public string exportBlobName {
+        //    get => $"{importBlobName}";
         //}
 
         public string previewBlobName
         {
-            get => sampleBlobName;
+            get => $"{id}.{Config.ClipExportFileFormat}";
         }
+
+        //public string previewBlobName
+        //{
+        //    get => sampleBlobName;
+        //}
 
         public string sampleBlobName
         {

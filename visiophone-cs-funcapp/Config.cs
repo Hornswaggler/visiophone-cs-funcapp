@@ -51,6 +51,7 @@ namespace vp
         public static string ImageExportFileFormat = Environment.GetEnvironmentVariable("IMAGE_EXPORT_FILE_FORMAT");
         public static int ImageExportWidth;
         public static int ImageExportHeight;
+        public static int ImageExportQuality;
 
         public static int BufferSize  = 1 * 1024 * 1024;
         
@@ -92,7 +93,14 @@ namespace vp
                 throw new Exception($"Failed to parse IMAGE_EXPORT_HEIGHT");
             }
 
-
+            if (int.TryParse(Environment.GetEnvironmentVariable("IMAGE_EXPORT_QUALITY"), out int imageExportQualityOut))
+            {
+                ImageExportQuality = imageExportQualityOut;
+            }
+            else
+            {
+                throw new Exception($"Failed to parse IMAGE_EXPORT_QUALITY");
+            }
         }
     }
 }
