@@ -21,6 +21,7 @@ namespace vp.functions
 
         public const string GetPurchasedSample = "F_GetPurchasedSample";
         public const string GetPurchasedSamplePack = "F_GetPurchasedSamplePack";
+        public const string SamplePackTransactionStatus = "F_SamplePackTransactionStatus";
 
     }
 }

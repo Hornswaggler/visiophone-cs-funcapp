@@ -108,6 +108,9 @@ namespace vp.functions.samplepack {
                 transaction
             );
 
+            //TODO: Upload this id to a table so that the status may be tracked by the user
+            log.LogInformation($"Beginning Orchestration: {orchestrationId}");
+
             return new OkObjectResult(orchestrationId);
         }
 

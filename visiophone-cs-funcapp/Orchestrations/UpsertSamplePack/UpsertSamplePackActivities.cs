@@ -42,6 +42,9 @@ namespace vp.orchestrations.upsertSamplePack
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
         )
         {
+
+            throw new Exception("MigrateSamplePackAssetsFailed");
+
             var samplePackRequest = upsertSamplePackTransaction.request;
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
 
@@ -103,6 +106,8 @@ namespace vp.orchestrations.upsertSamplePack
             try
             {
                 dynamic taskDefinitions = new Dictionary<string, object>();
+
+                throw new Exception("OOF!");
 
                 //Sample Conversion(s)
                 foreach (var sample in samplePackRequest.samples)
@@ -196,6 +201,7 @@ namespace vp.orchestrations.upsertSamplePack
             catch(Exception e)
             {
                 log.LogError($"Failed to initiate cloud convert: {e.Message}", e);
+                throw new Exception("OOF!");
             }
 
             return upsertSamplePackTransaction;

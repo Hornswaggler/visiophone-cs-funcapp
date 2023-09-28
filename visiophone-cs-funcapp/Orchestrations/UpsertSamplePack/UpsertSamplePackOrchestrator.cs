@@ -68,6 +68,7 @@ namespace vp.orchestrations.upsertSamplePack
 
                 //TODO: Move this to sub orchestration...
                 //TODO: Change retries to someting configurable, longer than 5 seconds... :|
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.ConvertSamplePackAssets,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
@@ -75,6 +76,7 @@ namespace vp.orchestrations.upsertSamplePack
                 );
 
 
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.MigrateSamplePackAssets,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
@@ -133,7 +135,7 @@ namespace vp.orchestrations.upsertSamplePack
             }
             catch (Exception e)
             {
-                log.LogError($"Failed to process sampleRequest pack: {e.Message}", e);
+                log.LogError($"Failed to process sampleRequest pack {upsertSamplePackTransaction.request.id}: {e.Message}", e);
                 //TODO: rollback transaction here
             }
             return null;
