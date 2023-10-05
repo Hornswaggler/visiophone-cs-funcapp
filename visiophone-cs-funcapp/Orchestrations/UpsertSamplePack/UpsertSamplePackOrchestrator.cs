@@ -8,7 +8,6 @@ using vp.models;
 using vp.orchestrations.upsertsample;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager;
-using Azure.Core;
 using Azure.Identity;
 using RetryOptions = Microsoft.Azure.WebJobs.Extensions.DurableTask.RetryOptions;
 using Azure;
@@ -16,12 +15,6 @@ using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using System.Net;
 using System.IO;
-using CloudConvert.API;
-using CloudConvert.API.Models.ExportOperations;
-using CloudConvert.API.Models.ImportOperations;
-using CloudConvert.API.Models.JobModels;
-using CloudConvert.API.Models.TaskOperations;
-using System.Collections.Generic;
 using vp.services;
 
 namespace vp.orchestrations.upsertSamplePack
@@ -42,6 +35,7 @@ namespace vp.orchestrations.upsertSamplePack
             {
 
                 //TODO: The file upload(s) are atomic
+                //TODO: Delete this... not being used anymore :|
                 var samples = await Task.WhenAll(
                     upsertSamplePackTransaction.request.samples.Select(
                         sampleRequest =>
@@ -71,7 +65,7 @@ namespace vp.orchestrations.upsertSamplePack
                 log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.ConvertSamplePackAssets,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    new RetryOptions(TimeSpan.FromSeconds(5), 3),
                     upsertSamplePackTransaction
                 );
 
@@ -79,7 +73,7 @@ namespace vp.orchestrations.upsertSamplePack
                 log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.MigrateSamplePackAssets,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    new RetryOptions(TimeSpan.FromSeconds(5), 3),
                     upsertSamplePackTransaction
                 );
 
@@ -135,8 +129,14 @@ namespace vp.orchestrations.upsertSamplePack
             }
             catch (Exception e)
             {
-                log.LogError($"Failed to process sampleRequest pack {upsertSamplePackTransaction.request.id}: {e.Message}", e);
-                //TODO: rollback transaction here
+                //Orchestration status should be "Failed... not "Complete""
+                log.LogError($"Failed to process sampleRequest pack {upsertSamplePackTransaction.request.id}: {e.Message}, Rolling back transaction.", e);
+
+                await ctx.CallSubOrchestratorWithRetryAsync<Sample>(
+                    OrchestratorNames.RollbackSamplePackUpsert,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 20),
+                    upsertSamplePackTransaction
+                );
             }
             return null;
         }

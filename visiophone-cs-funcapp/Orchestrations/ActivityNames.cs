@@ -8,6 +8,7 @@
         public const string CleanupStagingData = "A_CleanupStagingData";
         public const string ConvertSamplePackAssets = "A_ConvertSamplePackAssets";
         public const string MigrateSamplePackAssets = "A_MigrateSamplePackAssets";
+        public const string RollbackSamplePackUpload = "A_RollbackUploadContainer";
     }
 }
 

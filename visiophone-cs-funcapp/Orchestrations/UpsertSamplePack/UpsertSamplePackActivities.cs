@@ -107,12 +107,12 @@ namespace vp.orchestrations.upsertSamplePack
             {
                 dynamic taskDefinitions = new Dictionary<string, object>();
 
-                throw new Exception("OOF!");
+                //throw new Exception($"OOF! {upsertSamplePackTransaction.request.id}");
 
                 //Sample Conversion(s)
                 foreach (var sample in samplePackRequest.samples)
                 {
-                    //TODO: ... UGH
+                    //TODO: ... UGH Check to see if you can generate a single SAS token for the "Folder"
                     var importSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.importBlobName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
                     var exportSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.exportBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
 
