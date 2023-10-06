@@ -33,6 +33,7 @@ namespace vp.orchestrations.upsertSamplePack
         public async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
             [ActivityTrigger] SamplePack<Sample> samplePack)
         {
+            throw new Exception("UpsertSamplePackMetadata failed...");
             var result = await _samplePackService.AddSamplePack(samplePack);
             return result;
         }
@@ -42,9 +43,6 @@ namespace vp.orchestrations.upsertSamplePack
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
         )
         {
-
-            throw new Exception("MigrateSamplePackAssetsFailed");
-
             var samplePackRequest = upsertSamplePackTransaction.request;
             BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
 
@@ -107,7 +105,6 @@ namespace vp.orchestrations.upsertSamplePack
             {
                 dynamic taskDefinitions = new Dictionary<string, object>();
 
-                //throw new Exception($"OOF! {upsertSamplePackTransaction.request.id}");
 
                 //Sample Conversion(s)
                 foreach (var sample in samplePackRequest.samples)
@@ -200,8 +197,9 @@ namespace vp.orchestrations.upsertSamplePack
             }
             catch(Exception e)
             {
-                log.LogError($"Failed to initiate cloud convert: {e.Message}", e);
-                throw new Exception("OOF!");
+                var error = $"Failed to initiate cloud convert: {e.Message}";
+                log.LogError(error, e);
+                throw new Exception(error, e);
             }
 
             return upsertSamplePackTransaction;
@@ -242,6 +240,7 @@ namespace vp.orchestrations.upsertSamplePack
 
             var service = new Stripe.ProductService();
             var stripeProduct = await service.CreateAsync(options);
+            sampleMetadata.productId = stripeProduct.Id;
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
             sampleMetadata.sellerId = account.accountId;
 

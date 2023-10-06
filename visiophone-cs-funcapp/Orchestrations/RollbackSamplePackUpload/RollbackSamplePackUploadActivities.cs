@@ -42,9 +42,29 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
                 );
 
                 return upsertSamplePackTransaction;
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 var error = $"Failed to rollback sample pack upload for request: {upsertSamplePackTransaction.request.id}.";
+                log.LogError(error, e);
+                throw new Exception(error, e);
+            }
+
+        }
+
+        public async Task<UpsertSamplePackTransaction> RollbackStripeProduct(
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
+            ILogger log)
+        {
+            try
+            {
+                var service = new Stripe.ProductService();
+                await service.DeleteAsync(upsertSamplePackTransaction.request.productId);
+
+                return upsertSamplePackTransaction;
+            } catch(Exception e)
+            {
+                var error = $"Failed to rollback stripe product data for request: {upsertSamplePackTransaction.request.id}.";
                 log.LogError(error, e);
                 throw new Exception(error, e);
             }

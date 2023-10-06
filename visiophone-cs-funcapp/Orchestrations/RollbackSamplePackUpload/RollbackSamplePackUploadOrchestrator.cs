@@ -23,7 +23,14 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     upsertSamplePackTransaction
                 );
-            }catch(Exception e)
+
+                result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.RollbackSamplePackUpload,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+            }
+            catch(Exception e)
             {
                 log.LogError($"Failed to rollback sample pack upload: {upsertSamplePackTransaction.request.id}.", e);
             }

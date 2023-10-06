@@ -97,9 +97,10 @@ namespace vp.orchestrations.upsertSamplePack
                 //TODO: Trigger this from the cloud convert web HOOK!
 
                 //Generate Price Id in Stripe for Sample Pack
+                //TODO: Fix this, if it re-runs it may create multiple products in stripe...
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.UpsertStripeData,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    new RetryOptions(TimeSpan.FromSeconds(10), 2),
                     upsertSamplePackTransaction
                 );
 

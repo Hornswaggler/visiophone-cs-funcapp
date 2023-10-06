@@ -17,6 +17,7 @@ namespace vp.models
         public string name { get; set; }
         public string description { get; set; }
         public string priceId { get; set; }
+        public string productId { get; set; }
         public decimal? cost { get; set; } = 0;
         public string sellerId { get; set; } = "";
         public string seller { get; set; } = "";
