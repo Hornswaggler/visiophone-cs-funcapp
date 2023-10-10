@@ -5,7 +5,6 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using vp.services;
-using vp.util;
 using Microsoft.AspNetCore.Mvc;
 
 namespace vp.functions.user
@@ -13,10 +12,12 @@ namespace vp.functions.user
     public class UserProfileSet
     {
         private readonly IUserService _userService;
+        private readonly IStorageService _storageService;
 
-        public UserProfileSet(IUserService userService)
+        public UserProfileSet(IUserService userService, IStorageService storageService)
         {
             _userService = userService;
+            _storageService = storageService;
         }
 
         [FunctionName(FunctionNames.UserProfileSet)]
@@ -30,13 +31,7 @@ namespace vp.functions.user
             }
 
             var userAccountId = _userService.GetUserAccountId(req.HttpContext.User);
-
-            var meta = req.Form.Files[0];
-            var contentType = req.Form.Files[0].ContentType;
-
-            using (Stream stream = meta.OpenReadStream()) {
-                Utils.UploadStream(stream, $"{userAccountId}.png", "avatars", contentType);
-            }
+            _storageService.UploadUserAvatar(req.Form.Files[0], $"{userAccountId}.png");
 
             return new OkResult();
         }

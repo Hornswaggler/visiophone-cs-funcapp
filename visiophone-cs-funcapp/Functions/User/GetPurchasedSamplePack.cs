@@ -38,7 +38,7 @@ namespace vp.functions.user
                 sampleLinks.Add(
                     new KeyValuePair<string, Uri>(
                         sample.id,
-                        _storageService.GetSASTokenForSampleBlob($"{sample.id}.wav", BlobSasPermissions.Read)
+                        _storageService.GetSASURIForSampleHDBlob($"{sample.id}.wav", BlobSasPermissions.Read)
                     )
                 );
             }

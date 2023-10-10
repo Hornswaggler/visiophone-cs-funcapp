@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Stripe;
 using System.Threading.Tasks;
 using vp.functions.stripe;
 using vp.services;

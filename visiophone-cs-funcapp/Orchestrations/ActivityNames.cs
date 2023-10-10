@@ -9,6 +9,8 @@
         public const string ConvertSamplePackAssets = "A_ConvertSamplePackAssets";
         public const string MigrateSamplePackAssets = "A_MigrateSamplePackAssets";
         public const string RollbackSamplePackUpload = "A_RollbackUploadContainer";
+        public const string RollbackStripeProduct = "A_RollbackStripeProduct";
+        public const string RollbackSamplePackMetadata = "A_RollbackSamplePackMetadata";
     }
 }
 

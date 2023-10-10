@@ -1,5 +1,4 @@
-﻿using Azure.Storage.Blobs;
-using Azure.Storage.Sas;
+﻿using Azure.Storage.Sas;
 using CloudConvert.API;
 using CloudConvert.API.Models.ExportOperations;
 using CloudConvert.API.Models.ImportOperations;
@@ -14,7 +13,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using vp.models;
 using vp.services;
-using vp.util;
 
 namespace vp.orchestrations.upsertSamplePack
 {
@@ -33,7 +31,6 @@ namespace vp.orchestrations.upsertSamplePack
         public async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
             [ActivityTrigger] SamplePack<Sample> samplePack)
         {
-            throw new Exception("UpsertSamplePackMetadata failed...");
             var result = await _samplePackService.AddSamplePack(samplePack);
             return result;
         }
@@ -43,54 +40,15 @@ namespace vp.orchestrations.upsertSamplePack
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
         )
         {
-            var samplePackRequest = upsertSamplePackTransaction.request;
-            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-
-            BlobContainerClient previewContainer = _blobServiceClient.GetBlobContainerClient(Config.SamplePreviewContainerName);
-            BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
-
-            //Migrate Samples to preview and high quality containers
-            foreach (var sampleRequest in samplePackRequest.samples)
-            {
-                var samplePreviewBlob = previewContainer.GetBlobClient($"{sampleRequest.previewBlobName}");
-                await samplePreviewBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, sampleRequest.exportBlobName));
-                
-                var sampleBlob = sampleContainer.GetBlobClient($"{sampleRequest.sampleBlobName}");
-                await sampleBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, sampleRequest.importBlobName));
-            }
-
-            //Migrate image to preview container
-            var imagePreviewBlob = previewContainer.GetBlobClient($"{samplePackRequest.imgBlobName}");
-            await imagePreviewBlob.StartCopyFromUriAsync(BlobFactory.GetBlobSasToken(Config.UploadStagingContainerName, samplePackRequest.exportImgBlobName));
-
+            await _storageService.MigrateUploadsForSamplePackTransaction(upsertSamplePackTransaction);
             return upsertSamplePackTransaction;
         }
 
         [FunctionName(ActivityNames.CleanupStagingData)]
         public async Task<UpsertSamplePackTransaction> CleanupStagingData(
-            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
-)
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction)
         {
-            //TODO: implement this way: await blobClient.DeleteBlobIfExistsAsync(blob, DeleteSnapshotsOption.IncludeSnapshots);
-            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-            var samplePackRequest = upsertSamplePackTransaction.request;
-
-            BlobContainerClient srcContainer = _blobServiceClient.GetBlobContainerClient(Config.UploadStagingContainerName);
-            var importImageBlob = srcContainer.GetBlobClient(samplePackRequest.importImgBlobName);
-            await importImageBlob.DeleteIfExistsAsync();
-
-            var exportImageBlob = srcContainer.GetBlobClient(samplePackRequest.exportImgBlobName);
-            await exportImageBlob.DeleteIfExistsAsync();
-
-            foreach (var sampleRequest in samplePackRequest.samples)
-            {
-                var importSampleBlob = srcContainer.GetBlobClient(sampleRequest.importBlobName);
-                await importSampleBlob.DeleteIfExistsAsync();
-
-                var exportSampleBlob = srcContainer.GetBlobClient(sampleRequest.exportBlobName);
-                await exportSampleBlob.DeleteIfExistsAsync();
-            }
-
+            await _storageService.DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction);
             return upsertSamplePackTransaction;
         }
 
@@ -109,9 +67,8 @@ namespace vp.orchestrations.upsertSamplePack
                 //Sample Conversion(s)
                 foreach (var sample in samplePackRequest.samples)
                 {
-                    //TODO: ... UGH Check to see if you can generate a single SAS token for the "Folder"
-                    var importSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.importBlobName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
-                    var exportSasToken = $"?{_storageService.GetSASTokenForUploadBlob(sample.exportBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
+                    var importSasToken = _storageService.GetSASTokenForUploadStagingBlob(sample.importBlobName, BlobSasPermissions.Read);
+                    var exportSasToken = _storageService.GetSASTokenForUploadStagingBlob(sample.exportBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write);
 
                     string importTaskName = $"import_{sample.id}";
                     string convertTaskName = $"convert_{sample.id}";
@@ -120,7 +77,7 @@ namespace vp.orchestrations.upsertSamplePack
                     taskDefinitions[importTaskName] = new ImportAzureBlobCreateRequest
                     {
                         Storage_Account = Config.StorageAccountName,
-                        Container = Config.SampleBlobContainerName,
+                        Container = Config.UploadStagingBlobContainerName,
                         Sas_Token = importSasToken,
                         Blob = sample.importBlobName
                     };
@@ -142,14 +99,14 @@ namespace vp.orchestrations.upsertSamplePack
                     {
                         Input = convertTaskName,
                         Storage_Account = Config.StorageAccountName,
-                        Container = Config.SampleBlobContainerName,
+                        Container = Config.UploadStagingBlobContainerName,
                         Sas_Token = exportSasToken,
                         Blob = sample.exportBlobName
                     };
                 }
 
-                var importImageSasToken = $"?{_storageService.GetSASTokenForUploadBlob(samplePackRequest.importImgBlobName, BlobSasPermissions.Read).ToString().Split('?').Last()}";
-                var exportImageSasToken = $"?{_storageService.GetSASTokenForUploadBlob(samplePackRequest.exportImgBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write).ToString().Split('?').Last()}";
+                var importImageSasToken = _storageService.GetSASTokenForUploadStagingBlob(samplePackRequest.importImgBlobName, BlobSasPermissions.Read);
+                var exportImageSasToken = _storageService.GetSASTokenForUploadStagingBlob(samplePackRequest.exportImgBlobName, BlobSasPermissions.Read | BlobSasPermissions.Write);
 
                 var importImageTaskName = "import_sample_pack_image";
                 var convertImageTaskName = "convert_sample_pack_image";
@@ -159,7 +116,7 @@ namespace vp.orchestrations.upsertSamplePack
                 taskDefinitions[importImageTaskName] = new ImportAzureBlobCreateRequest
                 {
                     Storage_Account = Config.StorageAccountName,
-                    Container = Config.SampleBlobContainerName,
+                    Container = Config.UploadStagingBlobContainerName,
                     Sas_Token = importImageSasToken,
                     Blob = samplePackRequest.importImgBlobName
                 };
@@ -184,12 +141,11 @@ namespace vp.orchestrations.upsertSamplePack
                 {
                     Input = convertImageTaskName,
                     Storage_Account = Config.StorageAccountName,
-                    Container = Config.SampleBlobContainerName,
+                    Container = Config.UploadStagingBlobContainerName,
                     Sas_Token = exportImageSasToken,
                     Blob = samplePackRequest.exportImgBlobName
                 };
 
-                //TODO: do not await... let callbacks handle this
                 var job = await cloudConvert.CreateJobAsync(new JobCreateRequest
                 {
                     Tasks = taskDefinitions
@@ -220,11 +176,10 @@ namespace vp.orchestrations.upsertSamplePack
 
             var options = new Stripe.ProductCreateOptions
             {
-                //TODO: Magic number
                 Name = sampleMetadata.name,
                 Description = $"{sampleMetadata.description}: {sampleDescriptions}",
 
-                //Default to the currency of the User Account (Probably is affiliated w/ the account?)
+                //TODO: Default to the currency of the User Account (Probably is affiliated w/ the account?)
                 DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
                 {
                     Currency = account.defaultCurrency,

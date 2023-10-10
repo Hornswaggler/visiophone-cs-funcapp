@@ -7,12 +7,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using vp.orchestrations.upsertSamplePack;
+using vp.services;
 using vp.util;
 
 namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
 {
     public class RollbackSamplePackUploadActivities
     {
+        private static IStorageService _storageService;
+
+        public RollbackSamplePackUploadActivities(IStorageService storageService) {
+            _storageService = storageService;
+        }
+
         [FunctionName(ActivityNames.RollbackSamplePackUpload)]
         public async Task<UpsertSamplePackTransaction> RollbackSamplePackUpload(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
@@ -20,26 +27,12 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
         {
             try
             {
-                var blobClient = BlobFactory.GetBlobContainerClient(Config.SampleBlobContainerName);
+                //TODO: Test this...
+                await _storageService.DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction);
 
-                List<string> blobs = new List<string>();
-                blobs.Add(upsertSamplePackTransaction.request.importImgBlobName);
-                blobs.Add(upsertSamplePackTransaction.request.exportImgBlobName);
+                //TODO: DELETE DATA FROM Transcodes / cover-art storage here...
 
-                foreach (var sampleTransaction in upsertSamplePackTransaction.request.samples)
-                {
-                    blobs.Add(sampleTransaction.importBlobName);
-                    blobs.Add(sampleTransaction.exportBlobName);
-                }
 
-                await Task.WhenAll(
-                    blobs.Select(
-                        blob =>
-                        {
-                            return blobClient.DeleteBlobIfExistsAsync(blob, DeleteSnapshotsOption.IncludeSnapshots);
-                        }
-                    )
-                );
 
                 return upsertSamplePackTransaction;
             }
@@ -49,9 +42,9 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
                 log.LogError(error, e);
                 throw new Exception(error, e);
             }
-
         }
 
+        [FunctionName(ActivityNames.RollbackStripeProduct)]
         public async Task<UpsertSamplePackTransaction> RollbackStripeProduct(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
             ILogger log)
@@ -62,13 +55,27 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
                 await service.DeleteAsync(upsertSamplePackTransaction.request.productId);
 
                 return upsertSamplePackTransaction;
-            } catch(Exception e)
+            }
+            catch (Exception e)
             {
                 var error = $"Failed to rollback stripe product data for request: {upsertSamplePackTransaction.request.id}.";
                 log.LogError(error, e);
                 throw new Exception(error, e);
             }
-            
+
+        }
+
+        [FunctionName(ActivityNames.RollbackSamplePackMetadata)]
+        public async Task<UpsertSamplePackTransaction> RollbackSamplePackMetadata(
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
+            ILogger log)
+        {
+            //TODO: Check for samplePack id here, if it exists... delete the record
+            // if it does not exist, it was never created in the database to begin with...
+
+
+
+            return null;
         }
     }
 }

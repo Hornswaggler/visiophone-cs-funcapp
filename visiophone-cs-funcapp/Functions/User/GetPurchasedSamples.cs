@@ -27,7 +27,7 @@ namespace vp.functions.user
 
             //TODO: Get the name of the zip... Or zips? :| Each purchase is per pack.. :D
             //TODO: WTF is this????
-            var result = _storageService.GetSASTokenForSampleBlob("63fa6f062a41786b1656d793.wav", BlobSasPermissions.Read);
+            var result = _storageService.GetSASURIForSampleHDBlob("63fa6f062a41786b1656d793.wav", BlobSasPermissions.Read);
             if(result == null)
             {
                 return new BadRequestResult();

@@ -24,6 +24,10 @@ namespace vp.services
             return await GetById(_samplePackContainer, samplePackId);
         }
 
+        public async Task<SamplePack<Sample>> DeleteSamplePackById(string samplePackId)
+        {
+            return await _samplePackContainer.DeleteItemAsync<SamplePack<Sample>>(samplePackId, new PartitionKey(Config.SamplePackCollectionPartitionKey));
+        }
 
         public async Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack) {
             samplePack.id = samplePack.id;

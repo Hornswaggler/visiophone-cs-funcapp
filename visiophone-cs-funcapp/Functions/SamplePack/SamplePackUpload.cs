@@ -17,8 +17,13 @@ using vp.util;
 namespace vp.functions.samplepack {
     public class SamplePackUpload : AuthStripeBase
     {
-        public SamplePackUpload(IUserService userService, IStripeService stripeService, IValidationService validationService)
-            : base(userService, stripeService, validationService) { }
+        private IStorageService _storageService;
+
+        public SamplePackUpload(IUserService userService, IStripeService stripeService, IValidationService validationService, IStorageService storageService)
+            : base(userService, stripeService, validationService)
+        {
+            _storageService = storageService;
+        }
 
         [FunctionName(FunctionNames.SamplePackUpload)]
         public async Task<IActionResult> Run(
@@ -49,6 +54,7 @@ namespace vp.functions.samplepack {
                 var formData = form["data"];
                 samplePackRequest = JsonConvert.DeserializeObject<UpsertSamplePackRequest>(formData);
 
+                //TODO: Magic Number...
                 var errors = await _validationService.ValidateEntity(samplePackRequest, "samplePack");
                 if (errors.Count > 0)
                 {
@@ -92,8 +98,6 @@ namespace vp.functions.samplepack {
             try
             {
                 UploadSamplePackFiles(transaction, form);
-                //TODO: Delete this...
-                //throw new Exception("The shit hit the fan! Everything is sideways");
             }
             catch (Exception e)
             {
@@ -138,17 +142,10 @@ namespace vp.functions.samplepack {
         {
             foreach (var sample in transaction.request.samples)
             {
-                Utils.UploadFormFile(
-                    form.Files[sample.clipUri],
-                    Config.UploadStagingContainerName,
-                    sample.importBlobName);
+                _storageService.UploadStagingBlob(form.Files[sample.clipUri], sample.importBlobName);
             }
 
-            Utils.UploadFormFile(
-                form.Files[transaction.request.imgUrl],
-                Config.UploadStagingContainerName,
-                transaction.request.importImgBlobName);
-            }
-
+            _storageService.UploadStagingBlob(form.Files[transaction.request.imgUrl], transaction.request.importImgBlobName);
+        }
     }
 }

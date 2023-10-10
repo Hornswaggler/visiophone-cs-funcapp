@@ -25,21 +25,26 @@ namespace vp
         public static string CosmosKey = Environment.GetEnvironmentVariable("COSMOS_KEY");
         public static string CosmosConnectionString = Environment.GetEnvironmentVariable("COSMOS_CONNECTION_STRING");
 
-        public static string SampleFilesContainerName = Environment.GetEnvironmentVariable("SAMPLE_FILES_CONTAINER_NAME");
-        public static string CoverArtContainerName = Environment.GetEnvironmentVariable("COVER_ART_CONTAINER_NAME");
-        public static string SampleTranscodeContainerName = Environment.GetEnvironmentVariable("SAMPLE_TRANSCODES_CONTAINER_NAME");
+        //public static string SampleTranscodeContainerName = Environment.GetEnvironmentVariable("SAMPLE_TRANSCODES_CONTAINER_NAME");
         //TODO: Rename to "Staging or Uploads"
-        public static string SampleBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_CONTAINER_NAME");
-        public static string StorageContainerNameAvatars = Environment.GetEnvironmentVariable("STORAGE_CONTAINER_NAME_AVATARS");
+        //public static string UploadStagingBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_CONTAINER_NAME");
+        //public static string AvatarBlobContainerName = Environment.GetEnvironmentVariable("STORAGE_CONTAINER_NAME_AVATARS");
 
+        //Database
         public static string DatabaseName = Environment.GetEnvironmentVariable("DATABASE_NAME");
         public static string SampleCollectionName = Environment.GetEnvironmentVariable("SAMPLE_COLLECTION_NAME");
         public static string PurchaseCollectionName = Environment.GetEnvironmentVariable("PURCHASE_COLLECTION_NAME");
         public static string StripeProfileCollectionName = Environment.GetEnvironmentVariable("STRIPE_PROFILE_COLLECTION_NAME");
         public static string SamplePackCollectionName = Environment.GetEnvironmentVariable("SAMPLE_PACK_COLLECTION_NAME");
-        public static string UploadStagingContainerName = Environment.GetEnvironmentVariable("UPLOAD_STAGING_CONTAINER");
+        public static string SamplePackCollectionPartitionKey = "/sellerId";
 
-        public static string SamplePreviewContainerName = Environment.GetEnvironmentVariable("SAMPLE_PREVIEW_CONTAINER_NAME");
+
+        //Storage
+        public static string UploadStagingBlobContainerName = Environment.GetEnvironmentVariable("UPLOAD_STAGING_CONTAINER");
+        public static string SampleHDBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_FILES_CONTAINER_NAME");
+        public static string SamplePreviewBlobContainerName = Environment.GetEnvironmentVariable("SAMPLE_PREVIEW_CONTAINER_NAME");
+        public static string AvatarBlobContainerName = Environment.GetEnvironmentVariable("STORAGE_CONTAINER_NAME_AVATARS");
+        public static string SamplePackCoverArtBlobContainerName = Environment.GetEnvironmentVariable("COVER_ART_CONTAINER_NAME");
 
         public static string CloudConvertAPIKey = Environment.GetEnvironmentVariable("CLOUD_CONVERT_API_KEY");
 

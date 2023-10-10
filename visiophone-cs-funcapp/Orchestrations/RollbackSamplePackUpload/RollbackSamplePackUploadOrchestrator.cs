@@ -25,7 +25,13 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
                 );
 
                 result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
-                    ActivityNames.RollbackSamplePackUpload,
+                    ActivityNames.RollbackStripeProduct,
+                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    upsertSamplePackTransaction
+                );
+
+                result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                    ActivityNames.RollbackSamplePackMetadata,
                     new RetryOptions(TimeSpan.FromSeconds(5), 1),
                     upsertSamplePackTransaction
                 );
