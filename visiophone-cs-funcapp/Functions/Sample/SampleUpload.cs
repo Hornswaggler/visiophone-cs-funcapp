@@ -7,9 +7,9 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using visiophone_cs_funcapp.Orchestrations.UpsertSamplePack;
 using vp.functions.stripe;
 using vp.orchestrations;
-using vp.orchestrations.upsertsample;
 using vp.services;
 
 namespace vp.functions.sample

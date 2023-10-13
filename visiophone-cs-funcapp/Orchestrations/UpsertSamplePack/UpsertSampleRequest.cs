@@ -1,6 +1,7 @@
-﻿using vp.models;
+﻿using vp;
+using vp.models;
 
-namespace vp.orchestrations.upsertsample
+namespace visiophone_cs_funcapp.Orchestrations.UpsertSamplePack
 {
     public class UpsertSampleRequest : Sample
     {
@@ -8,7 +9,8 @@ namespace vp.orchestrations.upsertsample
         public string fileExtension { get; set; }
         public string samplePackId { get; set; } = "";
 
-        public string importBlobName {
+        public string importBlobName
+        {
             get => $"{(samplePackId == "" ? "" : $"{samplePackId}/")}{Config.BlobImportDirectoryName}/{id}.{fileExtension}";
         }
 

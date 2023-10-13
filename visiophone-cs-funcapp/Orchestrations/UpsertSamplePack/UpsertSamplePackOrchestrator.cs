@@ -3,10 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 using vp.models;
-using vp.orchestrations.upsertsample;
-using RetryOptions = Microsoft.Azure.WebJobs.Extensions.DurableTask.RetryOptions;
 
 namespace vp.orchestrations.upsertSamplePack
 {
@@ -17,83 +14,49 @@ namespace vp.orchestrations.upsertSamplePack
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            SamplePack<Sample> result;
+            //SamplePack<Sample> result;
             UpsertSamplePackTransaction upsertSamplePackTransaction = ctx.GetInput<UpsertSamplePackTransaction>();
 
             try
             {
-                //TODO: The file upload(s) are atomic
-                //TODO: Delete this... not being used anymore :|
-                var samples = await Task.WhenAll(
-                    upsertSamplePackTransaction.request.samples.Select(
-                        sampleRequest =>
-                        {
-                            log.LogInformation($"samplePack: {upsertSamplePackTransaction.request.id}, sampleRequest: {sampleRequest.id}");
-
-                            return ctx.CallSubOrchestratorAsync<Sample>(
-                                OrchestratorNames.UpsertSample,
-                                (new UpsertSampleTransaction(
-                                    upsertSamplePackTransaction.account,
-                                    sampleRequest,
-                                    upsertSamplePackTransaction.request.id)));
-                        }
-                    )
-                );
-
+                //TODO: Refactor to remove Side effects (transaction shouldn't be changing inside activity)
                 //TODO: Change retries to someting configurable, longer than 5 seconds... :|
-                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.ConvertSamplePackAssets,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 3),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
 
-                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.MigrateSamplePackAssets,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 3),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
 
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.CleanupStagingData,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
 
-                //Generate Price Id in Stripe for Sample Pack
-                //TODO: Fix this, if it re-runs it may create multiple products in stripe...
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.UpsertStripeData,
-                    new RetryOptions(TimeSpan.FromSeconds(10), 2),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
 
-                //TODO: this "conversion" should occur inside the activity, not here in the orchestration
-                var request = upsertSamplePackTransaction.request;
-                var samplePack = new SamplePack<Sample>
-                {
-                    id = request.id,
-                    name = request.name,
-                    cost = request.cost,
-                    priceId = request.priceId,
-                    productId = request.productId,
-                    description = request.description,
-                    samples = samples.Select(sample => sample).ToList(),
-                    sellerId = upsertSamplePackTransaction.account.stripeId,
-                    seller = upsertSamplePackTransaction.userName
-                };
-                
-                //TODO: Returning wrong data type...
-                result = await ctx.CallActivityWithRetryAsync<SamplePack<Sample>>(
+                //TODO: Tidy this up....
+                upsertSamplePackTransaction.request.sellerId = upsertSamplePackTransaction.account.stripeId;
+                upsertSamplePackTransaction.request.seller = upsertSamplePackTransaction.userName;
+
+                ////TODO: Returning wrong data type...
+                await ctx.CallActivityWithRetryAsync<SamplePack<Sample>>(
                     ActivityNames.UpsertSamplePackMetadata,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                    samplePack
+                    Config.OrchestratorRetryOptions,
+                    (SamplePack<Sample>)upsertSamplePackTransaction.request
                 );
 
-                //throw new Exception("Blow everything up...");
-
-                return result;
+                return (SamplePack<Sample>)upsertSamplePackTransaction.request;
             }
             catch (Exception e)
             {
@@ -102,7 +65,7 @@ namespace vp.orchestrations.upsertSamplePack
 
                 await ctx.CallSubOrchestratorWithRetryAsync<Sample>(
                     OrchestratorNames.RollbackSamplePackUpsert,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 20),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
             }

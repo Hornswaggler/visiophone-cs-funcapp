@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Azure.WebJobs.Extensions.DurableTask;
+using System;
 
 namespace vp
 {
@@ -69,6 +70,8 @@ namespace vp
 
         public static int ResultsPerRequest;
 
+        public static RetryOptions OrchestratorRetryOptions;
+
         static Config()
         {
             if (int.TryParse(Environment.GetEnvironmentVariable("RESULTS_PER_REQUEST"), out int resultsPerRequestOut))
@@ -105,6 +108,17 @@ namespace vp
             else
             {
                 throw new Exception($"Failed to parse IMAGE_EXPORT_QUALITY");
+            }
+
+            if (
+                int.TryParse(Environment.GetEnvironmentVariable("ORCHESTRATION_RETRY_SECONDS"), out int orchestrationRetrySecondsOut)
+                && int.TryParse(Environment.GetEnvironmentVariable("ORCHESTRATION_RETRY_ATTEMPTS"), out int orchestrationRetryAttemptsOut))
+            {
+                OrchestratorRetryOptions = new RetryOptions(TimeSpan.FromSeconds(orchestrationRetrySecondsOut), orchestrationRetryAttemptsOut);
+            }
+            else
+            {
+                throw new Exception("ORCHESTRATION_RETRY_SECONDS or ORCHESTRATION_RETRY_ATTEMPTS");
             }
         }
     }

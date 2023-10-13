@@ -28,26 +28,32 @@ namespace vp.orchestrations.upsertSamplePack
         }
 
         [FunctionName(ActivityNames.UpsertSamplePackMetadata)]
-        public async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
-            [ActivityTrigger] SamplePack<Sample> samplePack)
+        public static async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
+            [ActivityTrigger] SamplePack<Sample> samplePack,
+            ILogger log)
         {
+            log.LogInformation($"Processing transaction: {samplePack.id}, Inserting Sample Pack Metadata");
             var result = await _samplePackService.AddSamplePack(samplePack);
             return result;
         }
 
         [FunctionName(ActivityNames.MigrateSamplePackAssets)]
         public async Task<UpsertSamplePackTransaction> MigrateSamplePackAssets(
-            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
+            ILogger log
         )
         {
+            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
             await _storageService.MigrateUploadsForSamplePackTransaction(upsertSamplePackTransaction);
             return upsertSamplePackTransaction;
         }
 
         [FunctionName(ActivityNames.CleanupStagingData)]
         public async Task<UpsertSamplePackTransaction> CleanupStagingData(
-            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction)
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
+            ILogger log)
         {
+            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Cleaning up staging data");
             await _storageService.DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction);
             return upsertSamplePackTransaction;
         }
@@ -56,6 +62,8 @@ namespace vp.orchestrations.upsertSamplePack
         public async Task<UpsertSamplePackTransaction> ConvertSamplePackAssets(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction, ILogger log)
         {
+            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
+
             var cloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
             var samplePackRequest = upsertSamplePackTransaction.request;
 
@@ -150,8 +158,12 @@ namespace vp.orchestrations.upsertSamplePack
                 {
                     Tasks = taskDefinitions
                 });
+
+                //TODO: This should be a webhook callback, it is causing a blocking operation
+                var status = await cloudConvert.WaitJobAsync(job.Data.Id);
+
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 var error = $"Failed to initiate cloud convert: {e.Message}";
                 log.LogError(error, e);
@@ -163,11 +175,13 @@ namespace vp.orchestrations.upsertSamplePack
 
         [FunctionName(ActivityNames.UpsertStripeData)]
         public static async Task<UpsertSamplePackTransaction> UpsertStripeData(
-            [ActivityTrigger] UpsertSamplePackTransaction upsertSampleTransaction,
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
             ILogger log)
         {
-            var sampleMetadata = upsertSampleTransaction.request;
-            var account = upsertSampleTransaction.account;
+            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Inserting Stripe data");
+
+            var sampleMetadata = upsertSamplePackTransaction.request;
+            var account = upsertSamplePackTransaction.account;
 
             var sampleDescriptions = sampleMetadata.samples.Aggregate("", (acc, sample) =>
             {
@@ -188,7 +202,7 @@ namespace vp.orchestrations.upsertSamplePack
                 Metadata = new Dictionary<string, string>
                 {
                     { "accountId", $"{account.stripeId}" },
-                    { "id", $"{upsertSampleTransaction.request.id}" },
+                    { "id", $"{upsertSamplePackTransaction.request.id}" },
                     { "type", "samplePacks"}
                 }
             };
@@ -199,9 +213,9 @@ namespace vp.orchestrations.upsertSamplePack
             sampleMetadata.priceId = stripeProduct.DefaultPriceId;
             sampleMetadata.sellerId = account.accountId;
 
-            upsertSampleTransaction.request = sampleMetadata;
+            upsertSamplePackTransaction.request = sampleMetadata;
 
-            return upsertSampleTransaction;
+            return upsertSamplePackTransaction;
         }
     }
 }
