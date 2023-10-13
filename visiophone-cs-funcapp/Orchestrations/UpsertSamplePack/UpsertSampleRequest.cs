@@ -14,25 +14,15 @@ namespace visiophone_cs_funcapp.Orchestrations.UpsertSamplePack
             get => $"{(samplePackId == "" ? "" : $"{samplePackId}/")}{Config.BlobImportDirectoryName}/{id}.{fileExtension}";
         }
 
-        //TODO: Fix this :| 
         public string exportBlobName
         {
             get => $"{(samplePackId == "" ? "" : $"{samplePackId}/")}{Config.BlobExportDirectoryName}/{previewBlobName}";
         }
 
-        //public string exportBlobName {
-        //    get => $"{importBlobName}";
-        //}
-
         public string previewBlobName
         {
             get => $"{id}.{Config.ClipExportFileFormat}";
         }
-
-        //public string previewBlobName
-        //{
-        //    get => sampleBlobName;
-        //}
 
         public string sampleBlobName
         {
