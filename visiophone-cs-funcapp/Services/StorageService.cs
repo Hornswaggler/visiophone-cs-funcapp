@@ -1,10 +1,12 @@
 ﻿
+using Azure;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,13 +19,17 @@ namespace vp.services
 {
     public class StorageService : IStorageService
     {
+        private ILogger<StorageService> _log;
+
         private readonly BlobContainerClient _sampleHDBlobContainerClient;
         private readonly BlobContainerClient _samplePreviewBlobContainerClient;
         private readonly BlobContainerClient _uploadStagingBlobContainerClient;
         private readonly BlobContainerClient _samplePackCoverArtBlobContainerClient;
         private readonly BlobContainerClient _userAvatarBlobContainerClient;
         
-        public StorageService() {
+        public StorageService(ILogger<StorageService> log) {
+            _log = log; 
+
             StorageSharedKeyCredential storageSharedKeyCredential = new(Config.StorageAccountName, Config.StorageAccountKey);
 
             Uri sampleHDBlobContainerUri = new($"{Config.StorageBaseUrl}/{Config.SampleHDBlobContainerName}");
@@ -66,49 +72,96 @@ namespace vp.services
             UploadFileToBlob(file, _uploadStagingBlobContainerClient.GetBlockBlobClient(blobName));
         }
 
-        private void UploadFileToBlob(IFormFile file, BlockBlobClient blobClient) {
+        private void UploadFileToBlob(IFormFile file, BlockBlobClient blobClient)
+        {
             using (var stream = file.OpenReadStream())
             {
-                UploadStream(stream, file.ContentType, blobClient);
+                int offset = 0;
+                int counter = 0;
+                List<string> blockIds = new List<string>();
+
+                var bytesRemaining = stream.Length;
+                do
+                {
+                    var dataToRead = Math.Min(bytesRemaining, Config.BufferSize);
+                    byte[] data = new byte[dataToRead];
+                    var dataRead = stream.Read(data, offset, (int)dataToRead);
+                    bytesRemaining -= dataRead;
+                    if (dataRead > 0)
+                    {
+                        var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(counter.ToString("d6")));
+                        blobClient.StageBlock(blockId, new MemoryStream(data));
+
+                        _log.LogTrace(string.Format("Block {0} uploaded successfully.", counter.ToString("d6")));
+
+                        blockIds.Add(blockId);
+                        counter++;
+                    }
+                } while (bytesRemaining > 0);
+
+                var headers = new BlobHttpHeaders()
+                {
+                    ContentType = file.ContentType
+                };
+                blobClient.CommitBlockList(blockIds, headers);
             }
         }
 
-        private void UploadStream(Stream stream, string contentType, BlockBlobClient blobClient)
+        public async Task<Response<bool>[]> CleanupUploadDataForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
         {
-            int offset = 0;
-            int counter = 0;
-            List<string> blockIds = new List<string>();
-
-            var bytesRemaining = stream.Length;
-            do
-            {
-                var dataToRead = Math.Min(bytesRemaining, Config.BufferSize);
-                byte[] data = new byte[dataToRead];
-                var dataRead = stream.Read(data, offset, (int)dataToRead);
-                bytesRemaining -= dataRead;
-                if (dataRead > 0)
-                {
-                    var blockId = Convert.ToBase64String(Encoding.UTF8.GetBytes(counter.ToString("d6")));
-                    blobClient.StageBlock(blockId, new MemoryStream(data));
-                    //TODO: Shouldn't be console logging...
-                    Console.WriteLine(string.Format("Block {0} uploaded successfully.", counter.ToString("d6")));
-                    blockIds.Add(blockId);
-                    counter++;
-                }
-            } while (bytesRemaining > 0);
-
-            // TODO should come from request
-            var headers = new BlobHttpHeaders()
-            {
-                ContentType = contentType
-            };
-            blobClient.CommitBlockList(blockIds, headers);
+            return await Task.WhenAll(DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction));
         }
 
-        public async Task<bool> DeleteUploadsForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction) {
-            List<string> blobs = new List<string>();
-            blobs.Add(upsertSamplePackTransaction.request.importImgBlobName);
-            blobs.Add(upsertSamplePackTransaction.request.exportImgBlobName);
+        public async Task<Response<bool>[]> RollbackSampleTransactionBlobsForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction) {
+            return await Task.WhenAll(
+                DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction)
+                    .Concat(DeleteHDSamplesForSamplePackTransaction(upsertSamplePackTransaction)
+                    .Concat(DeletePreviewSamplesForSamplePackTransaction(upsertSamplePackTransaction))
+                    .Append(DeleteCoverArtForSamplePackTransaction(upsertSamplePackTransaction))
+                )
+            );
+        }
+
+        public async Task<CopyFromUriOperation[]> MigrateUploadsForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
+        {
+            var samplePackCoverArtBlob = _samplePackCoverArtBlobContainerClient.GetBlobClient(upsertSamplePackTransaction.request.imgBlobName);
+
+            List<Task<CopyFromUriOperation>> copyTasks = new List<Task<CopyFromUriOperation>>
+            {
+                samplePackCoverArtBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(upsertSamplePackTransaction.request.exportImgBlobName))
+            };
+
+            return await Task.WhenAll(
+                copyTasks.Concat(
+                    upsertSamplePackTransaction.request.samples.Select(
+                        sampleRequest =>
+                        {
+                            var samplePreviewBlob = _samplePreviewBlobContainerClient.GetBlobClient(sampleRequest.previewBlobName);
+                            return samplePreviewBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(sampleRequest.exportBlobName));
+
+                        }
+                    )
+                )
+                .Concat(
+                    upsertSamplePackTransaction.request.samples.Select(
+                        sampleRequest =>
+                        {
+
+                            var sampleHDBlob = _sampleHDBlobContainerClient.GetBlobClient(sampleRequest.sampleBlobName);
+                            return sampleHDBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(sampleRequest.importBlobName));
+                        }
+                    )
+                )
+            );
+        }
+
+        private IEnumerable<Task<Response<bool>>> DeleteUploadsForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
+        {
+            List<string> blobs = new List<string>
+            {
+                upsertSamplePackTransaction.request.importImgBlobName,
+                upsertSamplePackTransaction.request.exportImgBlobName
+            };
 
             foreach (var sampleTransaction in upsertSamplePackTransaction.request.samples)
             {
@@ -116,45 +169,28 @@ namespace vp.services
                 blobs.Add(sampleTransaction.exportBlobName);
             }
 
-            await Task.WhenAll(
-                blobs.Select(
-                    blob =>
-                    {
-                        return _uploadStagingBlobContainerClient.DeleteBlobIfExistsAsync(blob, DeleteSnapshotsOption.IncludeSnapshots);
-                    }
-                )
-            );
-
-            return true;
+            return blobs.Select(blob => _uploadStagingBlobContainerClient.DeleteBlobIfExistsAsync(blob, DeleteSnapshotsOption.IncludeSnapshots));
         }
 
-        public async Task<bool> MigrateUploadsForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
+
+        private IEnumerable<Task<Response<bool>>> DeleteHDSamplesForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
         {
-            var samplePackRequest = upsertSamplePackTransaction.request;
-            BlobServiceClient _blobServiceClient = new BlobServiceClient(Config.StorageConnectionString);
-
-            //Migrate Samples to preview and high quality containers
-            foreach (var sampleRequest in samplePackRequest.samples)
-            {
-                var samplePreviewBlob = _samplePreviewBlobContainerClient.GetBlobClient(sampleRequest.previewBlobName);
-                await samplePreviewBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(sampleRequest.exportBlobName));
-
-                var sampleHDBlob = _sampleHDBlobContainerClient.GetBlobClient(sampleRequest.sampleBlobName);
-                await sampleHDBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(sampleRequest.importBlobName));
-            }
-
-            //Migrate image to preview container
-            var samplePackCoverArtBlob = _samplePackCoverArtBlobContainerClient.GetBlobClient(samplePackRequest.imgBlobName);
-            await samplePackCoverArtBlob.StartCopyFromUriAsync(GetSASURIForUploadStagingBlob(samplePackRequest.exportImgBlobName));
-
-            return true;
+            return upsertSamplePackTransaction.request.samples.Select(
+                blob => _sampleHDBlobContainerClient.DeleteBlobIfExistsAsync(blob.sampleBlobName, DeleteSnapshotsOption.IncludeSnapshots)
+            );
         }
 
-        //public async Task<bool> DeleteUploadTranscodeForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
-        //{
+        private IEnumerable<Task<Response<bool>>> DeletePreviewSamplesForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
+        {
+            return upsertSamplePackTransaction.request.samples.Select(
+                blob => _samplePreviewBlobContainerClient.DeleteBlobIfExistsAsync(blob.previewBlobName, DeleteSnapshotsOption.IncludeSnapshots)
+            );
+        }
 
-        //    //_samplePreviewBlobContainerClient.
-        //}
+        private Task<Response<bool>> DeleteCoverArtForSamplePackTransaction(UpsertSamplePackTransaction upsertSamplePackTransaction)
+        {
+            return _samplePackCoverArtBlobContainerClient.DeleteBlobIfExistsAsync(upsertSamplePackTransaction.request.imgBlobName, DeleteSnapshotsOption.IncludeSnapshots);
+        }
 
         private Uri GetSASTokenForBlob(BlobContainerClient container, string blobName, BlobSasPermissions permissions)
         {

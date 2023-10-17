@@ -28,13 +28,26 @@ namespace vp.orchestrations.upsertSamplePack
         }
 
         [FunctionName(ActivityNames.UpsertSamplePackMetadata)]
-        public static async Task<SamplePack<Sample>> UpsertSamplePackMetadata(
-            [ActivityTrigger] SamplePack<Sample> samplePack,
+        public static async Task<UpsertSamplePackTransaction> UpsertSamplePackMetadata(
+            [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
             ILogger log)
         {
-            log.LogInformation($"Processing transaction: {samplePack.id}, Inserting Sample Pack Metadata");
-            var result = await _samplePackService.AddSamplePack(samplePack);
-            return result;
+            try
+            {
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Inserting Sample Pack Metadata");
+
+                upsertSamplePackTransaction.request.sellerId = upsertSamplePackTransaction.account.stripeId;
+                upsertSamplePackTransaction.request.seller = upsertSamplePackTransaction.userName;
+
+                await _samplePackService.AddSamplePack((SamplePack<Sample>)upsertSamplePackTransaction.request);
+            }
+            catch (Exception e) {
+                var error = $"Sample Pack Metadata insert failed for transaction: {upsertSamplePackTransaction.request.id}";
+                log.LogError(error, e);
+                throw new Exception(error, e);
+            }
+
+            return upsertSamplePackTransaction;
         }
 
         [FunctionName(ActivityNames.MigrateSamplePackAssets)]
@@ -43,8 +56,17 @@ namespace vp.orchestrations.upsertSamplePack
             ILogger log
         )
         {
-            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
-            await _storageService.MigrateUploadsForSamplePackTransaction(upsertSamplePackTransaction);
+            try
+            {
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Migrating Samplepack Assets");
+                await _storageService.MigrateUploadsForSamplePackTransaction(upsertSamplePackTransaction);
+            } catch ( Exception e )
+            {
+                var error = $"Sample Pack Asset Migration failed for transaction: {upsertSamplePackTransaction.request.id}";
+                log.LogError(error, e);
+                throw new Exception(error, e);
+            }
+
             return upsertSamplePackTransaction;
         }
 
@@ -53,8 +75,17 @@ namespace vp.orchestrations.upsertSamplePack
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
             ILogger log)
         {
-            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Cleaning up staging data");
-            await _storageService.DeleteUploadsForSamplePackTransaction(upsertSamplePackTransaction);
+            try
+            {
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Cleaning up staging data");
+                await _storageService.CleanupUploadDataForSamplePackTransaction(upsertSamplePackTransaction);
+            } catch ( Exception e )
+            {
+                var error = $"Sample Pack Asset staging data cleanup failed for transaction: {upsertSamplePackTransaction.request.id}";
+                log.LogError(error, e);
+                throw new Exception(error, e);
+            }
+
             return upsertSamplePackTransaction;
         }
 
@@ -62,17 +93,15 @@ namespace vp.orchestrations.upsertSamplePack
         public async Task<UpsertSamplePackTransaction> ConvertSamplePackAssets(
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction, ILogger log)
         {
-            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
-
-            var cloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
-            var samplePackRequest = upsertSamplePackTransaction.request;
-
             try
             {
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Converting Samplepack Assets");
+
+                var cloudConvert = new CloudConvertAPI(Config.CloudConvertAPIKey);
+                var samplePackRequest = upsertSamplePackTransaction.request;
+
                 dynamic taskDefinitions = new Dictionary<string, object>();
 
-
-                //Sample Conversion(s)
                 foreach (var sample in samplePackRequest.samples)
                 {
                     var importSasToken = _storageService.GetSASTokenForUploadStagingBlob(sample.importBlobName, BlobSasPermissions.Read);
@@ -165,7 +194,7 @@ namespace vp.orchestrations.upsertSamplePack
             }
             catch (Exception e)
             {
-                var error = $"Failed to initiate cloud convert: {e.Message}";
+                var error = $"Sample Conversion Process Failed for transaction {upsertSamplePackTransaction.request.id}";
                 log.LogError(error, e);
                 throw new Exception(error, e);
             }
@@ -178,43 +207,48 @@ namespace vp.orchestrations.upsertSamplePack
             [ActivityTrigger] UpsertSamplePackTransaction upsertSamplePackTransaction,
             ILogger log)
         {
-            log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Inserting Stripe data");
-
-            var sampleMetadata = upsertSamplePackTransaction.request;
-            var account = upsertSamplePackTransaction.account;
-
-            var sampleDescriptions = sampleMetadata.samples.Aggregate("", (acc, sample) =>
+            try
             {
-                return $"{(acc == "" ? "" : $"{acc}, ")}{sample.name}";
-            });
+                log.LogInformation($"Processing transaction: {upsertSamplePackTransaction.request.id}, Inserting Stripe data");
 
-            var options = new Stripe.ProductCreateOptions
+                var sampleDescriptions = upsertSamplePackTransaction.request.samples.Aggregate("", (acc, sample) =>
+                {
+                    return $"{(acc == "" ? "" : $"{acc}, ")}{sample.name}";
+                });
+
+                var options = new Stripe.ProductCreateOptions
+                {
+                    Name = upsertSamplePackTransaction.request.name,
+                    Description = $"{upsertSamplePackTransaction.request.description}: {sampleDescriptions}",
+
+                    //TODO: Default to the currency of the User Account (Probably is affiliated w/ the account?)
+                    DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
+                    {
+                        Currency = upsertSamplePackTransaction.account.defaultCurrency,
+                        UnitAmountDecimal = upsertSamplePackTransaction.request.cost
+                    },
+                    Metadata = new Dictionary<string, string>
+                    {
+                        { "accountId", $"{upsertSamplePackTransaction.account.stripeId}" },
+                        { "id", $"{upsertSamplePackTransaction.request.id}" },
+                        { "type", "samplePacks"}
+                    }
+                };
+
+                var service = new Stripe.ProductService();
+                var stripeProduct = await service.CreateAsync(options);
+
+                upsertSamplePackTransaction.request.productId = stripeProduct.Id;
+                upsertSamplePackTransaction.request.priceId = stripeProduct.DefaultPriceId;
+                upsertSamplePackTransaction.request.sellerId = upsertSamplePackTransaction.account.accountId;
+            }
+            catch (Exception e)
             {
-                Name = sampleMetadata.name,
-                Description = $"{sampleMetadata.description}: {sampleDescriptions}",
-
-                //TODO: Default to the currency of the User Account (Probably is affiliated w/ the account?)
-                DefaultPriceData = new Stripe.ProductDefaultPriceDataOptions
-                {
-                    Currency = account.defaultCurrency,
-                    UnitAmountDecimal = sampleMetadata.cost
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { "accountId", $"{account.stripeId}" },
-                    { "id", $"{upsertSamplePackTransaction.request.id}" },
-                    { "type", "samplePacks"}
-                }
-            };
-
-            var service = new Stripe.ProductService();
-            var stripeProduct = await service.CreateAsync(options);
-            sampleMetadata.productId = stripeProduct.Id;
-            sampleMetadata.priceId = stripeProduct.DefaultPriceId;
-            sampleMetadata.sellerId = account.accountId;
-
-            upsertSamplePackTransaction.request = sampleMetadata;
-
+                var error = $"Sample Pack Stripe data upload failed for transaction {upsertSamplePackTransaction.request.id}";
+                log.LogError(error, e);
+                throw new Exception(error, e);
+            }
+            
             return upsertSamplePackTransaction;
         }
     }

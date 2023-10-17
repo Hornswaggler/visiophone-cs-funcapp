@@ -10,17 +10,14 @@ namespace vp.orchestrations.upsertSamplePack
     public class UpsertSamplePackOrchestrator
     {
         [FunctionName(OrchestratorNames.UpsertSamplePack)]
-        public static async Task<SamplePack<Sample>> UpsertSamplePack(
+        public static async Task<UpsertSamplePackTransaction> UpsertSamplePack(
             [OrchestrationTrigger] IDurableOrchestrationContext ctx,
             ILogger log)
         {
-            //SamplePack<Sample> result;
             UpsertSamplePackTransaction upsertSamplePackTransaction = ctx.GetInput<UpsertSamplePackTransaction>();
 
             try
             {
-                //TODO: Refactor to remove Side effects (transaction shouldn't be changing inside activity)
-                //TODO: Change retries to someting configurable, longer than 5 seconds... :|
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.ConvertSamplePackAssets,
                     Config.OrchestratorRetryOptions,
@@ -45,31 +42,27 @@ namespace vp.orchestrations.upsertSamplePack
                     upsertSamplePackTransaction
                 );
 
-                //TODO: Tidy this up....
-                upsertSamplePackTransaction.request.sellerId = upsertSamplePackTransaction.account.stripeId;
-                upsertSamplePackTransaction.request.seller = upsertSamplePackTransaction.userName;
-
-                ////TODO: Returning wrong data type...
-                await ctx.CallActivityWithRetryAsync<SamplePack<Sample>>(
+                upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.UpsertSamplePackMetadata,
                     Config.OrchestratorRetryOptions,
                     (SamplePack<Sample>)upsertSamplePackTransaction.request
                 );
-
-                return (SamplePack<Sample>)upsertSamplePackTransaction.request;
             }
             catch (Exception e)
             {
-                //Orchestration status should be "Failed... not "Complete""
-                log.LogError($"Failed to process sampleRequest pack {upsertSamplePackTransaction.request.id}: {e.Message}, Rolling back transaction.", e);
+                var error = $"Failed to process sampleRequest pack {upsertSamplePackTransaction.request.id}: {e.Message}, Rolling back transaction.";
+                log.LogError(error, e);
 
                 await ctx.CallSubOrchestratorWithRetryAsync<Sample>(
                     OrchestratorNames.RollbackSamplePackUpsert,
                     Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
+
+                throw new Exception(error, e);
             }
-            return null;
+
+            return upsertSamplePackTransaction;
         }
     }
 }

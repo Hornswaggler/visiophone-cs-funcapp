@@ -20,25 +20,30 @@ namespace vp.orchestrations.rollbackSamplePackUploadOrchestrator
             {
                 result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.RollbackSamplePackUpload,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
 
-                result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
-                    ActivityNames.RollbackStripeProduct,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
-                    upsertSamplePackTransaction
-                );
-
+                if(upsertSamplePackTransaction.request.priceId == null || upsertSamplePackTransaction.request.productId == null)
+                {
+                    result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
+                        ActivityNames.RollbackStripeProduct,
+                        Config.OrchestratorRetryOptions,
+                        upsertSamplePackTransaction
+                    );
+                }
+                
                 result = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.RollbackSamplePackMetadata,
-                    new RetryOptions(TimeSpan.FromSeconds(5), 1),
+                    Config.OrchestratorRetryOptions,
                     upsertSamplePackTransaction
                 );
             }
             catch(Exception e)
             {
-                log.LogError($"Failed to rollback sample pack upload: {upsertSamplePackTransaction.request.id}.", e);
+                var error = $"Failed to rollback sample pack upload: {upsertSamplePackTransaction.request.id}.";
+                log.LogError(error, e);
+                throw new Exception(error, e);
             }
 
             return result;
