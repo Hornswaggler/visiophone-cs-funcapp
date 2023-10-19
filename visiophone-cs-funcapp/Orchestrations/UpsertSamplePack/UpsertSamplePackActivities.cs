@@ -128,7 +128,9 @@ namespace vp.orchestrations.upsertSamplePack
                         Options = new Dictionary<string, object>
                         {
                             ["audio_codec"] = $"{Config.ClipExportFileFormat}",
-                            ["audio_qscale"] = 0
+                            ["audio_qscale"] = 0,
+                            ["trim_start"] = "00:00:00",
+                            ["trim_end"] = $"00:00:{Config.SamplePreviewClipLengthSS}"
                         }
                     };
 

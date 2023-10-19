@@ -45,7 +45,7 @@ namespace vp.orchestrations.upsertSamplePack
                 upsertSamplePackTransaction = await ctx.CallActivityWithRetryAsync<UpsertSamplePackTransaction>(
                     ActivityNames.UpsertSamplePackMetadata,
                     Config.OrchestratorRetryOptions,
-                    (SamplePack<Sample>)upsertSamplePackTransaction.request
+                    upsertSamplePackTransaction
                 );
             }
             catch (Exception e)

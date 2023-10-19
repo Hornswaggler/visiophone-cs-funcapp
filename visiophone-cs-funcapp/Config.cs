@@ -48,6 +48,7 @@ namespace vp
         public static string SamplePackCoverArtBlobContainerName = Environment.GetEnvironmentVariable("COVER_ART_CONTAINER_NAME");
 
         public static string CloudConvertAPIKey = Environment.GetEnvironmentVariable("CLOUD_CONVERT_API_KEY");
+        public static string SamplePreviewClipLengthSS = Environment.GetEnvironmentVariable("SAMPLE_PREVIEW_CLIP_LENGTH_SS");
 
         //Import stuff...
         public static string BlobImportDirectoryName = Environment.GetEnvironmentVariable("BLOB_IMPORT_DIRECTORY_NAME");
@@ -63,8 +64,12 @@ namespace vp
         
         public static string StripeAPIKey  = Environment.GetEnvironmentVariable("STRIPE_API_KEY");
         public static string StripeWebhookSigningSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SIGNING_SECRET");
+        
+        //TODO: Is this being Used???
         public static string ProvisionStripeStandardReturnUrl = Environment.GetEnvironmentVariable("PROVISION_STRIPE_STANDARD_RETURN_URL");
+        //TODO: Is this being used???
         public static string ProvisionStripeStandardRefreshUrl = Environment.GetEnvironmentVariable("PROVISION_STRIPE_STANDARD_REFRESH_URL");
+        
         public static string PurchaseSampleStripeReturnUrl = Environment.GetEnvironmentVariable("PURCHASE_SAMPLE_STRIPE_RETURN_URL");
         public static string PurchaseSampleStripeCancelUrl = Environment.GetEnvironmentVariable("PURCHASE_SAMPLE_STRIPE_CANCEL_URL");
 
