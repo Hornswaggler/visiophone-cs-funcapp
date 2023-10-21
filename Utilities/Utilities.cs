@@ -21,6 +21,7 @@ namespace vp.utilities
 
             this.log = log;
 
+            //TODO: Region hardcoded...
             cosmosClient = new (
                 connectionString: Config.CosmosConnectionString,
                 new CosmosClientOptions()
@@ -75,10 +76,10 @@ namespace vp.utilities
         }
 
         public async Task<int> InitializeEnvironmentData(bool duplicates = false) {
-            BlobContainerClient coverArtContainer = _blobServiceClient.GetBlobContainerClient(Config.CoverArtContainerName);
-            BlobContainerClient avatarContainer = _blobServiceClient.GetBlobContainerClient(Config.StorageContainerNameAvatars);
-            BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleFilesContainerName);
-            BlobContainerClient transcodeContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleTranscodeContainerName);
+            BlobContainerClient coverArtContainer = _blobServiceClient.GetBlobContainerClient(Config.SamplePackCoverArtBlobContainerName);
+            BlobContainerClient avatarContainer = _blobServiceClient.GetBlobContainerClient(Config.AvatarBlobContainerName);
+            BlobContainerClient sampleContainer = _blobServiceClient.GetBlobContainerClient(Config.SampleHDBlobContainerName);
+            BlobContainerClient transcodeContainer = _blobServiceClient.GetBlobContainerClient(Config.SamplePreviewBlobContainerName);
 
             StripeService stripeService = new StripeService(cosmosClient);
             SamplePackService samplePackService = new SamplePackService(cosmosClient);
@@ -221,7 +222,7 @@ namespace vp.utilities
                     new ContainerProperties
                     {
                         Id = Config.SamplePackCollectionName,
-                        PartitionKeyPath = "/sellerId"
+                        PartitionKeyPath = Config.SamplePackCollectionPartitionKey
                     }
                 );
 
@@ -250,56 +251,56 @@ namespace vp.utilities
             try
             {
                 await _blobServiceClient.CreateBlobContainerAsync(
-                    Config.StorageContainerNameAvatars,
+                    Config.AvatarBlobContainerName,
                     PublicAccessType.Blob
                 );
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to create: {Config.StorageContainerNameAvatars}: {e.Message}", e);
+                log.LogWarning($"failed to create: {Config.AvatarBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleTranscodeContainerName, PublicAccessType.Blob);
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SamplePreviewBlobContainerName, PublicAccessType.Blob);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to create: {Config.SampleTranscodeContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to create: {Config.SamplePreviewBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.UploadStagingContainerName);
+                await _blobServiceClient.CreateBlobContainerAsync(Config.UploadStagingBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to create: {Config.UploadStagingContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to create: {Config.UploadStagingBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
                 await _blobServiceClient.CreateBlobContainerAsync(
-                    Config.CoverArtContainerName, PublicAccessType.Blob
+                    Config.SamplePackCoverArtBlobContainerName, PublicAccessType.Blob
                 );
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.CoverArtContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.SamplePackCoverArtBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleFilesContainerName, PublicAccessType.Blob);
+                await _blobServiceClient.CreateBlobContainerAsync(Config.SampleHDBlobContainerName, PublicAccessType.Blob);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.SampleFilesContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.SampleHDBlobContainerName}: {e.Message}", e);
             }
         }
 
@@ -311,69 +312,69 @@ namespace vp.utilities
             } 
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete database: {Config.DatabaseName}");
+                log.LogWarning($"failed to delete database: {Config.DatabaseName}", e);
             }
         }
 
         public async Task DeleteStorage() {
             try
             {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleBlobContainerName);
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.SampleBlobContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.UploadStagingBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.StorageContainerNameAvatars);
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.AvatarBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.StorageContainerNameAvatars}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.AvatarBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleTranscodeContainerName);
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SamplePreviewBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.SampleTranscodeContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.SamplePreviewBlobContainerName}: {e.Message}", e);
             }
 
             //try
             //{
-            //    await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingContainerName);
+            //    await _blobServiceClient.DeleteBlobContainerAsync(Config.UploadStagingBlobContainerName);
 
             //}
             //catch (Exception e)
             //{
-            //    log.LogWarning($"failed to delete: {Config.UploadStagingContainerName}: {e.Message}", e);
+            //    log.LogWarning($"failed to delete: {Config.UploadStagingBlobContainerName}: {e.Message}", e);
             //}
 
             try
             {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.CoverArtContainerName);
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SamplePackCoverArtBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.CoverArtContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.SamplePackCoverArtBlobContainerName}: {e.Message}", e);
             }
 
             try
             {
-                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleFilesContainerName);
+                await _blobServiceClient.DeleteBlobContainerAsync(Config.SampleHDBlobContainerName);
 
             }
             catch (Exception e)
             {
-                log.LogWarning($"failed to delete: {Config.SampleFilesContainerName}: {e.Message}", e);
+                log.LogWarning($"failed to delete: {Config.SampleHDBlobContainerName}: {e.Message}", e);
             }
         }
     }

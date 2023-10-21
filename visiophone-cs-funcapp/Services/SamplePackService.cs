@@ -24,11 +24,13 @@ namespace vp.services
             return await GetById(_samplePackContainer, samplePackId);
         }
 
+        public async Task<SamplePack<Sample>> DeleteSamplePack(SamplePack<Sample> samplePack)
+        {
+            return await _samplePackContainer.DeleteItemAsync<SamplePack<Sample>>(samplePack.id, new PartitionKey(samplePack.sellerId));
+        }
 
         public async Task<SamplePack<Sample>> AddSamplePack(SamplePack<Sample> samplePack) {
-            samplePack.id = samplePack.id;
             await _samplePackContainer.CreateItemAsync(samplePack);
-
             return samplePack;
         }
 
@@ -44,7 +46,6 @@ namespace vp.services
 
         public async Task<List<SamplePack<Sample>>> GetSamplePackPurchasesByPriceIds(List<string> priceIds)
         {
-
             return await FindWhereIn(_samplePackContainer, "priceId", priceIds);
         }
     }

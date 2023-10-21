@@ -7,17 +7,21 @@ using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using visiophone_cs_funcapp.Orchestrations.UpsertSamplePack;
 using vp.functions.stripe;
 using vp.orchestrations;
-using vp.orchestrations.upsertsample;
 using vp.services;
 
 namespace vp.functions.sample
 {
     public class SampleUpload : AuthStripeBase
     {
-        public SampleUpload(IUserService userService, IStripeService stripeService, IValidationService validationService) 
-            : base(userService, stripeService, validationService) { }
+        private IStorageService _storageService;
+        public SampleUpload(IUserService userService, IStripeService stripeService, IValidationService validationService, IStorageService storageService)
+            : base(userService, stripeService, validationService)
+        {
+            _storageService = storageService;
+        }
 
         //[FunctionName(FunctionNames.SampleUpload)]
         public async Task<IActionResult> Run (
@@ -63,10 +67,7 @@ namespace vp.functions.sample
             //TODO: These data uploads need to be deleted if / when the transaction fails
             try
             {
-                util.Utils.UploadFormFile(
-                    form.Files[upsertSampleRequest.clipUri], 
-                    Config.SampleBlobContainerName, 
-                    upsertSampleRequest.clipUri);
+                _storageService.UploadStagingBlob(form.Files[upsertSampleRequest.clipUri], upsertSampleRequest.clipUri);
             }
             catch (Exception e)
             {

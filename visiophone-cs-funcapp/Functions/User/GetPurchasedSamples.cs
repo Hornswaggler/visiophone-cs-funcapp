@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using vp.services;
 using System.IO;
 using Newtonsoft.Json;
+using Azure.Storage.Sas;
 
 namespace vp.functions.user
 {
@@ -25,7 +26,8 @@ namespace vp.functions.user
             string sampleName = JsonConvert.DeserializeObject<string>(requestBody);
 
             //TODO: Get the name of the zip... Or zips? :| Each purchase is per pack.. :D
-            var result = _storageService.GetSASTokenForSampleBlob("63fa6f062a41786b1656d793.wav");
+            //TODO: WTF is this????
+            var result = _storageService.GetSASURIForSampleHDBlob("63fa6f062a41786b1656d793.wav", BlobSasPermissions.Read);
             if(result == null)
             {
                 return new BadRequestResult();

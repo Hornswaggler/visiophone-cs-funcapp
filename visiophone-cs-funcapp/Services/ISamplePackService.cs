@@ -12,5 +12,6 @@ namespace vp.services
         Task<SamplePack<Sample>> GetSamplePackById(string samplePackId);
         Task<SearchQueryResult<SamplePack<Sample>>> GetSamplePacksBySellerId(SearchQueryRequest request);
         Task<List<SamplePack<Sample>>> GetSamplePackPurchasesByPriceIds(List<string> priceIds);
+        Task<SamplePack<Sample>> DeleteSamplePack(SamplePack<Sample> samplePack);
     }
 }
